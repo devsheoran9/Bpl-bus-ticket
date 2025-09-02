@@ -1,0 +1,1852 @@
+:root {
+    --sidebar-width: 250px;
+}
+
+body {
+    margin-top: 65px;
+    background-color: #f4f7fc;
+}
+
+#sidebarOverlay {
+    display: none;
+    /* hide by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    /* below sidebar (1024) and toggle (1100) */
+    transition: opacity .3s ease;
+    opacity: 0;
+}
+
+.navbar {
+
+    background: #fff;
+    position: fixed;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    transition: width 0.3s ease;
+    /* Add transform transition for smoothness if needed */
+    transition: width 0.3s ease, transform 0.3s ease;
+   
+    
+}
+ 
+/* wrapper holds sidebar + content */
+#wrapper {
+    display: flex;
+    transition: all .3s ease;
+}
+
+#wrapper.toggled .navbar {
+
+    transform: translateX(0);
+}
+
+/*
+=========================================
+MODERN SIDEBAR STYLES with ::before
+=========================================
+*/
+
+/* --- General Sidebar & Scrollbar --- */
+.sidebar {
+    position: fixed;
+    z-index: 1024;
+    top: 0;
+    width: var(--sidebar-width, 250px);
+    /* Use CSS variable for width */
+    height: 100%;
+    background: #ffffff;
+    /* A slightly softer black */
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left .3s ease;
+    overflow: hidden;
+    /* Prevent main scrollbar */
+    /* box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);? */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            /* border-color: #0d6efd; */
+    /* Add a subtle shadow */
+}
+
+.sidebar-header {
+    padding: 0.2rem 1.2rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-bottom: 0.1rem solid #0d6efd;
+    border-radius: 0 0 10px 0;
+}
+
+/* A styled horizontal rule */
+.sidebar hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    margin: 0 1rem;
+}
+
+.sidebar-scroll {
+    flex-grow: 1;
+    /* Allows this element to fill available space */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 0;
+    /* Vertical padding */
+}
+
+/* Custom scrollbar for a modern look */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #007bff;
+}
+
+
+/* --- Navigation Links --- */
+
+.sidebar .nav-link {
+    color: rgba(106, 95, 95, 0.7);
+    padding: 0.8rem 1.5rem;
+    /* Increased padding for better spacing */
+    transition: all 0.3s ease-in-out;
+    position: relative;
+    /* CRUCIAL: Parent for the ::before element */
+    font-weight: 500;
+    overflow: hidden;
+    /* Helps contain the ::before element */
+}
+
+/* The ::before element will act as our hover/active indicator background */
+.sidebar .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 4px;
+    /* The width of our highlight bar */
+    background-color: #007bff;
+    transform: translateX(-150%);
+    /* Start off-screen to the left */
+    transition: transform 0.3s ease-in-out;
+    z-index: -1;
+    /* Place it behind the text and icon */
+}
+
+/* On hover, change text color and slide the ::before element to the edge */
+.sidebar .nav-link:hover {
+    color: #b06bb3;
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Very subtle background */
+}
+
+.sidebar .nav-link:hover::before {
+    transform: translateX(0);
+    /* Bring the bar into view on hover */
+}
+
+/* For the ACTIVE link, keep the bar visible and make text bright white */
+.sidebar .nav-link.active {
+    color: #bd52ff;
+    background-color: rgba(0, 123, 255, 0.15);
+    /* A subtle blue glow */
+}
+
+.sidebar .nav-link.active::before {
+    transform: translateX(0);
+    /* Keep the bar visible */
+}
+
+.sidebar .nav-link i.nav-icon {
+    margin-right: 12px;
+    width: 20px;
+    /* Ensures icons are aligned */
+    text-align: center;
+}
+
+/* --- Collapsible Sub-menus --- */
+
+.collapse .nav-link {
+    padding-left: 3rem;
+    /* Indent sub-menu items */
+    font-size: 0.9rem;
+    color: rgba(106, 95, 95, 0.7);
+}
+
+/* Active sub-menu item has a more pronounced look */
+.collapse .nav-link.active {
+    color: #bd52ff;
+    font-weight: 700;
+    background-color: transparent;
+    /* No background on active sub-items */
+}
+
+/* The indicator for an active sub-menu link is a small circle */
+.collapse .nav-link.active::before {
+    top: 50%;
+    left: 1.5rem;
+    /* Position it within the indentation */
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    /* Center it perfectly */
+}
+
+/* Chevron animation for dropdowns */
+.sidebar .nav-link[data-bs-toggle="collapse"] .fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.sidebar .nav-link[data-bs-toggle="collapse"]:not(.collapsed) .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+
+/* your main‐content area */
+.main-content {
+    flex: 1;
+    transition: all .3s ease;
+    /* margin-left: 0px; */
+    padding-top: 10px;
+    /* top:90px; */
+    border-radius: 20px 0 0 0;
+    /* min-height: 100vh; */
+    border-top: 0.1rem solid #0d6efd;
+}
+
+#wrapper .sidebar {
+    margin-left: -250px;
+    transition: all .3s ease;
+}
+
+/* when #wrapper has .toggled, hide the sidebar */
+#wrapper.toggled .sidebar {
+    margin-left: 0px;
+    transition: all .3s ease;
+}
+
+#wrapper.toggled .main-content {
+    margin-left: var(--sidebar-width);
+    transition: all .3s ease;
+}
+
+/* chevron rotation for your collapse links */
+.nav-link.collapsed .fa-chevron-down {
+    transform: rotate(-90deg);
+}
+
+.nav-link:not(.collapsed) .fa-chevron-down {
+    transform: rotate(0);
+}
+
+.fa-chevron-down {
+    transition: transform .2s ease;
+}
+
+#sidebarOverlay.active {
+    display: block;
+}
+
+@media (max-width: 1080px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100%;
+        /* background: ; */
+        padding-top: 1rem;
+        overflow-y: auto;
+        /* allow scrolling on small screens */
+        -webkit-overflow-scrolling: touch;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+        z-index: 1000;
+    }
+
+    #wrapper.toggled .navbar {
+        width: 100%;
+        transform: translateX(0);
+    }
+
+    /* hidden by default */
+    .main-content {
+        margin-left: 0px;
+        /* padding: 0rem; */
+        padding-top: 10px;
+    }
+
+    .navbar {
+        transform: translateX(0);
+        width: 100%;
+    }
+
+    /* show on toggle */
+    #wrapper.toggled .sidebar {
+        transform: translateX(0);
+        margin-left: 0px;
+    }
+
+    #wrapper.toggled .main-content {
+        margin-left: 0px;
+    }
+
+    #wrapper.toggled #sidebarOverlay {
+        display: block;
+        opacity: 1;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+}
+
+.pagination .page-link {
+    padding: .5rem .75rem;
+}
+
+td {
+    white-space: normal;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.filter-section {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .25rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-section .form-control,
+.filter-section .form-select {
+    height: calc(1.5em + .75rem + 2px);
+    /* Align height with other inputs */
+}
+
+.filter-section .btn {
+    height: calc(1.5em + .75rem + 2px);
+    line-height: 1.5;
+    /* Center text */
+}
+
+/* Styles for history modal content */
+.status-badge {
+    font-size: 0.75rem;
+    /* Smaller font for badges */
+    padding: 0.3em 0.5em;
+    vertical-align: middle;
+}
+
+/* New history entry styling for timeline-like feel */
+.history-timeline {
+    position: relative;
+    padding-left: 30px;
+    /* Space for the line and dots */
+}
+
+.history-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    /* Position the line */
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+    /* Light gray line */
+}
+
+.history-timeline .list-group-item {
+    border: none;
+    padding: 10px 0 10px 20px;
+    /* Padding for content, and left space from line */
+    position: relative;
+    background-color: transparent;
+}
+
+.history-timeline .list-group-item::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    /* Position of the dot on the line */
+    top: 15px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    /* Blue dot (primary color) */
+    border: 2px solid #fff;
+    /* White border to stand out from line */
+    z-index: 1;
+}
+
+.history-timeline .list-group-item:first-child::before {
+    background-color: #28a745;
+    /* Green for the latest status */
+}
+
+.list-group-item.list-group-item-action {
+    cursor: default;
+    /* Remove pointer cursor as items are not clickable for navigation */
+}
+
+.history-timeline .list-group-item:last-child {
+    padding-bottom: 0;
+}
+
+.history-timeline .list-group-item p {
+    margin-bottom: 0.2rem;
+}
+
+.history-timeline .list-group-item p:last-child {
+    margin-bottom: 0;
+}
+
+/* Testimonials Section */
+.testimonials-section {
+    padding: 60px 0;
+    /* More vertical padding */
+    background-color: #f0f2f5;
+    /* Match body background */
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #343a40;
+    /* margin-bottom: 50px; */
+    position: relative;
+    padding-bottom: 15px;
+    text-align: center;
+    /* Ensure title is centered */
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #007bff;
+    /* Main blue accent */
+    /* border-radius removed as per request */
+}
+
+/* Testimonial Card */
+.testimonial-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    /* Subtle border for a sharp look */
+    border-radius: 0;
+    /* As requested - Sharp corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    /* Sharper, less diffused shadow */
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    height:100%;
+    /* Adjusted later with content */
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    /* Slightly less lift */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    /* Slightly stronger on hover */
+}
+
+.testimonial-header {
+    padding: 20px 25px;
+    /* Keep internal padding for readability */
+    background: linear-gradient(45deg, black, black);
+    /* Gradient background */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.testimonial-header h5 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.testimonial-location {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+.testimonial-rating {
+    flex-shrink: 0;
+    margin-left: 20px;
+}
+
+.testimonial-rating .fa-star {
+    color: #ffc107;
+    /* Gold for stars */
+    margin-right: 2px;
+    font-size: 1.1rem;
+}
+
+.testimonial-body {
+    padding: 25px;
+    /* Keep internal padding for readability */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.testimonial-text {
+    font-size: 0.8em;
+    line-height: 1.7;
+    color: #343a40;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    /* Hide overflow if text is too long for the initial view */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    /* Limit to 4 lines */
+    -webkit-box-orient: vertical;
+}
+
+.testimonial-images {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #e9ecef;
+    /* Dashed line separator */
+    display: flex;
+    /* Ensure flex for image layout */
+    flex-wrap: wrap;
+    /* Allow images to wrap */
+    gap: 10px;
+    /* Gap between images */
+}
+
+.testimonial-images img {
+    width: 80px;
+    /* Fixed width */
+    height: 80px;
+    /* Fixed height */
+    border: 1px solid #e0e0e0;
+    /* Match card border for consistency */
+    padding: 2px;
+    /* Small inner padding for border effect */
+    border-radius: 0;
+    /* As requested - Sharp corners */
+    object-fit: cover;
+    transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.testimonial-images img:hover {
+    transform: scale(1.03);
+    /* Slightly less zoom on image hover */
+    border-color: #007bff;
+    /* Highlight border on hover */
+}
+
+.testimonial-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f2f5;
+    /* Subtle border for meta */
+}
+
+/* Delete Button */
+.delete-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    opacity: 0.8;
+    position: absolute;
+    /* Changed to absolute for precise positioning relative to header */
+    top: 7px;
+    right: 20px;
+    z-index: 11;
+}
+
+.delete-btn:hover {
+    color: #ffda6a;
+    /* Light gold on hover for contrast */
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* Reply Button */
+.reply-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    /* Consistent size with delete */
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    opacity: 0.8;
+    position: absolute;
+    top: 7px;
+    /* Align with delete button */
+    right: 55px;
+    /* Position next to delete button */
+    z-index: 11;
+}
+
+.reply-btn:hover {
+    color: #5cb85c;
+    /* Greenish on hover */
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.reply-btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    color: #ccc;
+}
+
+
+/* Reply Section Styling */
+.testimonial-reply-section {
+    background-color: #f8f9fa;
+    /* Light grey background for reply */
+    border-top: 1px solid #e0e0e0;
+    padding: 15px 25px;
+    margin-top: 15px;
+    /* Space between testimonial body and reply */
+}
+
+.testimonial-reply-section p {
+    margin-bottom: 5px;
+    color: #343a40;
+    font-style: italic;
+}
+
+.testimonial-reply-section .replier-name {
+    font-weight: 600;
+    color: #007bff;
+    /* Highlight replier name */
+    font-size: 0.95rem;
+}
+
+.testimonial-reply-section .reply-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+    float: right;
+}
+
+/* No Testimonials Message */
+.no-testimonials {
+    text-align: center;
+    padding: 60px;
+    color: #6c757d;
+    font-size: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    /* Match card border for consistency */
+    border-radius: 0;
+    /* As requested - Sharp corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    /* Match card shadow */
+    margin-top: 40px;
+}
+
+/* Toast notifications */
+.toast-message {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #28a745;
+    /* Success green */
+    color: white;
+    padding: 12px 25px;
+    border-radius: 0;
+    /* As requested - Sharp corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    z-index: 2000;
+    display: none;
+    font-size: 1.05rem;
+    animation: fadeInOut 3.5s forwards;
+    /* Animation for a slicker appearance */
+}
+
+.toast-message.error {
+    background-color: #dc3545;
+    /* Error red */
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+/* Pagination Styling */
+.pagination-container {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination .page-item .page-link {
+    color: #007bff;
+    border-radius: 0;
+    /* Sharp corners */
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    border-radius: 0;
+    /* Sharp corners */
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+/* Base styles for table on larger screens */
+.table-responsive {
+    overflow-x: auto;
+    /* Ensures horizontal scrollbar for very wide content if necessary */
+}
+
+ 
+
+/* --- Responsive Table Styles for Smaller Screens --- */
+@media (max-width: 767.98px) {
+
+    /* Applies to screens smaller than 768px (e.g., phones) */
+    .table-responsive table {
+        border: 0;
+        /* Remove outer table borders */
+    }
+
+    .table-responsive thead {
+        display: none;
+        /* Hide table headers on small screens */
+    }
+
+    .table-responsive tr {
+        display: block;
+        /* Make each row behave like a block-level element */
+        margin-bottom: 1rem;
+        /* Space between rows/cards */
+        border: 1px solid #e9ecef;
+        /* Add a border to each 'card' */
+        border-radius: .5rem;
+        padding: .5rem;
+        background-color: #fff;
+        box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+        /* Subtle shadow for card effect */
+    }
+
+    .table-responsive td {
+        display: block;
+        /* Make each cell behave like a block-level element */
+        text-align: right;
+        /* Align cell content to the right */
+        padding-left: 50% !important;
+        /* Make space for the pseudo-element label */
+        position: relative;
+        border: none;
+        /* Remove individual cell borders */
+        white-space: normal;
+        /* Allow text to wrap naturally */
+    }
+
+    .table-responsive td::before {
+        content: attr(data-label);
+        /* Use data-label for the pseudo-element */
+        position: absolute;
+        left: 0;
+        width: 50%;
+        /* Label takes half the space */
+        padding-left: .5rem;
+        /* Indent label */
+        font-weight: bold;
+        text-align: left;
+        /* Align label to the left */
+    }
+
+    /* Ensure action buttons stack nicely within their cell */
+    .action-btns {
+        text-align: left !important;
+        /* Override text-align: right from td */
+        padding-left: .5rem !important;
+        /* Adjust padding for actions */
+        display: flex;
+        /* Use flexbox for button arrangement */
+        flex-direction: column;
+        /* Stack buttons vertically */
+        align-items: flex-start;
+        /* Align buttons to the left */
+        margin-top: .5rem;
+        /* Add some space above buttons if needed */
+    }
+
+    .action-btns button {
+        width: 100%;
+        /* Make buttons full width in their small container */
+        margin-right: 0;
+        /* Remove horizontal margin */
+        margin-bottom: .5rem;
+        /* Add vertical margin between buttons */
+    }
+
+    /* Remove margin from the last button to prevent extra space */
+    .action-btns button:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Adjust font size for very small screens if needed */
+
+}
+
+@media (max-width: 575.98px) {
+    .action-btns button {
+        font-size: 0.85rem;
+        /* Slightly smaller text for very small buttons */
+        padding: .3rem .6rem;
+        /* Adjust padding */
+    }
+}
+
+.upload-form-section,
+.gallery-section {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+}
+
+.video-card {
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.video-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    /* 16:9 Aspect Ratio */
+    overflow: hidden;
+    background-color: #000;
+    /* Black background for embeds */
+}
+
+.video-thumbnail iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* NEW: Styling for the card footer holding the button */
+.video-card-footer {
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.delete-video-btn {
+    width: 100%;
+    /* Make button take full width */
+}
+
+.form-card,
+.table-card {
+    background: #ffffff;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card-header-custom {
+    background-color: #343a40;
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.btn-edit {
+    color: #ffc107;
+}
+
+.btn-delete {
+    color: #dc3545;
+}
+
+.action-btns a {
+    margin: 0 5px;
+    font-size: 1.1rem;
+}
+
+.form-control {
+    border-radius: 0;
+}
+
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ccc;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eee;
+}
+
+.image-preview-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.image-preview-item .remove-image {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.custom-file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    height: calc(1.5em + 0.75rem + 2px);
+    /* Match Bootstrap form-control height */
+}
+
+.custom-file-input-wrapper input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.custom-file-upload-button {
+    display: block;
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #e9ecef;
+    border-right: 1px solid #ced4da;
+    white-space: nowrap;
+}
+
+.custom-file-input-display {
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+    color: #495057;
+    display: block;
+    width: calc(100% - 100px);
+    /* Adjust based on button width */
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+fieldset {
+    border: 1px solid #ddd !important;
+    padding: 1.25rem !important;
+    margin-bottom: 2rem;
+    border-radius: .25rem;
+}
+
+legend {
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    text-align: left !important;
+    width: auto;
+    padding: 0 10px;
+    border-bottom: none;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+
+
+
+.upload-form-section,
+.gallery-section {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+}
+
+.image-card {
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.image-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+.image-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    /* 1:1 Aspect Ratio */
+    overflow: hidden;
+    background-color: #e9ecef;
+}
+
+.image-thumbnail img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* NEW: Styling for the card footer area holding the button */
+.image-card-footer {
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+    /* Center the button */
+}
+
+.delete-image-btn {
+    width: 100%;
+    /* Make button take full width of the footer */
+}
+
+
+
+
+
+
+
+/* Search Bar Container Styling */
+.search-container-wrapper {
+    margin-bottom: 30px;
+    /* Space below the search card */
+}
+
+.search-form-card {
+    padding: 15px;
+    /* Internal padding for the card body */
+    background-color: #f8f9fa;
+    /* Light background for the search section */
+    border: 1px solid #e9ecef;
+    /* border-radius: 8px; Rounded corners for the search card */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
+    /* Subtle shadow */
+}
+
+.search-form .form-control {
+    /* border-radius: 5px; Make search input slightly more rounded */
+}
+
+.search-form .btn {
+    /* border-radius: 5px; Make search buttons rounded */
+}
+
+.search-form .btn+.btn {
+    /* Spacing for clear button */
+    margin-left: 10px;
+}
+
+/* Table Container Styling (Card effect) */
+.table-card {
+    margin-top: 20px;
+    /* Space above table card */
+    border-radius: 8px;
+    /* Rounded corners for the entire table card */
+    overflow: hidden;
+    /* Ensures rounded corners apply to content */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    /* More prominent shadow for the table card */
+}
+
+.table {
+    margin-bottom: 0;
+    /* Remove default table bottom margin if within table-responsive */
+}
+
+.table thead th {
+    background-color: #343a40;
+    /* Dark header background */
+    color: #fff;
+    /* White text for header */
+    border-color: #454d55;
+    /* Darker border for header cells */
+    vertical-align: middle;
+    /* Center text vertically */
+    padding: 12px;
+    /* Slightly more padding for headers */
+}
+
+.table tbody td {
+    vertical-align: middle;
+    /* Center cell content vertically */
+    padding: 12px;
+    /* Consistent padding for body cells */
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+    /* No border on the last row */
+}
+
+/* Image Styling in table */
+.blog-featured-image {
+    width: 80px;
+    /* Fixed width for consistency */
+    height: 60px;
+    /* Fixed height */
+    object-fit: cover;
+    /* Ensures image covers area without distortion */
+    border-radius: 4px;
+    /* Slight rounding for images */
+    border: 1px solid #dee2e6;
+    /* Light border around images */
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.4em 0.7em;
+    /* Slightly larger padding for badges */
+    font-size: 0.8em;
+    /* Relative font size */
+    font-weight: 600;
+    /* Bolder font for badges */
+    border-radius: 0.25rem;
+    /* Rounded badge corners */
+}
+
+/* Ensure text is visible on warning badge */
+.badge.bg-warning {
+    color: #212529 !important;
+    /* Dark text for light background */
+}
+
+/* Action Buttons Group */
+.action-btns {
+    white-space: nowrap;
+    /* Keep buttons on one line */
+    display: flex;
+    /* Use flexbox for button alignment */
+    gap: 8px;
+    /* Space between buttons */
+}
+
+.action-btns .btn {
+    padding: 0.45rem 0.8rem;
+    /* Adjust button padding for sm size */
+    font-size: 0.85rem;
+    border-radius: 5px;
+    /* Rounded buttons */
+}
+
+/* --- MOBILE-SPECIFIC STYLES (Card View for Tables) --- */
+/* Hide the traditional table on small screens */
+.table-responsive.d-md-block {
+    /* Apply this to the .table-responsive */
+    display: none;
+    /* Hide by default on small screens */
+}
+
+@media (min-width: 768px) {
+
+    /* Show only on medium screens and up */
+    .table-responsive.d-md-block {
+        display: block !important;
+    }
+}
+
+/* Show the card view only on small screens */
+.blog-cards-mobile {
+    display: block;
+    /* Show by default on small screens */
+}
+
+@media (min-width: 768px) {
+
+    /* Hide on medium screens and up */
+    .blog-cards-mobile {
+        display: none !important;
+    }
+}
+
+.blog-card-item {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    /* REVISED: Smaller border-radius */
+    border-radius: 3px;
+    /* Even smaller radius for a tighter look */
+    /* REVISED: Smaller padding */
+    padding: 8px;
+    /* Reduced padding for a more compact card */
+    margin-bottom: 12px;
+    /* Slightly less space between cards */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .03);
+    /* Lighter and more subtle shadow */
+    position: relative;
+}
+
+.blog-card-item .card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    /* Reduced space between rows */
+}
+
+.blog-card-item .card-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 70px;
+    /* Adjusted fixed width for labels on mobile to be smaller */
+    flex-shrink: 0;
+    margin-right: 8px;
+    /* Reduced margin */
+    padding-top: 2px;
+    font-size: 0.825rem;
+    /* Slightly smaller label font */
+}
+
+.blog-card-item .card-value {
+    flex-grow: 1;
+    font-size: 0.85rem;
+    /* Slightly smaller default mobile text size */
+    line-height: 1.3;
+    /* Tighter line height */
+}
+
+.blog-card-item .card-row:last-of-type {
+    margin-bottom: 0;
+}
+
+.blog-card-item h5 {
+    font-size: 1rem;
+    /* Smaller heading for mobile card */
+    margin-bottom: 8px;
+    /* Reduced margin */
+    padding-bottom: 5px;
+    /* Subtle separator below title */
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.blog-card-item .blog-featured-image-mobile {
+    max-width: 90px;
+    /* Even smaller image on mobile card */
+    height: auto;
+    border-radius: 2px;
+    /* Minimal radius for image */
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid #eee;
+    /* Lighter image border */
+}
+
+/* REVISED: Specific style for short description text in mobile cards */
+.blog-card-item .short-description-mobile {
+    font-size: 0.8rem;
+    /* **Smaller font size for short description** */
+    color: #555;
+    line-height: 1.3;
+    /* Tighter line height */
+    margin-top: 4px;
+    /* Small space after label/value line if needed */
+}
+
+
+.blog-card-item .action-btns-mobile {
+    margin-top: 12px;
+    /* Reduced margin */
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    /* Reduced gap between buttons */
+}
+
+.blog-card-item .action-btns-mobile .btn {
+    font-size: 0.8rem;
+    /* Smaller button font size */
+    padding: 0.35rem 0.7rem;
+    /* Reduced button padding */
+}
+
+
+
+
+
+/* Base styles for table on larger screens */
+.table-responsive {
+    overflow-x: auto;
+    /* Ensures horizontal scrollbar for very wide content if necessary */
+}
+
+.action-btns button {
+    margin-bottom: 5px;
+    margin-right: 5px;
+}
+
+/* --- Responsive Table Styles for Smaller Screens --- */
+@media (max-width: 767.98px) {
+
+    /* Applies to screens smaller than 768px (e.g., phones) */
+    .table-responsive table {
+        border: 0;
+        /* Remove outer table borders */
+    }
+
+    .table-responsive thead {
+        display: none;
+        /* Hide table headers on small screens */
+    }
+
+    .table-responsive tr {
+        display: block;
+        /* Make each row behave like a block-level element */
+        margin-bottom: 1rem;
+        /* Space between rows/cards */
+        border: 1px solid #e9ecef;
+        /* Add a border to each 'card' */
+        border-radius: .5rem;
+        padding: .5rem;
+        background-color: #fff;
+        box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+        /* Subtle shadow for card effect */
+    }
+
+    .table-responsive td {
+        display: block;
+        /* Make each cell behave like a block-level element */
+        text-align: right;
+        /* Align cell content to the right */
+        padding-left: 50% !important;
+        /* Make space for the pseudo-element label */
+        position: relative;
+        border: none;
+        /* Remove individual cell borders */
+        white-space: normal;
+        /* Allow text to wrap naturally */
+    }
+
+    .table-responsive td::before {
+        content: attr(data-label);
+        /* Use data-label for the pseudo-element */
+        position: absolute;
+        left: 0;
+        width: 50%;
+        /* Label takes half the space */
+        padding-left: .5rem;
+        /* Indent label */
+        font-weight: bold;
+        text-align: left;
+        /* Align label to the left */
+    }
+
+    /* Ensure action buttons stack nicely within their cell */
+    .action-btns {
+        text-align: left !important;
+        /* Override text-align: right from td */
+        padding-left: .5rem !important;
+        /* Adjust padding for actions */
+        display: flex;
+        /* Use flexbox for button arrangement */
+        flex-direction: column;
+        /* Stack buttons vertically */
+        align-items: flex-start;
+        /* Align buttons to the left */
+        margin-top: .5rem;
+        /* Add some space above buttons if needed */
+    }
+
+    .action-btns button {
+        width: 100%;
+        /* Make buttons full width in their small container */
+        margin-right: 0;
+        /* Remove horizontal margin */
+        margin-bottom: .5rem;
+        /* Add vertical margin between buttons */
+    }
+
+    /* Remove margin from the last button to prevent extra space */
+    .action-btns button:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Adjust font size for very small screens if needed */
+    @media (max-width: 575.98px) {
+        .action-btns button {
+            font-size: 0.85rem;
+            /* Slightly smaller text for very small buttons */
+            padding: .3rem .6rem;
+            /* Adjust padding */
+        }
+    }
+}
+
+
+ 
+
+/* Testimonials Section */
+.testimonials-section {
+    padding: 60px 0;
+    background-color: #f0f2f5;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #343a40;
+    /* margin-bottom: 50px; */
+    position: relative;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #007bff;
+}
+
+/* Testimonial Card */
+.testimonial-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.testimonial-header {
+    padding: 20px 25px;
+    background: linear-gradient(45deg, rgb(39, 43, 117), rgb(56, 63, 124));
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    gap: 15px;
+}
+
+.testimonial-header-info h5 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.testimonial-location {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+.testimonial-header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.testimonial-rating .fa-star { 
+    color: #ffc107;
+    margin-right: 2px;
+    font-size: 1.1rem;
+}
+
+.testimonial-actions {
+    display: flex;
+    gap: 10px;
+}
+
+
+/* Testimonial Body */
+.testimonial-body {
+    padding: 25px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.testimonial-text {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #343a40;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.testimonial-images {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #e9ecef;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.testimonial-images a {
+    display: block;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #e0e0e0;
+    padding: 2px;
+    transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.testimonial-images a:hover {
+    transform: scale(1.03);
+    border-color: #007bff;
+}
+
+.testimonial-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.testimonial-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f2f5;
+}
+
+/* Reply Section Styling */
+.testimonial-reply-section {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    padding: 15px 25px;
+    margin-top: 15px;
+}
+
+.testimonial-reply-section p {
+    margin-bottom: 5px;
+    color: #343a40;
+    font-style: italic;
+}
+
+.testimonial-reply-section .replier-name {
+    font-weight: 600;
+    color: #007bff;
+    font-size: 0.95rem;
+}
+
+.testimonial-reply-section .reply-date {
+    font-size: 0.8rem;
+    color: #6c757d;
+    float: right;
+}
+
+/* Other styles */
+.no-testimonials {
+    text-align: center;
+    padding: 60px;
+    color: #6c757d;
+    font-size: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-top: 40px;
+}
+
+.toast-message {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #28a745;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    z-index: 2000;
+    display: none;
+    font-size: 1.05rem;
+    animation: fadeInOut 3.5s forwards;
+}
+
+.toast-message.error {
+    background-color: #dc3545;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+.pagination-container {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination .page-item .page-link {
+    color: #007bff;
+    border-radius: 0;
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    border-radius: 0;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+
+
+    /* Custom CSS for a responsive table without using Bootstrap classes */
+        /* This will apply on screens smaller than 992px (tablets and phones) */
+        @media screen and (max-width: 992px) {
+            .custom-responsive-table table {
+                border: 0;
+                width: 100%;
+            }
+
+            .custom-responsive-table table thead {
+                /* Hide the table header on small screens */
+                display: none;
+            }
+
+            .custom-responsive-table table tr {
+                /* Each row becomes a card-like block */
+                display: block;
+                margin-bottom: 1.5rem;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+                padding: 10px;
+                background-color: #fff;
+            }
+
+            .custom-responsive-table table td {
+                /* Stack table cells vertically */
+                display: block;
+                text-align: right; /* Aligns cell content to the right */
+                font-size: 0.9rem;
+                padding: 12px 10px;
+                border-bottom: 1px solid #f0f0f0;
+                position: relative;
+                min-height: 40px; /* Ensure space for the label */
+            }
+
+            .custom-responsive-table table td:last-child {
+                border-bottom: 0;
+            }
+
+            /* Use the 'data-label' attribute to create a label for each cell */
+            .custom-responsive-table table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-weight: 600;
+                color: #343a40;
+                text-align: left;
+                white-space: nowrap;
+            }
+            
+            /* Adjust alignment for cells with multi-line content */
+            .custom-responsive-table table td[data-label="Sender"],
+            .custom-responsive-table table td[data-label="Receiver"],
+            .custom-responsive-table table td[data-label="Current Status"] {
+                padding: 15px 10px;
+            }
+            
+            .custom-responsive-table table td[data-label="Sender"]::before,
+            .custom-responsive-table table td[data-label="Receiver"]::before,
+            .custom-responsive-table table td[data-label="Current Status"]::before {
+                top: 15px; /* Align label to the top for these cells */
+                transform: translateY(0);
+            }
+
+            /* Special handling for the Actions column to make buttons wrap nicely */
+            .custom-responsive-table table td[data-label="Actions"] {
+                text-align: left; /* Override right-align for this cell */
+                padding-top: 45px; /* Make space for the absolute-positioned label */
+            }
+            .custom-responsive-table table td[data-label="Actions"]::before {
+                top: 15px; /* Position label at the top */
+                transform: translateY(0);
+            }
+
+            .custom-responsive-table table td[data-label="Actions"] .btn,
+            .custom-responsive-table table td[data-label="Actions"] button {
+                margin-right: 5px;
+                margin-bottom: 5px; /* Allows buttons to wrap and have space */
+            }
+        }
+
+
+
+
+        
