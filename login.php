@@ -15,6 +15,10 @@
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                            <label class="form-check-label" for="remember_me">Remember Me</label>
+                        </div>
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                         <p class="text-center mt-3">
                             Don't have an account? <a href="register.php">Sign Up</a>

@@ -5,18 +5,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Bus Ticket Booking</title>
+    <title>Bpl Bus Ticket</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="css/custom.css?<?php echo time(); ?>">
 </head>
 
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <img src="https://s3.rdbuz.com/web/images/website/rb_logo.png" alt="Logo" style="height: 35px;">
+            <a class="navbar-brand" href="index">
+                <!-- <img src="https://s3.rdbuz.com/web/images/website/rb_logo.png" alt="Logo" style="height: 35px;"> -->
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -24,7 +24,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="index.php"><i class="bi bi-bus-front-fill"></i> Bus Tickets</a>
+                        <a class="nav-link active" aria-current="page" href="index"><i class="bi bi-bus-front-fill"></i> Bus Tickets</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
@@ -53,9 +53,9 @@
                 <!-- Logged Out View -->
                 <h2 class="sidebar-login-prompt">Log in to manage your bookings</h2>
                 <div class="d-grid gap-2 my-4">
-                    <a href="login.php" class="btn btn-primary btn-lg">Log in</a>
+                    <a href="login" class="btn btn-primary btn-lg">Log in</a>
                 </div>
-                <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
+                <p class="text-center">Don't have an account? <a href="register">Sign up</a></p>
             <?php endif; ?>
 
             <h3 class="sidebar-heading">My details</h3>
@@ -70,7 +70,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="sidebar-menu-item">
+                    <a href="profile" class="sidebar-menu-item">
                         <div class="icon-text-group">
                             <i class="bi bi-person"></i>
                             <span>Personal information</span>
@@ -105,7 +105,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="sidebar-menu-item">
+                    <a href="about_us" class="sidebar-menu-item">
                         <div class="icon-text-group">
                             <i class="bi bi-info-circle"></i>
                             <span>Know about us</span>
@@ -114,7 +114,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="sidebar-menu-item">
+                    <a href="help" class="sidebar-menu-item">
                         <div class="icon-text-group">
                             <i class="bi bi-question-circle"></i>
                             <span>Help</span>
@@ -135,7 +135,7 @@
 
             <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
                 <div class="d-grid gap-2 mt-4">
-                    <a href="logout.php" class="btn btn-outline-secondary">Logout</a>
+                    <a href="logout" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to logout?');">Logout</a>
                 </div>
             <?php endif; ?>
 

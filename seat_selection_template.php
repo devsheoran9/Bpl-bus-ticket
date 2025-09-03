@@ -20,7 +20,7 @@
                         <div class="seat-visual seater available"></div>
                         <div class="seat-visual seater booked"></div>
                     </div>
-                    <div class="seat-row">
+                     <div class="seat-row">
                         <div class="seat-visual sleeper available"></div>
                         <div class="gangway"></div>
                         <div class="seat-visual seater available"></div>
@@ -48,21 +48,15 @@
                 </div>
             </div>
             <div class="seat-legend mt-3">
-                <div>
-                    <div class="seat-box seater"></div> Available
-                </div>
-                <div>
-                    <div class="seat-box" style="background-color: #e5e7eb;"></div> Booked
-                </div>
-                <div>
-                    <div class="seat-box" style="background-color: var(--success-color);"></div> Selected
-                </div>
+                <div><div class="seat-box seater"></div> Available</div>
+                <div><div class="seat-box" style="background-color: #e5e7eb;"></div> Booked</div>
+                <div><div class="seat-box" style="background-color: var(--success-color);"></div> Selected</div>
             </div>
         </div>
 
         <!-- Right Side: Bus Details Tabs -->
         <div class="col-lg-7 mt-4 mt-lg-0">
-            <ul class="nav nav-tabs bus-details-tabs" id="busTab" role="tablist">
+             <ul class="nav nav-tabs bus-details-tabs" id="busTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#reviews-tab-content" type="button">Rating & reviews</button>
                 </li>
@@ -75,10 +69,10 @@
             </ul>
             <div class="tab-content pt-3" id="busTabContent">
                 <div class="tab-pane fade show active" id="reviews-tab-content" role="tabpanel">
-                    <span class="rating-badge fs-5">4.7 <i class="bi bi-star-fill"></i></span>
-                    <p class="d-inline-block ms-2 text-muted">Based on 1599 Ratings</p>
-                    <hr>
-                    <p>Reviews content would go here.</p>
+                     <span class="rating-badge fs-5">4.7 <i class="bi bi-star-fill"></i></span>
+                     <p class="d-inline-block ms-2 text-muted">Based on 1599 Ratings</p>
+                     <hr>
+                     <p>Reviews content would go here.</p>
                 </div>
                 <div class="tab-pane fade" id="amenities-tab-content" role="tabpanel">
                     <h6>5 amenities</h6>
