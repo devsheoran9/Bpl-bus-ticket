@@ -1,7 +1,10 @@
 <?php
+// PHP Configuration & Database Connection
+// Ensure _db.php handles session_start() if it's not done elsewhere.
+// It also should define $_conn_db and check_user_login().
 global $_conn_db;
-include_once('function/_db.php');
-check_user_login(); 
+include_once('function/_db.php'); // Your DB connection and helper functions
+check_user_login(); // This function should also handle redirect if not logged in.
 
 // Function to sanitize output (essential for preventing XSS)
 if (!function_exists('show_rhyno_data')) {
@@ -16,53 +19,12 @@ $email = $_SESSION['user']['email'] ?? 'N/A';
 $mobile = $_SESSION['user']['mobile'] ?? 'N/A';
 $user_id = $_SESSION['user']['id'] ?? null;
 
-// --- Sidebar Active States (Logic integrated here) ---
-$current_page = basename($_SERVER['PHP_SELF'], '.php');
-$is_dashboard_active = ($current_page === 'dashboard');
-$is_categories_active = ($current_page === 'categories');
-$is_blog_active = in_array($current_page, ['insert_blog', 'view_blogs']);
-$is_shipment_active = in_array($current_page, ['generate_shipment', 'view_shipment']);
-$is_gallery_active = in_array($current_page, ['video_gallery', 'manage_images']);
-$is_contact_active = ($current_page === 'view_contacts');
-$is_quotes_active = ($current_page === 'view_quotes');
-$is_website_details_active = ($current_page === 'website_details');
-$is_reviews_active = ($current_page === 'view_reviews');
+ 
 
-// --- Initialize Dashboard Data ---
-$recent_shipments = [];
-$recent_quote_requests = [];
-$recent_blogs = [];
 
-// NEW: KPI Statistics
-$stats_in_transit = 0;
-$stats_pending_quotes = 0;
-$stats_new_contacts = 0;
-$stats_published_blogs = 0;
+$dashboard_error = null;  
 
-$dashboard_error = null; // Variable to store database errors
-
-try {
-    // --- Fetch KPI Statistics (The "Smart" Dashboard data) ---
-    $stats_in_transit = $_conn_db->query("SELECT COUNT(*) FROM shipments WHERE status = 'In Transit'")->fetchColumn();
-    $stats_pending_quotes = $_conn_db->query("SELECT COUNT(*) FROM quote_requests WHERE status = 'pending'")->fetchColumn();
-    // Assuming 'unread' or 'new' status. If not, COUNT(*) is fine.
-    $stats_new_contacts = $_conn_db->query("SELECT COUNT(*) FROM contact_submissions WHERE status = 'new' OR status = 'unread'")->fetchColumn(); 
-    $stats_published_blogs = $_conn_db->query("SELECT COUNT(*) FROM blogs WHERE status = 'published'")->fetchColumn();
-
-    // --- Fetch Recent Data for Lists (Last 5) ---
-    $stmt_shipments = $_conn_db->query("SELECT shipment_id, sender_name, receiver_name, status, created_at FROM shipments ORDER BY created_at DESC LIMIT 5");
-    $recent_shipments = $stmt_shipments->fetchAll(PDO::FETCH_ASSOC);
-
-    $stmt_quotes = $_conn_db->query("SELECT id, full_name, from_location, to_location, service_type, status, created_at FROM quote_requests ORDER BY created_at DESC LIMIT 5");
-    $recent_quote_requests = $stmt_quotes->fetchAll(PDO::FETCH_ASSOC);
-
-    $stmt_blogs = $_conn_db->query("SELECT id, title, author_name, status, created_at FROM blogs ORDER BY created_at DESC LIMIT 5");
-    $recent_blogs = $stmt_blogs->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) {
-    error_log("Dashboard Database Error: " . $e->getMessage());
-    $dashboard_error = "<div class='alert alert-danger'>Oops! A database error occurred while loading dashboard data. Please check logs.</div>";
-}
+ 
 ?>
 
 <!DOCTYPE html>

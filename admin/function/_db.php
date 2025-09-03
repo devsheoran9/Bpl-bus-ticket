@@ -1,10 +1,10 @@
 <?php
 session_start();
-
+global $_conn_db;
 $db_s_host = '127.0.0.1';
 $db_s_user = 'root';
 $db_s_pass = '';
-$db_s_name = 'packers_movers';
+$db_s_name = 'bpl-bus-ticket';
 $charset   = 'utf8mb4';
 
 $dsn = "mysql:host=$db_s_host;dbname=$db_s_name;charset=$charset";

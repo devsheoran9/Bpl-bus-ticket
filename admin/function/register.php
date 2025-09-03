@@ -19,7 +19,7 @@ if($errData=='') {
 
 		}else{
 
-            mysqli_query($_conn_db, "INSERT INTO users( name, mobile, email, password, password_salt, ip_address) VALUES ('$yourname','$mobile','$email','$password','$password_salt','$ip')");
+            mysqli_query($_conn_db, "INSERT INTO admin( name, mobile, email, password, password_salt, ip_address) VALUES ('$yourname','$mobile','$email','$password','$password_salt','$ip')");
             $newid = $_conn_db->insert_id;
 
             $_SESSION['user']['token'] = rhyno_new_token($newid);

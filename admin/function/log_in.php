@@ -7,7 +7,7 @@ $username = validate_rhyno_data($_POST["username"]);
 $password = validate_rhyno_data($_POST["password"]);
 
 if ($errData == '') {
-    $stmt = $_conn_db->prepare("SELECT * FROM users WHERE email = :emails OR mobile = :mobiles");
+    $stmt = $_conn_db->prepare("SELECT * FROM admin WHERE email = :emails OR mobile = :mobiles");
     $stmt->execute([
         'emails' => $username,
         'mobiles' => $username

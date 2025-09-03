@@ -19,7 +19,7 @@ if (!isset($_SESSION['profile_access_verified']) || !$_SESSION['profile_access_v
 
         try {
             // Fetch user's actual password hash from the database using their ID
-            $stmt = $_conn_db->prepare("SELECT password FROM users WHERE id = :id");
+            $stmt = $_conn_db->prepare("SELECT password FROM admin WHERE id = :id");
             $stmt->execute([':id' => $user_id]);
             $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -89,7 +89,7 @@ if (!isset($_SESSION['profile_access_verified']) || !$_SESSION['profile_access_v
 // Fetch current user data from the database
 $user = [];
 try {
-    $stmt = $_conn_db->prepare("SELECT name, mobile, email FROM users WHERE id = :id");
+    $stmt = $_conn_db->prepare("SELECT name, mobile, email FROM admin WHERE id = :id");
     $stmt->execute([':id' => $user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$user) {
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     } else {
         // First, verify the current password one more time before applying changes
         try {
-            $stmt = $_conn_db->prepare("SELECT password FROM users WHERE id = :id");
+            $stmt = $_conn_db->prepare("SELECT password FROM admin WHERE id = :id");
             $stmt->execute([':id' => $user_id]);
             $db_user_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
                 if ($message === '') { // Only proceed if no password mismatch/strength errors
                     if (!empty($update_fields)) {
-                        $update_query = "UPDATE users SET " . implode(', ', $update_fields) . " WHERE id = :id";
+                        $update_query = "UPDATE admin SET " . implode(', ', $update_fields) . " WHERE id = :id";
                         $stmt = $_conn_db->prepare($update_query);
 
                         if ($stmt->execute($update_params)) {

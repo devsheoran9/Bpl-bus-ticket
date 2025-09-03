@@ -70,7 +70,7 @@ global $is_gallery_active;
 */
 ?>
 <nav class="sidebar">
-    <div class="sidebar-header d-flex text-center" style="justify-item:center;justify-content:center;"><img src="../assets/logo/chhavi_logo.png" style="width:110px;" alt=""></div>
+    <div class="sidebar-header d-flex text-center" style="justify-item:center;justify-content:center;"><h2>BPL Tickets</h2></div>
    
 
     <div class="sidebar-scroll">

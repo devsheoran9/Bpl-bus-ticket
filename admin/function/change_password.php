@@ -15,7 +15,7 @@ if($new_password !== $confirm_password){
 }
 
 if($errData=='') {
-    $stmt =  $_conn_db->prepare("SELECT * FROM users WHERE id= :user_id");
+    $stmt =  $_conn_db->prepare("SELECT * FROM admin WHERE id= :user_id");
     $stmt->execute([
         'user_id' => $user_id
     ]);
@@ -23,7 +23,7 @@ if($errData=='') {
 		if($fetch){
             if (password_verify($current_password, $fetch['password'])) {
                 $password = password_hash($confirm_password, PASSWORD_BCRYPT, ['cost' => 12,]);
-                $update =  $_conn_db->prepare("UPDATE users SET password=:password,password_salt= :confirm_password WHERE id= :user_id");
+                $update =  $_conn_db->prepare("UPDATE admin SET password=:password,password_salt= :confirm_password WHERE id= :user_id");
                 $update->execute([
                     'password' => $password,
                     'confirm_password' => $confirm_password,
