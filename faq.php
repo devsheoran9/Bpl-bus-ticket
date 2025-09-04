@@ -1,6 +1,5 @@
 <?php include 'includes/header.php'; ?>
 
-
 <!-- ======= FAQ Hero Section ======= -->
 <section class="faq-hero-section text-center mb-5">
     <div class="container">
@@ -8,7 +7,7 @@
         <p class="lead mt-3">Your questions, answered. Find everything you need to know about booking and managing your bus journey with us.</p>
     </div>
 </section>
-<main class="container pt-5 mt-5">
+<main class="container  mt-5">
     <div class="faq-section">
         <h2 class="faq-title">FAQs related to Bus Tickets Booking</h2>
 
@@ -37,30 +36,30 @@
                 <div class="accordion accordion-flush faq-accordion" id="generalFaqAccordion">
 
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-1">Can I track the location of my booked bus online?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-1">Can I track the location of my booked bus online?</button></h2>
                         <div id="faq-general-1" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                            <div class="accordion-body">Yes, for many of our bus operators, we offer a live tracking feature. You can find the "Track My Bus" link in your booking confirmation email or in the "My Bookings" section of your account. This allows you to see the real-time location of your bus.</div>
+                            <div class="accordion-body ps-2">Yes, for many of our bus operators, we offer a live tracking feature. You can find the "Track My Bus" link in your booking confirmation email or in the "My Bookings" section of your account. This allows you to see the real-time location of your bus.</div>
                         </div>
                     </div>
 
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-2">What are the advantages of purchasing a bus ticket with PBL Bus?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-2">What are the advantages of purchasing a bus ticket with PBL Bus?</button></h2>
                         <div id="faq-general-2" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                            <div class="accordion-body">With PBL Bus, you get access to a wide network of trusted bus operators, transparent pricing, exclusive discounts, 24/7 customer support, and innovative features like live tracking and M-tickets, ensuring a seamless and reliable booking experience.</div>
+                            <div class="accordion-body ps-2">With PBL Bus, you get access to a wide network of trusted bus operators, transparent pricing, exclusive discounts, 24/7 customer support, and innovative features like live tracking and M-tickets, ensuring a seamless and reliable booking experience.</div>
                         </div>
                     </div>
 
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-3">Do I need to create an account to book my bus ticket?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-3">Do I need to create an account to book my bus ticket?</button></h2>
                         <div id="faq-general-3" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                            <div class="accordion-body">While you can book as a guest, creating an account is highly recommended. An account allows you to easily manage your bookings, view your travel history, save passenger details for faster checkout, and access exclusive member-only offers.</div>
+                            <div class="accordion-body ps-2">While you can book as a guest, creating an account is highly recommended. An account allows you to easily manage your bookings, view your travel history, save passenger details for faster checkout, and access exclusive member-only offers.</div>
                         </div>
                     </div>
 
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-4">Does bus booking online cost me more?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-general-4">Does bus booking online cost me more?</button></h2>
                         <div id="faq-general-4" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                            <div class="accordion-body">Not at all. In fact, booking online with PBL Bus is often cheaper! You get access to special online-only discounts and offers that are not available at physical counters. The price you see is inclusive of all standard taxes.</div>
+                            <div class="accordion-body ps-2">Not at all. In fact, booking online with PBL Bus is often cheaper! You get access to special online-only discounts and offers that are not available at physical counters. The price you see is inclusive of all standard taxes.</div>
                         </div>
                     </div>
 
@@ -71,21 +70,21 @@
             <div class="tab-pane fade" id="ticket" role="tabpanel">
                 <div class="accordion accordion-flush faq-accordion" id="ticketFaqAccordion">
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-1">Do I need to print my bus ticket?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-1">Do I need to print my bus ticket?</button></h2>
                         <div id="faq-ticket-1" class="accordion-collapse collapse" data-bs-parent="#ticketFaqAccordion">
-                            <div class="accordion-body">Most bus operators on our platform accept M-tickets (the ticket confirmation you receive via SMS or email on your phone). You can show this on your mobile device along with a valid photo ID. Please check the specific operator's policy mentioned on your ticket for confirmation.</div>
+                            <div class="accordion-body ps-2">Most bus operators on our platform accept M-tickets (the ticket confirmation you receive via SMS or email on your phone). You can show this on your mobile device along with a valid photo ID. Please check the specific operator's policy mentioned on your ticket for confirmation.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-2">What is the luggage policy?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-2">What is the luggage policy?</button></h2>
                         <div id="faq-ticket-2" class="accordion-collapse collapse" data-bs-parent="#ticketFaqAccordion">
-                            <div class="accordion-body">Luggage policies vary by bus operator. Typically, passengers are allowed one piece of luggage (up to 15-20 kg) and a small handbag. Any extra or oversized luggage is subject to the operator's discretion and may incur additional charges.</div>
+                            <div class="accordion-body ps-2">Luggage policies vary by bus operator. Typically, passengers are allowed one piece of luggage (up to 15-20 kg) and a small handbag. Any extra or oversized luggage is subject to the operator's discretion and may incur additional charges.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-3">What documents do I need to carry while traveling?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-ticket-3">What documents do I need to carry while traveling?</button></h2>
                         <div id="faq-ticket-3" class="accordion-collapse collapse" data-bs-parent="#ticketFaqAccordion">
-                            <div class="accordion-body">You must carry a valid government-issued photo ID (like an Aadhar Card, Driver's License, or Passport) along with your M-ticket or a printout of the e-ticket. The name on the ID should match the name of the passenger on the ticket.</div>
+                            <div class="accordion-body ps-2">You must carry a valid government-issued photo ID (like an Aadhar Card, Driver's License, or Passport) along with your M-ticket or a printout of the e-ticket. The name on the ID should match the name of the passenger on the ticket.</div>
                         </div>
                     </div>
                 </div>
@@ -95,21 +94,21 @@
             <div class="tab-pane fade" id="payment" role="tabpanel">
                 <div class="accordion accordion-flush faq-accordion" id="paymentFaqAccordion">
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-1">What payment options are available?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-1">What payment options are available?</button></h2>
                         <div id="faq-payment-1" class="accordion-collapse collapse" data-bs-parent="#paymentFaqAccordion">
-                            <div class="accordion-body">We accept a wide variety of payment methods, including Credit Cards, Debit Cards, Net Banking, UPI (Google Pay, PhonePe, etc.), and popular digital wallets.</div>
+                            <div class="accordion-body ps-2">We accept a wide variety of payment methods, including Credit Cards, Debit Cards, Net Banking, UPI (Google Pay, PhonePe, etc.), and popular digital wallets.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-2">My payment failed but money was deducted. What should I do?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-2">My payment failed but money was deducted. What should I do?</button></h2>
                         <div id="faq-payment-2" class="accordion-collapse collapse" data-bs-parent="#paymentFaqAccordion">
-                            <div class="accordion-body">In such rare cases, the deducted amount is usually reversed back to your account by your bank within 5-7 working days. Please wait for the stipulated time. If you do not receive the refund, contact our customer support with your transaction details.</div>
+                            <div class="accordion-body ps-2">In such rare cases, the deducted amount is usually reversed back to your account by your bank within 5-7 working days. Please wait for the stipulated time. If you do not receive the refund, contact our customer support with your transaction details.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-3">Are my payment details secure?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-payment-3">Are my payment details secure?</button></h2>
                         <div id="faq-payment-3" class="accordion-collapse collapse" data-bs-parent="#paymentFaqAccordion">
-                            <div class="accordion-body">Absolutely. We use industry-standard SSL encryption for all transactions, and we do not store your card or bank details on our servers. Your payment is processed through a secure, certified payment gateway.</div>
+                            <div class="accordion-body ps-2">Absolutely. We use industry-standard SSL encryption for all transactions, and we do not store your card or bank details on our servers. Your payment is processed through a secure, certified payment gateway.</div>
                         </div>
                     </div>
                 </div>
@@ -119,13 +118,13 @@
             <div class="tab-pane fade" id="cancellation" role="tabpanel">
                 <div class="accordion accordion-flush faq-accordion" id="cancellationFaqAccordion">
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-cancel-1">How can I cancel my bus ticket?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-cancel-1">How can I cancel my bus ticket?</button></h2>
                         <div id="faq-cancel-1" class="accordion-collapse collapse" data-bs-parent="#cancellationFaqAccordion">
-                            <div class="accordion-body">You can cancel your ticket by logging into your PBL Bus account and visiting the "My Bookings" section. Select the booking you wish to cancel and click the 'Cancel Ticket' button. The applicable refund amount will be shown to you before you confirm the cancellation.</div>
+                            <div class="accordion-body ps-2">You can cancel your ticket by logging into your PBL Bus account and visiting the "My Bookings" section. Select the booking you wish to cancel and click the 'Cancel Ticket' button. The applicable refund amount will be shown to you before you confirm the cancellation.</div>
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-cancel-2">How long does it take to get a refund?</button></h2>
+                        <h2 class="accordion-header"><button class="accordion-button collapsed ps-2" type="button" data-bs-toggle="collapse" data-bs-target="#faq-cancel-2">How long does it take to get a refund?</button></h2>
                         <div id="faq-cancel-2" class="accordion-collapse collapse" data-bs-parent="#cancellationFaqAccordion">
                             <div class="accordion-body">The refund is processed instantly from our end. Depending on your bank's processing time, it usually reflects in your source account within 5-7 working days.</div>
                         </div>
@@ -133,7 +132,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-cancel-3">Can I partially cancel my booking?</button></h2>
                         <div id="faq-cancel-3" class="accordion-collapse collapse" data-bs-parent="#cancellationFaqAccordion">
-                            <div class="accordion-body">Partial cancellation (canceling only some seats in a multi-seat booking) is subject to the policies of the bus operator. If allowed, you will see the option during the cancellation process. If the option is not available, you would need to cancel the entire booking and re-book.</div>
+                            <div class="accordion-body ps-2">Partial cancellation (canceling only some seats in a multi-seat booking) is subject to the policies of the bus operator. If allowed, you will see the option during the cancellation process. If the option is not available, you would need to cancel the entire booking and re-book.</div>
                         </div>
                     </div>
                 </div>

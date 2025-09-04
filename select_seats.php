@@ -1,846 +1,805 @@
-<?php include 'includes/header.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fouji Travels - Book Your Seat</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f8f8;
         }
 
-        /* Process Header */
-        .process-header {
-            background: white;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid #e5e5e5;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        .panel-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
         }
 
-        .process-steps {
+        /* Header & Progress Steps */
+        .top-header {
+            background-color: #fff;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .progress-steps {
             display: flex;
-            gap: 2rem;
+            justify-content: center;
+            gap: 20px;
+            text-align: center;
         }
 
-        .process-steps .step {
-            padding: 0.5rem 1rem;
-            color: #666;
+        .step {
+            color: #9e9e9e;
+            font-weight: 500;
             position: relative;
-            font-size: 0.9rem;
-            white-space: nowrap;
+            padding: 0 20px;
+            cursor: pointer;
+            /* Indicates steps are clickable */
         }
 
-        .process-steps .step.active {
-            color: #dc3545;
-            font-weight: 600;
+        .step.active {
+            color: #d32f2f;
+            font-weight: bold;
         }
 
-        .process-steps .step.active::after {
+        .step.active::after {
             content: '';
             position: absolute;
-            bottom: -1rem;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #dc3545;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 3px;
+            background-color: #d32f2f;
+            border-radius: 2px;
         }
 
-        /* Main Container */
-        .main-container {
+        /* Hide steps that are not active */
+        .step-container {
+            display: none;
+        }
+
+        .step-container.active {
+            display: block;
+        }
+
+
+        /* Bus Layout */
+        .decks-container {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 18px;
+            padding: 20px 10px;
             display: flex;
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            gap: 10px;
+            justify-content: center;
         }
 
-        /* Left Side - Seat Selection */
-        .seat-selection-panel {
-            flex: 1;
-            background: white;
-            border-radius: 8px;
-            padding: 2rem;
-            height: fit-content;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        .deck {
+            flex: 0 1 250px;
         }
 
-        /* Deck Headers */
-        .deck-header {
+        .deck-label-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e5e5e5;
+            margin-bottom: 20px;
+            padding: 0 5px;
         }
 
-        .deck-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+        .deck-label {
             color: #333;
+            font-weight: 500;
         }
 
-        .steering-wheel {
-            font-size: 1.5rem;
-            color: #666;
-        }
-
-        /* Seat Grid Layout */
-        .seat-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-            margin-bottom: 3rem;
+        .steering-wheel i {
+            font-size: 24px;
+            color: #888;
         }
 
         .seat-row {
             display: flex;
-            gap: 0.5rem;
-            align-items: center;
+            justify-content: space-around;
+            margin-bottom: 8px;
         }
 
-        .seat-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .aisle {
-            width: 3rem;
-        }
-
-        /* Individual Seats */
-        .seat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .seat {
-            width: 35px;
-            height: 45px;
-            border: 2px solid #28a745;
-            border-radius: 4px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
+        .seat,
+        .seat-placeholder {
+            width: 38px;
+            height: 50px;
         }
 
         .sleeper {
-            width: 35px;
-            height: 70px;
-            border: 2px solid #28a745;
-            border-radius: 6px;
-            background: white;
+            height: 75px;
+        }
+
+        .seat {
+            border: 1px solid #999;
+            border-radius: 7px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            padding-bottom: 4px;
+            font-size: 11px;
             cursor: pointer;
+            position: relative;
             transition: all 0.2s ease;
         }
 
-        /* Seat States */
-        .seat.available,
-        .sleeper.available {
-            border-color: #28a745;
-            background: white;
+        .price {
+            color: #555;
+            font-weight: 500;
         }
 
-        .seat.booked,
-        .sleeper.booked {
-            border-color: #ddd;
-            background: #f0f0f0;
+        /* Seat States */
+        .seat.available {
+            border-color: #27ae60;
+            background-color: #fff;
+        }
+
+        .seat:not(.sold):hover {
+            box-shadow: 0 0 0 2px #d32f2f40;
+        }
+
+        .seat.sold {
+            background-color: #eceff1;
+            border-color: #bdc3c7;
             cursor: not-allowed;
         }
 
-        .seat.male,
-        .sleeper.male {
-            border-color: #007bff;
-            background: #e3f2fd;
+        .seat.sold .price {
+            visibility: hidden;
         }
 
-        .seat.female,
-        .sleeper.female {
-            border-color: #e91e63;
-            background: #fce4ec;
-        }
-
-        .seat.selected,
-        .sleeper.selected {
-            border-color: #28a745;
-            background: #28a745;
-        }
-
-        /* Seat Icons */
-        .seat-icon {
+        .seat.sold::after {
+            content: 'Sold';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.8rem;
-            color: inherit;
-        }
-
-        .seat.male .seat-icon {
-            color: #007bff;
-        }
-
-        .seat.female .seat-icon {
-            color: #e91e63;
-        }
-
-        .seat.selected .seat-icon {
-            color: white;
-        }
-
-        /* Seat Prices */
-        .seat-price {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #28a745;
-            text-align: center;
-        }
-
-        .seat.booked+.seat-price {
             color: #999;
+            font-size: 12px;
+        }
+
+        .seat.male-only {
+            border-color: #2196f3;
+        }
+
+        .seat.female-only {
+            border-color: #e91e63;
+        }
+
+        .seat.selected {
+            background: #27ae60 !important;
+            border-color: #27ae60 !important;
+        }
+
+        .seat.selected .price,
+        .seat.selected i {
+            color: #fff !important;
         }
 
         /* Seat Legend */
-        .seat-legend {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 2rem;
+        .legend-card {
+            padding: 16px;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
         }
 
         .legend-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            color: #333;
-        }
-
-        .legend-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            flex-basis: 50%;
+            font-size: 14px;
         }
 
         .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 0.85rem;
-        }
-
-        .legend-seat {
-            width: 20px;
-            height: 25px;
-            border: 2px solid;
-            border-radius: 3px;
-            flex-shrink: 0;
-        }
-
-        .legend-seat.available {
-            border-color: #28a745;
-            background: white;
-        }
-
-        .legend-seat.booked {
-            border-color: #ddd;
-            background: #f0f0f0;
-        }
-
-        .legend-seat.male {
-            border-color: #007bff;
-            background: #e3f2fd;
-        }
-
-        .legend-seat.female {
-            border-color: #e91e63;
-            background: #fce4ec;
-        }
-
-        .legend-seat.selected {
-            border-color: #28a745;
-            background: #28a745;
-        }
-
-        /* Right Side - Bus Details */
-        .bus-details-panel {
-            width: 400px;
-            flex-shrink: 0;
-        }
-
-        .bus-info-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .bus-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .bus-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-            margin: 0;
-        }
-
-        .bus-type {
-            color: #666;
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-
-        .rating-badge {
-            background: #28a745;
-            color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            flex: 1;
             text-align: center;
         }
 
-        .rating-count {
-            font-size: 0.7rem;
-            opacity: 0.9;
-            font-weight: normal;
+        .legend-seat {
+            margin: 0 auto;
         }
 
-        /* Tabs */
-        .custom-tabs {
-            border-bottom: 2px solid #f0f0f0;
-            margin-bottom: 1rem;
+        .legend-seat.seater {
+            height: 40px;
         }
 
-        .custom-tabs .nav-link {
-            border: none;
-            color: #666;
-            padding: 0.75rem 1rem;
+        .legend-seat.sleeper {
+            height: 60px;
+        }
+
+        /* Right Panel & Board/Drop Point styles */
+        .rating-badge {
+            background-color: #2c6f1a;
+            color: white;
+            padding: 10px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
             font-weight: 500;
-            border-bottom: 2px solid transparent;
-            font-size: 0.9rem;
-            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
         }
 
-        .custom-tabs .nav-link.active {
-            color: #dc3545;
-            border-bottom-color: #dc3545;
+        .nav-tabs .nav-link.active {
+            color: #d32f2f;
+            border-bottom-color: #d32f2f;
         }
 
-        /* Policies Section */
-        .policies-section h6 {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 1rem;
-        }
-
-        .policy-item {
+        .feature {
             display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: #f8f9fa;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .feature i {
+            margin-right: 12px;
+        }
+
+        .point-option {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .point-option input[type="radio"] {
+            margin-right: 15px;
+        }
+
+        .point-option.selected {
+            border-color: #d32f2f;
+            background-color: #fdefee;
+        }
+
+        .point-time {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .point-name {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .point-details {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .summary-card {
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
         }
 
-        .policy-icon {
-            color: #28a745;
-            font-size: 1.2rem;
-            margin-top: 0.25rem;
+        .summary-header {
+            background-color: #f7f7f7;
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .policy-content h6 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #333;
-            margin: 0 0 0.5rem 0;
+        .summary-body {
+            padding: 15px;
         }
 
-        .policy-content p {
-            font-size: 0.8rem;
-            color: #666;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        /* Bottom Summary Bar */
-        .summary-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid #e5e5e5;
-            padding: 1rem 2rem;
+        .summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 12px;
         }
 
-        .summary-bar.visible {
-            transform: translateY(0);
-        }
 
-        .summary-info {
+        /* Bottom Bar */
+        .bottom-action-bar {
+            position: fixed;
+            bottom: -120px;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            padding: 15px 30px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1000;
         }
 
-        .total-price {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .seat-count {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .proceed-btn {
-            background: #dc3545;
-            border-color: #dc3545;
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .proceed-btn:hover:not(:disabled) {
-            background: #c82333;
-        }
-
-        .proceed-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-                padding: 0 0.5rem;
-            }
-
-            .bus-details-panel {
-                width: 100%;
-            }
-
-            .seat-selection-panel {
-                padding: 1rem;
-            }
+        .bottom-action-bar.visible {
+            bottom: 0;
         }
     </style>
- 
+</head>
 
 <body>
-    <!-- Process Header -->
-    <div class="process-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <a href="bus_list.php" class="text-dark me-3"><i class="bi bi-arrow-left"></i></a>
-                <strong>Delhi to Lucknow</strong>
-            </div>
-            <div class="process-steps">
-                <div class="step active">1. Select seats</div>
-                <div class="step">2. Board/Drop point</div>
-                <div class="step">3. Passenger info</div>
+    <header class="top-header">
+        <div class="container">
+            <div class="progress-steps">
+                <div class="step active" data-step="1">1. Select seats</div>
+                <div class="step" data-step="2">2. Board/Drop point</div>
+                <div class="step" data-step="3">3. Passenger Info</div>
             </div>
         </div>
+    </header>
+
+    <main class="container py-4">
+        <div id="step-1" class="step-container active">
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="panel-card">
+                        <div class="decks-container">
+                            <div class="deck border">
+                                <div class="deck-label-container"><span class="deck-label">Lower deck</span><span class="steering-wheel"><i class="bi bi-fan"></i></span></div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="L1"><span class="price">₹1299</span></div>
+                                    <div class="seat seater available" data-price="699" data-seat-id="L2"><span class="price">₹699</span></div>
+                                    <div class="seat seater female-only" data-price="699" data-seat-id="L3"><i class="bi bi-person-standing-dress fs-5" style="color:#e91e63"></i><span class="price">₹699</span></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="L4"><span class="price">₹1299</span></div>
+                                    <div class="seat seater available" data-price="699" data-seat-id="L5"><span class="price">₹699</span></div>
+                                    <div class="seat seater available" data-price="699" data-seat-id="L6"><span class="price">₹699</span></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat seater sold"></div>
+                                    <div class="seat seater sold"></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="L7"><span class="price">₹999</span></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="L8"><span class="price">₹999</span></div>
+                                </div>
+                            </div>
+                            <div class="deck border">
+                                <div class="deck-label-container"><span class="deck-label">Upper deck</span></div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U1"><span class="price">₹999</span></div>
+                                    <div class="seat sleeper male-only" data-price="999" data-seat-id="U2"><i class="bi bi-person-standing fs-5" style="color:#2196f3"></i><span class="price">₹999</span></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U3"><span class="price">₹1299</span></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U4"><span class="price">₹1299</span></div>
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U5"><span class="price">₹1299</span></div>
+
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat sleeper sold"></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U6"><span class="price">₹999</span></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U7"><span class="price">₹999</span></div>
+                                    <div class="seat sleeper sold"></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U1"><span class="price">₹999</span></div>
+                                    <div class="seat sleeper male-only" data-price="999" data-seat-id="U2"><i class="bi bi-person-standing fs-5" style="color:#2196f3"></i><span class="price">₹999</span></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U3"><span class="price">₹1299</span></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U4"><span class="price">₹1299</span></div>
+                                    <div class="seat sleeper available" data-price="1299" data-seat-id="U5"><span class="price">₹1299</span></div>
+
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper sold"></div>
+                                    <div class="seat sleeper sold"></div>
+                                </div>
+                                <div class="seat-row">
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U6"><span class="price">₹999</span></div>
+                                    <div class="seat-placeholder"></div>
+                                    <div class="seat sleeper available" data-price="999" data-seat-id="U7"><span class="price">₹999</span></div>
+                                    <div class="seat sleeper sold"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-card legend-card">
+                        <h5 class="mb-3">Know your seat types</h5>
+                        <div class="legend-row">
+                            <div class="legend-title">Available</div>
+                            <div class="legend-item">
+                                <div class="legend-seat seater seat available"></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat sleeper seat available"></div>
+                            </div>
+                        </div>
+                        <div class="legend-row">
+                            <div class="legend-title">Available for male</div>
+                            <div class="legend-item">
+                                <div class="legend-seat seater seat male-only"><i class="bi bi-person-standing fs-5" style="color:#2196f3"></i></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat sleeper seat male-only"><i class="bi bi-person-standing fs-5" style="color:#2196f3"></i></div>
+                            </div>
+                        </div>
+                        <div class="legend-row">
+                            <div class="legend-title">Available for female</div>
+                            <div class="legend-item">
+                                <div class="legend-seat seater seat female-only"><i class="bi bi-person-standing-dress fs-5" style="color:#e91e63"></i></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat sleeper seat female-only"><i class="bi bi-person-standing-dress fs-5" style="color:#e91e63"></i></div>
+                            </div>
+                        </div>
+                        <div class="legend-row">
+                            <div class="legend-title">Booked</div>
+                            <div class="legend-item">
+                                <div class="legend-seat seater seat sold"></div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-seat sleeper seat sold"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column: Bus Details -->
+                <div class="col-lg-5">
+                    <div class="panel-card">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <h5>Fouji travels</h5>
+                                <p class="small text-muted mb-1">A/C Seater / Sleeper (2+1)</p>
+                            </div>
+                            <div class="rating-badge">★ 4.6</div>
+                        </div>
+                        <p class="small text-muted">20:30 - 09:45, Fri 05 Sep</p>
+                        <ul class="nav nav-tabs" id="detailsTab" role="tablist">
+                            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#why-book">Why book this bus?</button></li>
+                            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bus-route">Bus route</button></li>
+                            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#amenities">Amenities</button></li>
+                        </ul>
+                        <div class="tab-content pt-3">
+                            <div class="tab-pane fade show active" id="why-book">
+                                <div class="feature"><i class="bi bi-hand-thumbs-up fs-5 text-muted"></i> Highly rated by women</div>
+                                <div class="feature"><i class="bi bi-broadcast-pin fs-5 text-muted"></i> Live Tracking Available</div>
+                                <div class="feature"><i class="bi bi-ticket-perforated fs-5 text-muted"></i> Flexi Ticket option</div>
+                                <div class="feature"><i class="bi bi-shield-check fs-5 text-muted"></i> Safety+ Certified Buses</div>
+                            </div>
+                            <div class="tab-pane fade" id="bus-route">Delhi &rarr; Noida &rarr; Mathura &rarr; Lucknow &rarr; Barabanki &rarr; Faizabad &rarr; Ayodhya &rarr; Basti &rarr; Khalilabad &rarr; Gorakhpur (uttar pradesh)</div>
+                            <div class="tab-pane fade" id="amenities">This bus includes Water Bottles, Blankets, and Charging Points for your convenience. Please contact the bus operator for any specific requests.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: BOARD/DROP POINT -->
+        <div id="step-2" class="step-container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="panel-card">
+                        <h5>Boarding points</h5>
+                        <p class="text-muted">Select Boarding Point</p>
+                        <div class="point-option">
+                            <input type="radio" name="boarding_point" id="bp1" value="ISBT Kashmiri Gate">
+                            <div>
+                                <label for="bp1" class="point-time">20:30</label>
+                                <label for="bp1" class="point-name">ISBT Kashmiri Gate</label>
+                                <label for="bp1" class="point-details">FOUJI TRAVELS KASHMERE GATE METRO STATION GATE NO 2</label>
+                            </div>
+                        </div>
+                        <div class="point-option">
+                            <input type="radio" name="boarding_point" id="bp2" value="NOIDA ZERO POINT">
+                            <div>
+                                <label for="bp2" class="point-time">21:50</label>
+                                <label for="bp2" class="point-name">NOIDA ZERO POINT</label>
+                                <label for="bp2" class="point-details">NOIDA ZERO POINT YAMUNA EXPRESSWAY NOIDA ZERO POINT YAMUNA EXPRESSWAY</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel-card">
+                        <h5>Dropping points</h5>
+                        <p class="text-muted">NAUSHAD CHAURAHA GORAKHPUR</p>
+                        <div class="point-option">
+                            <input type="radio" name="dropping_point" id="dp1" value="NAUSHAD CHAURAHA GORAKHPUR" checked>
+                            <div>
+                                <label for="dp1" class="point-time">09:45 <span class="small text-muted">06 Sep</span></label>
+                                <label for="dp1" class="point-name">NAUSHAD CHAURAHA GORAKHPUR</label>
+                                <label for="dp1" class="point-details">NAUSHAD CHAURAHA, JAGDAMBA INDIAN OIL PETROL PUMP NAUSHAD CHAURAHA, JAGDAMBA INDIAN OIL PETROL PUMP</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: PASSENGER INFO -->
+        <div id="step-3" class="step-container">
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="panel-card mb-4">
+                        <h5>Contact details</h5>
+                        <p class="small text-muted">Ticket details will be sent to</p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email ID</label>
+                                <input type="email" class="form-control" value="">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <div class="input-group">
+                                    <select class="form-select" style="max-width: 100px;">
+                                        <option>+91 (IND)</option>
+                                    </select>
+                                    <input type="tel" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="whatsapp-updates" checked>
+                            <label class="form-check-label" for="whatsapp-updates">Send booking details and trip updates on WhatsApp</label>
+                        </div>
+                    </div>
+
+                    <div id="passenger-details-forms">
+                        <!-- Passenger forms will be dynamically inserted here -->
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <h5>Fouji travels</h5>
+                            <p class="small text-muted mb-1">A/C Seater / Sleeper (2+1)</p>
+                        </div>
+                        <div class="summary-body">
+                            <div class="summary-item">
+                                <div><strong id="summary-route">Delhi &rarr; Gorakhpur</strong>
+                                    <p class="small text-muted mb-0" id="summary-datetime">05 Sep, 20:30</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="summary-item">
+                                <div><strong id="summary-boarding-point"></strong></div>
+                            </div>
+                            <div class="summary-item">
+                                <div><strong id="summary-dropping-point"></strong></div>
+                            </div>
+                            <hr>
+                            <div class="summary-item">
+                                <div><strong>Seat Details</strong></div>
+                                <div id="summary-seat-numbers"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <br><br><br>
+    <!-- Bottom Action Bar -->
+    <div id="bottom-bar" class="bottom-action-bar">
+        <div><span id="seat-count-text"></span><br><strong class="fs-5">₹<span id="total-price">0</span></strong></div>
+        <button id="action-btn" class="btn btn-danger btn-lg">Continue</button>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-container">
-        <!-- Left Side - Seat Selection -->
-        <div class="seat-selection-panel">
-            <!-- Lower Deck -->
-            <div class="deck-header">
-                <span class="deck-title">Lower deck</span>
-                <i class="bi bi-circle steering-wheel"></i>
-            </div>
-
-            <div class="seat-grid">
-                <div class="seat-row">
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                    </div>
-                    <div class="aisle"></div>
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="sleeper available" data-price="1899">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1899</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat booked">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="seat-row">
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                    </div>
-                    <div class="aisle"></div>
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="sleeper available" data-price="1899">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1899</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="sleeper available" data-price="1899">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1899</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upper Deck -->
-            <div class="deck-header">
-                <span class="deck-title">Upper deck</span>
-            </div>
-
-            <div class="seat-grid">
-                <div class="seat-row">
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="seat female" data-price="1299">
-                                <i class="bi bi-person-dress seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat female" data-price="1299">
-                                <i class="bi bi-person-dress seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                    </div>
-                    <div class="aisle"></div>
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="sleeper available" data-price="1899">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1899</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="sleeper male" data-price="1899">
-                                <i class="bi bi-person-standing seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1899</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="seat-row">
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat booked">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price"></div>
-                        </div>
-                    </div>
-                    <div class="aisle"></div>
-                    <div class="seat-group">
-                        <div class="seat-item">
-                            <div class="seat booked">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price"></div>
-                        </div>
-                        <div class="seat-item">
-                            <div class="seat available" data-price="1299">
-                                <i class="bi bi-person-fill seat-icon"></i>
-                            </div>
-                            <div class="seat-price">₹1299</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Seat Legend -->
-            <div class="seat-legend">
-                <div class="legend-title">Know your seat types</div>
-                <div class="legend-grid">
-                    <div class="legend-item">
-                        <div class="legend-seat available"></div>
-                        <span>Available only for male passenger</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-seat booked"></div>
-                        <span>Already booked</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-seat selected"></div>
-                        <span>Selected by you</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-seat female"></div>
-                        <span>Available only for female passenger</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-seat booked"></div>
-                        <span>Booked by female passenger</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-seat booked"></div>
-                        <span>Booked by male passenger</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Side - Bus Details -->
-        <div class="bus-details-panel">
-            <div class="bus-info-card">
-                <div class="bus-header">
-                    <div>
-                        <div class="bus-name">Gola Bus Service</div>
-                        <div class="bus-type">22:30 - 06:30 • Wed 03 Sep<br>Bharat Benz A/C Seater/Sleeper (2+1)</div>
-                    </div>
-                    <div class="rating-badge">
-                        <div><i class="bi bi-star-fill"></i> 4.8</div>
-                        <div class="rating-count">1851</div>
-                    </div>
-                </div>
-
-                <!-- Tabs -->
-                <ul class="nav custom-tabs" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#why-book">Why book this bus?</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bus-route">Bus route</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#boarding-point">Boarding point</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dropping-point">Dropping point</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rest-stop">Rest stop</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#amenities">Amenities</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#booking-policy">Booking policy</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="why-book">
-                        <div class="policies-section">
-                            <div class="policy-item">
-                                <i class="bi bi-people policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Women Travelling</h6>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-person-check policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Highly rated by women</h6>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-geo-alt policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Live Tracking</h6>
-                                    <p>You can now track your bus and plan your commute to the boarding point.</p>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-ticket policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Flexi Ticket</h6>
-                                    <p>Change your travel date for free up to 8 hours before the departure. Get...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h6>Bus route</h6>
-                        <p class="text-muted small">5 hr 0 min</p>
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <span class="fw-bold">Delhi</span>
-                            <i class="bi bi-arrow-right"></i>
-                            <span>Mathura</span>
-                            <i class="bi bi-arrow-right"></i>
-                            <span>Agra</span>
-                            <i class="bi bi-arrow-right"></i>
-                            <span class="fw-bold">Lucknow</span>
-                        </div>
-
-                        <div class="policies-section">
-                            <h6>Other Policies</h6>
-                            <div class="policy-item">
-                                <i class="bi bi-person-plus policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Child passenger policy</h6>
-                                    <p>Children above the age of 6 will need a ticket</p>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-bag policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Luggage policy</h6>
-                                    <p>2 pieces of luggage will be accepted free of charge per passenger. Excess items will be chargeable</p>
-                                    <p>Excess baggage over 10 kgs per passenger will be chargeable</p>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-heart policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Pets Policy</h6>
-                                    <p>Pets are not allowed</p>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-cup policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Liquor Policy</h6>
-                                    <p>Carrying or consuming liquor inside the bus is prohibited. Bus operator reserves the right to deboard drunk passengers.</p>
-                                </div>
-                            </div>
-                            <div class="policy-item">
-                                <i class="bi bi-clock policy-icon"></i>
-                                <div class="policy-content">
-                                    <h6>Pick up time policy</h6>
-                                    <p>Bus operator is not obligated to wait beyond the scheduled departure time of the bus. No refund request will be entertained for late arriving passengers.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Summary Bar -->
-    <div class="summary-bar" id="summaryBar">
-        <div class="summary-info">
-            <span class="total-price" id="totalPrice">₹0</span>
-            <span class="seat-count" id="seatCount">0 seats</span>
-        </div>
-        <button class="proceed-btn" id="proceedBtn" disabled>Select boarding & dropping points</button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const availableSeats = document.querySelectorAll('.seat.available, .sleeper.available, .seat.female, .sleeper.female, .seat.male, .sleeper.male');
-            const summaryBar = document.getElementById('summaryBar');
-            const totalPriceEl = document.getElementById('totalPrice');
-            const seatCountEl = document.getElementById('seatCount');
-            const proceedBtn = document.getElementById('proceedBtn');
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectedSeats = new Map();
+            let currentStep = 1;
 
-            availableSeats.forEach(seat => {
-                seat.addEventListener('click', function() {
-                    if (!seat.classList.contains('booked')) {
-                        seat.classList.toggle('selected');
-                        updateSummary();
+            const actionBtn = document.getElementById('action-btn');
+            const bottomBar = document.getElementById('bottom-bar');
+            const stepElements = document.querySelectorAll('.step');
+
+            // --- Step 1: Seat Selection Logic ---
+            document.querySelectorAll('.seat:not(.sold)').forEach(seat => {
+                seat.addEventListener('click', () => {
+                    if (currentStep !== 1) return;
+
+                    const seatId = seat.dataset.seatId;
+                    const price = parseInt(seat.dataset.price);
+                    if (!seatId || isNaN(price)) return;
+
+                    seat.classList.toggle('selected');
+                    if (seat.classList.contains('selected')) {
+                        selectedSeats.set(seatId, {
+                            price
+                        });
+                    } else {
+                        selectedSeats.delete(seatId);
+                    }
+                    updateSummaryBar();
+                });
+            });
+
+            function updateSummaryBar() {
+                const totalPrice = Array.from(selectedSeats.values()).reduce((sum, s) => sum + s.price, 0);
+                const seatCount = selectedSeats.size;
+
+                bottomBar.classList.toggle('visible', seatCount > 0 || currentStep > 1);
+
+                if (currentStep === 1) {
+                    actionBtn.classList.toggle('disabled', seatCount === 0);
+                } else {
+                    actionBtn.classList.remove('disabled');
+                }
+
+                document.getElementById('total-price').textContent = totalPrice;
+                document.getElementById('seat-count-text').textContent = seatCount > 0 ? `${seatCount} Seat(s) Selected` : '';
+            }
+
+            // --- Step 2: Boarding/Dropping Point Logic ---
+            document.querySelectorAll('.point-option input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    document.querySelectorAll(`input[name="${radio.name}"]`).forEach(el => {
+                        el.closest('.point-option').classList.remove('selected');
+                    });
+                    if (radio.checked) {
+                        radio.closest('.point-option').classList.add('selected');
                     }
                 });
             });
 
-            function updateSummary() {
-                const selectedSeats = document.querySelectorAll('.seat.selected, .sleeper.selected');
-                const numSeats = selectedSeats.length;
+            // --- Validation Functions ---
+            function validateStep1() {
+                if (selectedSeats.size === 0) {
+                    alert('Please select at least one seat.');
+                    return false;
+                }
+                return true;
+            }
 
-                const totalPrice = Array.from(selectedSeats).reduce((total, seat) => {
-                    return total + parseInt(seat.dataset.price || 0, 10);
-                }, 0);
+            function validateStep2() {
+                if (!document.querySelector('input[name="boarding_point"]:checked')) {
+                    alert('Please select a boarding point.');
+                    return false;
+                }
+                if (!document.querySelector('input[name="dropping_point"]:checked')) {
+                    alert('Please select a dropping point.');
+                    return false;
+                }
+                return true;
+            }
 
-                if (numSeats > 0) {
-                    totalPriceEl.textContent = `₹${totalPrice.toLocaleString()}`;
-                    seatCountEl.textContent = `${numSeats} seats`;
-                    proceedBtn.disabled = false;
-                    summaryBar.classList.add('visible');
-                } else {
-                    proceedBtn.disabled = true;
-                    summaryBar.classList.remove('visible');
+            // --- Multi-Step Navigation ---
+            actionBtn.addEventListener('click', () => {
+                if (actionBtn.classList.contains('disabled')) return;
+
+                if (currentStep === 1) {
+                    if (validateStep1()) handleGoToStep(2);
+                } else if (currentStep === 2) {
+                    if (validateStep2()) handleGoToStep(3);
+                } else if (currentStep === 3) {
+                    alert('Proceeding to payment!');
+                }
+            });
+
+            // Allow clicking on the top step indicators
+            stepElements.forEach(stepEl => {
+                stepEl.addEventListener('click', () => {
+                    const targetStep = parseInt(stepEl.dataset.step);
+                    handleGoToStep(targetStep);
+                });
+            });
+
+            function handleGoToStep(targetStep) {
+                if (targetStep === currentStep) return;
+
+                // Validate before proceeding to a future step
+                if (targetStep > 1 && selectedSeats.size === 0) {
+                    alert('Please select a seat first.');
+                    return;
+                }
+                if (targetStep > 2 && !validateStep2()) {
+                    return;
+                }
+
+                // Prepare for the target step if it's the final one
+                if (targetStep === 3) {
+                    updateFinalSummary();
+                    populatePassengerForms();
+                }
+
+                goToStep(targetStep);
+            }
+
+            function goToStep(stepNumber) {
+                currentStep = stepNumber;
+
+                // Update progress bar
+                stepElements.forEach(stepEl => {
+                    stepEl.classList.toggle('active', parseInt(stepEl.dataset.step) === stepNumber);
+                });
+
+                // Show/hide step containers
+                document.querySelectorAll('.step-container').forEach(container => {
+                    container.classList.remove('active');
+                });
+                document.getElementById(`step-${stepNumber}`).classList.add('active');
+
+                // Update button text and summary bar state
+                if (stepNumber === 1) {
+                    actionBtn.textContent = 'Continue';
+                    document.getElementById('seat-count-text').textContent = `${selectedSeats.size} Seat(s) Selected`;
+                } else if (stepNumber === 2) {
+                    actionBtn.textContent = 'Continue';
+                } else if (stepNumber === 3) {
+                    actionBtn.textContent = 'Proceed to Payment';
+                }
+                updateSummaryBar();
+            }
+
+            function populatePassengerForms() {
+                const container = document.getElementById('passenger-details-forms');
+                container.innerHTML = '';
+                let passengerCount = 1;
+                for (const seatId of selectedSeats.keys()) {
+                    const formHtml = `
+                        <div class="panel-card mb-3">
+                            <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatId}</span></h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                     <label class="form-label">Age</label>
+                                     <input type="number" class="form-control" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                     <label class="form-label">Gender</label>
+                                     <select class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                     </select>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', formHtml);
+                    passengerCount++;
                 }
             }
 
-            // Tab functionality
-            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-                tab.addEventListener('click', function(e) {
-                    e.preventDefault();
+            function updateFinalSummary() {
+                const boardingPointInput = document.querySelector('input[name="boarding_point"]:checked');
+                const droppingPointInput = document.querySelector('input[name="dropping_point"]:checked');
 
-                    // Remove active from all tabs and content
-                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                    document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.classList.remove('show', 'active');
-                    });
+                const boardingPointValue = boardingPointInput ? boardingPointInput.value : 'Not Selected';
+                const droppingPointValue = droppingPointInput ? droppingPointInput.value : 'Not Selected';
 
-                    // Add active to clicked tab
-                    this.classList.add('active');
-
-                    // Show corresponding content
-                    const targetId = this.getAttribute('data-bs-target');
-                    const targetPane = document.querySelector(targetId);
-                    if (targetPane) {
-                        targetPane.classList.add('show', 'active');
-                    }
-                });
-            });
+                document.getElementById('summary-boarding-point').textContent = `Boarding at: ${boardingPointValue}`;
+                document.getElementById('summary-dropping-point').textContent = `Dropping at: ${droppingPointValue}`;
+                document.getElementById('summary-seat-numbers').textContent = Array.from(selectedSeats.keys()).join(', ');
+            }
         });
     </script>
 </body>

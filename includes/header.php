@@ -1,4 +1,8 @@
-<?php session_start(); ?>
+<?php 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+} 
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -53,9 +57,9 @@
                 <!-- Logged Out View -->
                 <h2 class="sidebar-login-prompt">Log in to manage your bookings</h2>
                 <div class="d-grid gap-2 my-4">
-                    <a href="login" class="btn btn-primary btn-lg">Log in</a>
+                    <a href="login.php" class="btn btn-primary btn-lg">Log in</a>
                 </div>
-                <p class="text-center">Don't have an account? <a href="register">Sign up</a></p>
+                <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
             <?php endif; ?>
 
             <h3 class="sidebar-heading">My details</h3>
@@ -80,18 +84,19 @@
                 </li>
             </ul>
 
-            <h3 class="sidebar-heading">Payments</h3>
+            <h3 class="sidebar-heading">FAQS</h3>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="#" class="sidebar-menu-item">
+                    <a href="faq" class="sidebar-menu-item">
                         <div class="icon-text-group">
-                            <i class="bi bi-wallet2"></i>
-                            <span>Wallet</span>
+                            <i class="bi bi-question-circle"></i>
+                            <span>Any doubt</span>
                         </div>
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
             </ul>
+
 
             <h3 class="sidebar-heading">More</h3>
             <ul class="sidebar-menu">
@@ -133,11 +138,11 @@
                 </li>
             </ul>
 
+
             <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
                 <div class="d-grid gap-2 mt-4">
-                    <a href="logout" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to logout?');">Logout</a>
+                    <a href="logout.php" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to logout?');">Logout</a>
                 </div>
             <?php endif; ?>
-
         </div>
     </div>

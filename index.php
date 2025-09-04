@@ -1,5 +1,6 @@
-<?php include 'includes/header.php'; ?>
-
+<?php  
+include 'includes/header.php'; 
+?>
 <main>
     <!-- =======================
     Hero Section
@@ -97,23 +98,23 @@
             <h2 class="section-title text-center">Popular Bus Routes</h2>
             <div class="row g-4">
                 <!-- Data attributes added for JavaScript functionality -->
-                <div class="col-md-4 "><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Delhi" data-to="Lucknow">
-                        <div class="route-card">Delhi <i class="bi bi-arrow-left-right"></i> Lucknow</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Delhi" data-to="Lucknow">
+                        <div class="route-card py-2">Delhi <i class="bi bi-arrow-left-right"></i> Lucknow</div>
                     </a></div>
-                <div class="col-md-4"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Mumbai" data-to="Pune">
-                        <div class="route-card">Mumbai <i class="bi bi-arrow-left-right"></i> Pune</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Mumbai" data-to="Pune">
+                        <div class="route-card py-2">Mumbai <i class="bi bi-arrow-left-right"></i> Pune</div>
                     </a></div>
-                <div class="col-md-4"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Bangalore" data-to="Chennai">
-                        <div class="route-card">Bangalore <i class="bi bi-arrow-left-right"></i> Chennai</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Bangalore" data-to="Chennai">
+                        <div class="route-card py-2">Bangalore <i class="bi bi-arrow-left-right"></i> Chennai</div>
                     </a></div>
-                <div class="col-md-4"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Hyderabad" data-to="Bangalore">
-                        <div class="route-card">Hyderabad <i class="bi bi-arrow-left-right"></i> Bangalore</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Hyderabad" data-to="Bangalore">
+                        <div class="route-card py-2">Hyderabad <i class="bi bi-arrow-left-right"></i> Bangalore</div>
                     </a></div>
-                <div class="col-md-4"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Chennai" data-to="Madurai">
-                        <div class="route-card">Chennai <i class="bi bi-arrow-left-right"></i> Madurai</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Chennai" data-to="Madurai">
+                        <div class="route-card py-2">Chennai <i class="bi bi-arrow-left-right"></i> Madurai</div>
                     </a></div>
-                <div class="col-md-4"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Kolkata" data-to="Digha">
-                        <div class="route-card">Kolkata <i class="bi bi-arrow-left-right"></i> Digha</div>
+                <div class="col-md-4 text-center"><a href="#" class="text-decoration-none text-dark popular-route-link" data-from="Kolkata" data-to="Digha">
+                        <div class="route-card py-2">Kolkata <i class="bi bi-arrow-left-right"></i> Digha</div>
                     </a></div>
             </div>
         </div>
@@ -187,7 +188,7 @@
     <!-- =======================
     NEW! Top Operators Section
     ======================== -->
-    <section class="section">
+    <!-- <section class="section">
         <div class="container">
             <h2 class="section-title text-center">Our Top Bus Operators</h2>
             <div class="d-flex flex-wrap justify-content-center align-items-center gap-5">
@@ -198,7 +199,7 @@
                 <img src="https://via.placeholder.com/150x50.png?text=CityLink" alt="Operator 5" class="operator-logo">
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- =======================
     App Download Section

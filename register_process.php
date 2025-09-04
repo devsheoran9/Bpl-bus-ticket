@@ -1,45 +1,50 @@
-    <?php
-    session_start();
-    require 'db_connect.php';
+<?php
+session_start();
+require 'db_connect.php'; // Make sure this path is correct
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $username = $_POST['username'];
-        $mobile_no = $_POST['mobile_no'];
-        $email = $_POST['email'] ?? null; // Opsyonal ang email
-        $password = $_POST['password'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $mobile_no = $_POST['mobile_no'];
+    $email = $_POST['email'] ?? null; // Email is optional
+    $password = $_POST['password'];
 
-        // I-hash ang password para sa seguridad
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    // --- NEW: Get the user's IP address ---
+    $ip_address = $_SERVER['REMOTE_ADDR'];
 
-        // Suriin kung mayroon nang mobile number
-        $stmt = $conn->prepare("SELECT id FROM users WHERE mobile_no = ?");
-        $stmt->bind_param("s", $mobile_no);
-        $stmt->execute();
-        $stmt->store_result();
+    // Hash the password for security
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        if ($stmt->num_rows > 0) {
-            // Mayroon nang mobile number
-            echo "Error: This mobile number is already registered.";
-            // Maaari kang mag-redirect pabalik na may mensahe ng error
-            header("refresh:2;url=register.php");
-            exit();
-        }
-        $stmt->close();
+    // Check if the mobile number already exists
+    $stmt = $conn->prepare("SELECT id FROM users WHERE mobile_no = ?");
+    $stmt->bind_param("s", $mobile_no);
+    $stmt->execute();
+    $stmt->store_result();
 
-        // Ipasok ang bagong user
-        $stmt = $conn->prepare("INSERT INTO users (username, mobile_no, email, password) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $username, $mobile_no, $email, $hashed_password);
-
-        if ($stmt->execute()) {
-            // Matagumpay ang pagpaparehistro
-            header("Location: login.php");
-            exit();
-        } else {
-            // Nagkaroon ng error
-            echo "Error: " . $stmt->error;
-        }
-
-        $stmt->close();
-        $conn->close();
+    if ($stmt->num_rows > 0) {
+        // Mobile number already exists
+        echo "Error: This mobile number is already registered.";
+        // You can redirect back with an error message
+        header("refresh:2;url=register.php");
+        exit();
     }
-    ?>
+    $stmt->close();
+
+    // --- UPDATED: Insert the new user with their IP address ---
+    // The SQL query now includes the 'ip_address' column
+    $stmt = $conn->prepare("INSERT INTO users (username, mobile_no, email, password, ip_address) VALUES (?, ?, ?, ?, ?)");
+
+    // The bind_param now includes a fifth parameter 's' for the IP address string
+    $stmt->bind_param("sssss", $username, $mobile_no, $email, $hashed_password, $ip_address);
+
+    if ($stmt->execute()) {
+        // Registration successful
+        header("Location: login.php");
+        exit();
+    } else {
+        // An error occurred
+        echo "Error: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $conn->close();
+}
