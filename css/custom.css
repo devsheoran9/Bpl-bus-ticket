@@ -383,224 +383,317 @@ body.booking-process-page {
   color: var(--text-light);
 }
 
-/* --- Step 1: Seat Selection --- */
-#seat-selection-view .main-layout-v2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 1.5rem;
-  max-width: 1400px;
-  margin: 1.5rem auto;
-  padding: 0 1.5rem;
-  align-items: flex-start;
-}
-#seat-selection-view .left-panel,
-#seat-selection-view .right-panel {
-  background-color: #fff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: var(--card-shadow);
-}
-#seat-selection-view .right-panel {
-  position: sticky;
-  top: 100px;
-}
-.decks-wrapper {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-start;
-  gap: 1rem;
-}
-.deck-title {
-  text-align: center;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-}
-.seat-grid {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-}
-.seat-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.seat,
-.sleeper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.seat {
-  width: 42px;
-  height: 42px;
-}
-.sleeper {
-  width: 42px;
-  height: 84px;
-}
-.seat.available {
-  border-color: #a5d6a7;
-  background-color: #f0fdf4;
-  color: var(--success-color);
-}
-.seat.female,
-.sleeper.female {
-  background-color: #fdf2f8;
-  border-color: var(--female-color);
-  color: var(--female-color);
-}
-.seat.male,
-.sleeper.male {
-  background-color: #f0f9ff;
-  border-color: var(--info-color);
-  color: var(--info-color);
-}
-.seat.sold,
-.sleeper.sold {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-.seat.selected,
-.sleeper.selected {
-  background-color: var(--success-color);
-  border-color: var(--success-color-dark);
-  color: #fff !important;
-}
-.seat.female.selected,
-.sleeper.female.selected {
-  background-color: var(--female-color);
-  border-color: var(--female-color-dark);
-}
-.seat.male.selected,
-.sleeper.male.selected {
-  background-color: var(--info-color);
-  border-color: var(--info-color-dark);
-}
-.seat-legend {
-  border-top: 1px solid var(--border-color);
-  padding-top: 1.5rem;
-  margin-top: 1.5rem;
-}
-.legend-body {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1rem 1.5rem;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-}
-.legend-box {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-}
-.legend-box.available {
-  background-color: #f0fdf4;
-}
-.legend-box.female {
-  background-color: #fdf2f8;
-}
-.legend-box.male {
-  background-color: #f0f9ff;
-}
-.legend-box.sold {
-  background-color: #f3f4f6;
+.panel-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
 }
 
-/* --- Step 2: Boarding/Dropping Point --- */
-.point-selection-container {
-  max-width: 1100px;
-  margin: 2rem auto;
+/* Header & Progress Steps */
+.top-header {
+  background-color: #fff;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
 }
-.point-selection-card {
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: var(--card-shadow);
-  padding: 1.5rem;
-  height: 100%;
+
+.progress-steps {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
 }
-.point-selection-card h5 {
-  font-weight: 600;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1rem;
+
+.step {
+  color: #9e9e9e;
+  font-weight: 500;
+  position: relative;
+  padding: 0 20px;
+  cursor: pointer;
+  /* Indicates steps are clickable */
 }
-.point-list {
-  list-style: none;
-  padding: 0;
+
+.step.active {
+  color: #d32f2f;
+  font-weight: bold;
 }
-.point-item {
+
+.step.active::after {
+  content: "";
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 3px;
+  background-color: #d32f2f;
+  border-radius: 2px;
+}
+
+/* Hide steps that are not active */
+.step-container {
+  display: none;
+}
+
+.step-container.active {
+  display: block;
+}
+
+/* Bus Layout */
+.decks-container {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 18px;
+  padding: 20px 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.deck {
+  flex: 0 1 250px;
+}
+
+.deck-label-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-.point-item:last-child {
-  border-bottom: none;
-}
-.point-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-.point-location p {
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin: 0;
-}
-.point-item .form-check-input {
-  border-color: var(--primary-color);
+  margin-bottom: 20px;
+  padding: 0 5px;
 }
 
-/* --- Step 3: Passenger Information --- */
-.passenger-form-card,
-.summary-card {
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: var(--card-shadow);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+.deck-label {
+  color: #333;
+  font-weight: 500;
 }
-.passenger-form-card h5,
-.summary-card h5 {
-  font-weight: 600;
+
+.steering-wheel i {
+  font-size: 24px;
+  color: #888;
 }
-.gender-selection .btn-check:checked + .btn {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: #fff;
-}
-.gender-selection .btn {
-  border-radius: 20px !important;
-}
-.summary-card p {
-  margin-bottom: 0.25rem;
-  color: var(--text-light);
-}
-.summary-card strong {
-  color: var(--text-dark);
-}
-.summary-point {
+
+.seat-row {
   display: flex;
-  gap: 1rem;
-  margin: 1rem 0;
+  justify-content: space-around;
+  margin-bottom: 8px;
 }
-.summary-duration {
-  font-size: 0.8rem;
-  color: var(--text-light);
-  padding-left: 3.5rem;
+
+.seat,
+.seat-placeholder {
+  width: 38px;
+  height: 50px;
+}
+
+.sleeper {
+  height: 75px;
+}
+
+.seat {
+  border: 1px solid #999;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  padding-bottom: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.price {
+  color: #555;
+  font-weight: 500;
+}
+
+/* Seat States */
+.seat.available {
+  border-color: #27ae60;
+  background-color: #fff;
+}
+
+.seat:not(.sold):hover {
+  box-shadow: 0 0 0 2px #d32f2f40;
+}
+
+.seat.sold {
+  background-color: #eceff1;
+  border-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.seat.sold .price {
+  visibility: hidden;
+}
+
+.seat.sold::after {
+  content: "Sold";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #999;
+  font-size: 12px;
+}
+
+.seat.male-only {
+  border-color: #2196f3;
+}
+
+.seat.female-only {
+  border-color: #e91e63;
+}
+
+.seat.selected {
+  background: #27ae60 !important;
+  border-color: #27ae60 !important;
+}
+
+.seat.selected .price,
+.seat.selected i {
+  color: #fff !important;
+}
+
+/* Seat Legend */
+.legend-card {
+  padding: 16px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.legend-title {
+  flex-basis: 50%;
+  font-size: 14px;
+}
+
+.legend-item {
+  flex: 1;
+  text-align: center;
+}
+
+.legend-seat {
+  margin: 0 auto;
+}
+
+.legend-seat.seater {
+  height: 40px;
+}
+
+.legend-seat.sleeper {
+  height: 60px;
+}
+
+/* Right Panel & Board/Drop Point styles */
+.rating-badge {
+  background-color: #2c6f1a;
+  color: white;
+  padding: 10px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.nav-tabs .nav-link {
+  color: #6c757d;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: #d32f2f;
+  border-bottom-color: #d32f2f;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.feature i {
+  margin-right: 12px;
+}
+
+.point-option {
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.point-option input[type="radio"] {
+  margin-right: 15px;
+}
+
+.point-option.selected {
+  border-color: #d32f2f;
+  background-color: #fdefee;
+}
+
+.point-time {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.point-name {
+  font-weight: 500;
+  color: #555;
+}
+
+.point-details {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.summary-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.summary-header {
+  background-color: #f7f7f7;
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.summary-body {
+  padding: 15px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Bottom Bar */
+.bottom-action-bar {
+  position: fixed;
+  bottom: -120px;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  padding: 15px 30px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: bottom 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.bottom-action-bar.visible {
+  bottom: 0;
 }
 
 /* ===================================================================

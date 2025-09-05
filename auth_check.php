@@ -5,14 +5,28 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require 'db_connect.php';
  
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['login_token'])) {
-    header("Location: login.php");
-    exit();
-}
+// if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['login_token'])) {
+//     header("Location: login.php");
+//     exit();
+// }
  
+if(isset($_SESSION['user_id'])){
 $user_id = $_SESSION['user_id'];
 $session_token = $_SESSION['login_token']; 
-$stmt = $conn->prepare("SELECT status FROM users_login_token WHERE user_id = ? AND token = ?");
+} else{
+    $user_id = $session_token ='';
+}
+function user_login($type = 'page') {
+            $data_get = '';
+    global $conn;
+if(isset($_SESSION['user_id'])){
+
+$user_id = $_SESSION['user_id'];
+$session_token = $_SESSION['login_token']; 
+} else{
+    $user_id = $session_token ='';
+}
+    $stmt = $conn->prepare("SELECT status FROM users_login_token WHERE user_id = ? AND token = ?");
 $stmt->bind_param("is", $user_id, $session_token);
 $stmt->execute();
 $stmt->store_result();
@@ -22,14 +36,24 @@ if ($stmt->num_rows > 0) {
     $stmt->fetch();
  
     if ($status != 1) { 
-        header("Location: logout.php");  
-        exit();
+        if ($type == 'page') {
+            $data_get = "<script>window.location.href = 'logout';</script>";
+        } else if ($type == 'header') {
+           $data_get = 'logout_user';
+        }
     } 
 
 } else {  
-    header("Location: logout.php");
-    exit();
+    if ($type == 'page') {
+            $data_get = "<script>window.location.href = 'logout';</script>";
+        } else if ($type == 'header') {
+           $data_get = 'logout_user';
+        }
 }
 
+            return $data_get;
 $stmt->close();
+}
+
+
 ?>

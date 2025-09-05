@@ -2,6 +2,9 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 } 
+
+require 'auth_check.php';
+$abc = user_login($type = 'header');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +65,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
             <?php endif; ?>
 
+            <?php if ($abc !== 'logout_user'){ ?>
             <h3 class="sidebar-heading">My details</h3>
             <ul class="sidebar-menu">
                 <li>
@@ -83,6 +87,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     </a>
                 </li>
             </ul>
+            <?php } ?>
 
             <h3 class="sidebar-heading">FAQS</h3>
             <ul class="sidebar-menu">

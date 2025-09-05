@@ -1,14 +1,14 @@
-<?php 
+<?php
 require 'db_connect.php';
-require 'auth_check.php';
 if (!isset($_SESSION['user_id'])) {
     header("Location: login");
-    exit(); 
+    exit();
 }
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include 'includes/header.php';
+echo user_login('page');
 
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT username, mobile_no, email FROM users WHERE id = ?");
@@ -17,32 +17,31 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
- 
+
 if (!$user) {
-    header("location: logout"); 
+    header("location: logout");
     exit;
 }
 ?>
+
 <main class="container my-5">
     <div class="row">
         <div class="col-md-8 mx-auto">
-            <h1 class="mb-4 text-center text-primary">My Account Profile</h1>
-
-            <!-- Display Success/Error Messages from the update process -->
+            <h1 class="mb-4 text-center text-primary">My Account Profile</h1> 
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="alert alert-success"><?php echo $_SESSION['success_message']; ?></div>
-                <?php unset($_SESSION['success_message']); 
+                <?php unset($_SESSION['success_message']);
                 ?>
             <?php endif; ?>
             <?php if (isset($_SESSION['error_message'])): ?>
                 <div class="alert alert-danger"><?php echo $_SESSION['error_message']; ?></div>
-                <?php unset($_SESSION['error_message']);   
+                <?php unset($_SESSION['error_message']);
                 ?>
             <?php endif; ?>
 
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-6">  
+                    <div class="col-lg-6">
                         <div class="card mb-4">
                             <div class="card-header">
                                 <h5 class="mb-0">Profile Details</h5>
@@ -66,7 +65,7 @@ if (!$user) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">  
+                    <div class="col-lg-6">
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="mb-0">Change Password</h5>
