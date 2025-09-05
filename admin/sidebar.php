@@ -55,7 +55,7 @@
                     <ul class="nav flex-column ms-3">
                         <li class="nav-item">
                             <a class="nav-link <?php echo $current_page == 'add_route' ? 'active' : ''; ?>" href="add_route.php">
-                                <i class="fas fa-plus-circle me-2"></i>Add / Edit Routes
+                                <i class="fas fa-plus-circle me-2"></i>Add Routes
                             </a>
                         </li>
                         <li class="nav-item">
