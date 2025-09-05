@@ -7,7 +7,9 @@ $username = validate_rhyno_data($_POST["username"]);
 $password = validate_rhyno_data($_POST["password"]);
 
 if ($errData == '') {
-    $stmt = $_conn_db->prepare("SELECT * FROM admin WHERE email = :emails OR mobile = :mobiles");
+    // --- STEP 1: MODIFY THIS SQL QUERY ---
+    // Add the `type` column to the SELECT statement
+    $stmt = $_conn_db->prepare("SELECT id, name, email, mobile, password, status, type FROM admin WHERE email = :emails OR mobile = :mobiles");
     $stmt->execute([
         'emails' => $username,
         'mobiles' => $username
@@ -25,7 +27,23 @@ if ($errData == '') {
                 $_SESSION['user']['name']   = show_rhyno_data($fetch['name']);
                 $_SESSION['user']['email']  = show_rhyno_data($fetch['email']);
                 $_SESSION['user']['mobile'] = show_rhyno_data($fetch['mobile']);
-
+                
+                // --- STEP 2: ADD THIS LINE ---
+                // Store the user's role/type in the session
+                $_SESSION['user']['type'] = show_rhyno_data($fetch['type']);
+                $_SESSION['user']['permissions'] = json_decode($fetch['permissions'], true) ?? []; // Decode permissions into session
+                try {
+                    $log_stmt = $_conn_db->prepare("INSERT INTO admin_activity_log (admin_id, admin_name, activity_type, ip_address) VALUES (?, ?, 'login', ?)");
+                    $log_stmt->execute([
+                        $_SESSION['user']['id'],
+                        $_SESSION['user']['name'],
+                        $_SERVER['REMOTE_ADDR']
+                    ]);
+                } catch (PDOException $e) {
+                    // Optional: log this error to a file, but don't stop the login process
+                    error_log("Failed to log admin login: " . $e->getMessage());
+                }
+                
                 $__notif_title  = 'Login successfully!';
                 $__notif_disc   = 'Please wait for dashboard...';
                 $__notif_type   = 'success';

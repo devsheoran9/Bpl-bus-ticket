@@ -1,3 +1,12 @@
+<?php
+// sidebar.php
+
+// Determine active page for highlighting the link
+$current_page = basename($_SERVER['PHP_SELF'], ".php");
+
+$is_bus_active = in_array($current_page, ['add_bus', 'view_all_buses', 'edit_bus', 'bus_seat_layout']);
+$is_route_active = in_array($current_page, ['add_route', 'view_routes', 'edit_route']);
+?>
 <nav class="sidebar">
     <div class="sidebar-header d-flex text-center" style="justify-content:center;">
         <h2>BPL Tickets</h2>
@@ -6,23 +15,25 @@
     <div class="sidebar-scroll">
         <ul class="nav flex-column">
             <li class="nav-item pt-4">
-                <a class="nav-link <?php echo $dashboard_active ? 'active' : ''; ?>" href="dashboard">
+                <a class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>" href="dashboard.php">
                     <i class="fas fa-tachometer-alt nav-icon me-2"></i>Dashboard
                 </a>
             </li>
 
+            <!-- Link visible only if user has 'can_manage_operators' permission -->
+            <?php if (user_has_permission('can_manage_operators')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $add_operator_active ? 'active' : ''; ?>" href="add_operator.php">
+                <a class="nav-link <?php echo $current_page == 'add_operator' ? 'active' : ''; ?>" href="add_operator.php">
                     <i class="fas fa-user-tie nav-icon me-2"></i>Operators
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Menu visible only if user has 'can_manage_buses' permission -->
+            <?php if (user_has_permission('can_manage_buses')): ?>
             <li class="nav-item">
-                <!-- Dropdown for Buses -->
                 <a class="nav-link d-flex justify-content-between align-items-center <?php echo $is_bus_active ? 'active' : 'collapsed'; ?>"
-                   data-bs-toggle="collapse" href="#busMenu" role="button"
-                   aria-expanded="<?php echo $is_bus_active ? 'true' : 'false'; ?>"
-                   aria-controls="busMenu">
+                   data-bs-toggle="collapse" href="#busMenu" role="button" aria-expanded="<?php echo $is_bus_active ? 'true' : 'false'; ?>">
                     <span><i class="fas fa-bus nav-icon me-2"></i>Manage Buses</span>
                     <i class="fas fa-chevron-down small"></i>
                 </a>
@@ -41,13 +52,13 @@
                     </ul>
                 </div>
             </li>
+            <?php endif; ?>
             
+            <!-- Menu visible only if user has 'can_manage_routes' permission -->
+            <?php if (user_has_permission('can_manage_routes')): ?>
             <li class="nav-item">
-                <!-- Dropdown for Routes -->
                 <a class="nav-link d-flex justify-content-between align-items-center <?php echo $is_route_active ? 'active' : 'collapsed'; ?>"
-                   data-bs-toggle="collapse" href="#routeMenu" role="button"
-                   aria-expanded="<?php echo $is_route_active ? 'true' : 'false'; ?>"
-                   aria-controls="routeMenu">
+                   data-bs-toggle="collapse" href="#routeMenu" role="button" aria-expanded="<?php echo $is_route_active ? 'true' : 'false'; ?>">
                     <span><i class="fas fa-route nav-icon me-2"></i>Manage Routes</span>
                     <i class="fas fa-chevron-down small"></i>
                 </a>
@@ -66,18 +77,23 @@
                     </ul>
                 </div>
             </li>
+            <?php endif; ?>
            
+            <!-- Link visible only if user has 'can_manage_employees' permission -->
+            <?php if (user_has_permission('can_manage_employees')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $change_password_active ? 'active' : ''; ?>" href="change_password.php">
+                <a class="nav-link <?php echo $current_page == 'add_employee' ? 'active' : ''; ?>" href="add_employee.php">
+                    <i class="fas fa-user-plus me-2"></i>Manage Employees
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- General links visible to everyone logged in -->
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'change_password' ? 'active' : ''; ?>" href="change_password.php">
                     <i class="fas fa-key me-2"></i>Change Password
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $change_profile_active ? 'active' : ''; ?>" href="change_profile.php">
-                    <i class="fas fa-user me-2"></i>Account Details
-                </a>
-            </li>
-            
             <li class="nav-item">
                 <a class="nav-link" href="logout.php">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout

@@ -1,8 +1,3 @@
- 
- 
-
-
-
 <?php
 global $_conn_db;
 include_once('function/_db.php');

@@ -230,6 +230,96 @@ $(document).ready(function() {
     });
 });
 </script>
+<script>
+$(document).ready(function () {
+    const hiddenSelect = $('#hiddenCategories');
+    const selectedDisplay = $('#selectedCategoriesDisplay');
+    const categoryDropdown = $('#categoryDropdown');
+    const optionsList = $('#categoryOptionsList');
+    const categorySearch = $('#categorySearch');
+
+    function refreshSelectedDisplay() {
+        selectedDisplay.empty();
+        const selectedOptions = hiddenSelect.find('option:selected');
+
+        if (selectedOptions.length === 0) {
+            selectedDisplay.html('<span class="select-placeholder">Select categories...</span>');
+        } else {
+            selectedOptions.each(function () {
+                const value = $(this).val();
+                const text = $(this).text();
+                const pill = $(`
+                    <span class="selected-category-pill" data-value="${value}">
+                        ${text} <span class="remove-pill">&times;</span>
+                    </span>
+                `);
+                selectedDisplay.append(pill);
+            });
+        }
+    }
+
+    function populateDropdownOptions() {
+        optionsList.empty();
+        hiddenSelect.find('option').each(function () {
+            const value = $(this).val();
+            const text = $(this).text();
+            const isSelected = $(this).is(':selected');
+            const li = $(`<li class="category-option" data-value="${value}">${text}</li>`);
+            if (isSelected) li.addClass('selected');
+            optionsList.append(li);
+        });
+    }
+
+    // Toggle dropdown visibility
+    selectedDisplay.on('click', function () {
+        categoryDropdown.toggle();
+    });
+
+    // Handle option click
+    optionsList.on('click', '.category-option', function () {
+        const value = $(this).data('value');
+        const option = hiddenSelect.find(`option[value="${value}"]`);
+        if (option.prop('selected')) {
+            option.prop('selected', false);
+            $(this).removeClass('selected');
+        } else {
+            option.prop('selected', true);
+            $(this).addClass('selected');
+        }
+        refreshSelectedDisplay();
+    });
+
+    // Remove pill
+    selectedDisplay.on('click', '.remove-pill', function (e) {
+        e.stopPropagation();
+        const pill = $(this).closest('.selected-category-pill');
+        const value = pill.data('value');
+        hiddenSelect.find(`option[value="${value}"]`).prop('selected', false);
+        optionsList.find(`.category-option[data-value="${value}"]`).removeClass('selected');
+        refreshSelectedDisplay();
+    });
+
+    // Filter dropdown options
+    categorySearch.on('keyup', function () {
+        const term = $(this).val().toLowerCase();
+        optionsList.find('.category-option').each(function () {
+            const text = $(this).text().toLowerCase();
+            $(this).toggle(text.includes(term));
+        });
+    });
+
+    // Close dropdown on outside click
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.custom-select-container').length) {
+            categoryDropdown.hide();
+        }
+    });
+
+    // Initial setup
+    populateDropdownOptions();
+    refreshSelectedDisplay();
+});
+</script>
 
 </body>
 </html>
