@@ -13,7 +13,7 @@ if (isset($_COOKIE['user_id']) && isset($_COOKIE['token'])) {
     $token = $_COOKIE['token'];
 
     // Look for the token in the database
-    $stmt = $conn->prepare("SELECT token FROM user_login_token WHERE user_id = ? AND status = 1 ORDER BY date_time DESC LIMIT 1");
+    $stmt = $conn->prepare("SELECT token FROM users_login_token WHERE user_id = ? AND status = 1 ORDER BY date_time DESC LIMIT 1");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $stmt->store_result();
@@ -23,8 +23,7 @@ if (isset($_COOKIE['user_id']) && isset($_COOKIE['token'])) {
         $stmt->fetch();
 
         // Verify the token from the cookie against the hashed token from the database
-        if (password_verify($token, $hashed_token)) {
-            // Token is valid, re-establish the session
+        if (password_verify($token, $hashed_token)) { 
             $user_stmt = $conn->prepare("SELECT id, username FROM users WHERE id = ?");
             $user_stmt->bind_param("i", $user_id);
             $user_stmt->execute();

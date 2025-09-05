@@ -4,28 +4,19 @@
    1. Main Variables and Global Styles
    2. Reusable Components (Buttons, Sections)
    3. Navbar / Header
-   4. Homepage Sections
-      - Hero Section
-      - Features Section
-      - Offers Section
-      - Popular Routes Section
-      - App Download Section
+   4. Homepage Sections (Hero, Features, Routes, Testimonials etc.)
    5. Sidebar (Offcanvas)
-   6. Bus List & Seat Selection Page Styles
-      - Filter Section
-      - Bus Item Card
-      - Seat Selection Page Header
-      - Seat Selection Details
-      - Bus Details Tabs (Right Side)
-      - Bottom Summary Bar
-   7. Footer
-   8. Responsive Design (All pages)
+   6. Bus List & Filter Page Styles
+   7. MULTI-STEP BOOKING PROCESS STYLES (Seats, Points, Passenger)
+   8. Footer
+   9. Responsive Design (All pages)
    =================================================================== */
 
 /* ===================================================================
    1. Main Variables and Global Styles
    =================================================================== */
 :root {
+  /* Original Theme Colors */
   --primary-color: #f3679a; /* A modern, vibrant pink/red */
   --primary-hover-color: #f599be;
   --primary-gradient: linear-gradient(
@@ -35,13 +26,22 @@
     #c2185b 100%
   );
   --secondary-color: #fce4ec; /* A light, complementary pink */
+
+  /* Utility & State Colors */
+  --success-color: #16a34a;
+  --success-color-dark: #14532d;
+  --info-color: #0284c7; /* Blue for male seats */
+  --info-color-dark: #0369a1;
+  --female-color: #be185d; /* Pink for female seats */
+  --female-color-dark: #9d174d;
+
+  /* Typography & Layout */
   --text-dark: #1f2937;
   --text-light: #6b7280;
   --body-bg: #f8f9fa;
+  --border-color: #e5e7eb;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
-  --success-color: #16a34a;
-  --success-color-dark: #14532d;
 }
 
 html {
@@ -49,11 +49,18 @@ html {
 }
 
 body {
-  padding-top: 70px;
   background-color: var(--body-bg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   color: var(--text-dark);
+  padding-top: 70px; /* Default padding for main navbar */
+  padding-bottom: 0;
+}
+
+/* Specific body padding for the booking process pages */
+body.booking-process-page {
+  padding-top: 80px;
+  padding-bottom: 120px;
 }
 
 /* ===================================================================
@@ -62,17 +69,15 @@ body {
 .section {
   padding: 60px 0;
 }
-
 .section-title {
   font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 40px;
 }
-
 .btn-primary {
-  padding: 12px 28px;
+  padding: 6px 10px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 12px;
   color: white;
   background-color: var(--primary-color);
   border: none;
@@ -83,7 +88,6 @@ body {
   background-position: right bottom;
   transition: all 0.4s ease-out;
 }
-
 .btn-primary:hover {
   color: white;
   background-position: left bottom;
@@ -97,19 +101,11 @@ body {
 .navbar {
   transition: background-color 0.4s ease-out, box-shadow 0.4s ease-out;
 }
-/* When navbar is at top and transparent */
 .navbar.navbar-dark {
   background-color: black;
 }
-/* When navbar is scrolled and becomes solid white */
 .navbar.navbar-light {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-.navbar-brand img {
-  transition: all 0.3s ease;
-}
-.navbar.navbar-light .navbar-brand img {
-  filter: brightness(0.9);
 }
 .navbar .nav-link {
   font-weight: 500;
@@ -137,9 +133,9 @@ body {
     url("../img/1.jpg");
   background-size: cover;
   background-position: center;
-  padding: 120px 0; /* Increased padding */
+  padding: 120px 0;
   color: white;
-  margin-top: -70px; /* Pull up to go behind the transparent navbar */
+  margin-top: -70px;
 }
 .hero-section h1 {
   font-size: 3.2rem;
@@ -148,7 +144,6 @@ body {
 }
 .search-form-container {
   background-color: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(8px);
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: var(--card-shadow);
@@ -165,6 +160,7 @@ body {
   font-size: 1.2rem;
   background-color: #fff;
 }
+
 .feature-box {
   text-align: center;
   padding: 20px;
@@ -179,7 +175,7 @@ body {
   color: var(--text-dark);
 }
 .bg-light-blue {
-  background-color: #d8d8d8;
+  background-color: var(--secondary-color);
 }
 .offer-card {
   border: none;
@@ -187,19 +183,10 @@ body {
   overflow: hidden;
   box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
-  height: 100%;
 }
 .offer-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--card-shadow-hover);
-}
-.offer-card .card-body {
-  background: var(--primary-gradient);
-  color: white;
-}
-.offer-card .card-title {
-  font-weight: 700;
-  font-size: 1.5rem;
 }
 .route-card {
   background-color: white;
@@ -207,405 +194,15 @@ body {
   padding: 20px;
   box-shadow: var(--card-shadow);
   text-align: center;
+  transition: all 0.2s ease;
   font-size: 1.1rem;
   font-weight: 500;
-  transition: all 0.2s ease;
 }
 .route-card:hover {
   transform: translateY(-5px) scale(1.03);
   box-shadow: var(--card-shadow-hover);
   color: var(--primary-color);
 }
-.app-download-section {
-  background-color: #fff;
-}
-.app-store-badge {
-  height: 50px;
-  margin: 5px;
-  transition: transform 0.2s ease;
-}
-.app-store-badge:hover {
-  transform: scale(1.05);
-}
-.phone-mockup {
-  max-width: 100%;
-  height: auto;
-}
-
-/* ===================================================================
-   5. Sidebar (Offcanvas)
-   =================================================================== */
-.offcanvas-header {
-  border-bottom: 1px solid #e9ecef;
-}
-.offcanvas-title {
-  font-weight: 600;
-}
-.sidebar-heading {
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-.sidebar-login-prompt {
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: var(--text-dark);
-}
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.sidebar-menu-item {
-  padding: 0.9rem 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-decoration: none;
-  color: var(--text-dark);
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
-.sidebar-menu-item:hover {
-  background-color: var(--secondary-color);
-  color: var(--text-dark);
-}
-.sidebar-menu-item .icon-text-group {
-  display: flex;
-  align-items: center;
-}
-.sidebar-menu-item i {
-  font-size: 1.2rem;
-  margin-right: 1rem;
-  color: var(--text-light);
-}
-.sidebar-menu-item .bi-chevron-right {
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-
-/* ===================================================================
-   6. Bus List & Seat Selection Page Styles
-   =================================================================== */
-.filter-section {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--card-shadow);
-  position: sticky;
-  top: 90px;
-}
-.filter-section h4 {
-  font-weight: 600;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
-}
-.filter-section h6 {
-  font-weight: 600;
-  margin-top: 1rem;
-}
-.form-check-input:checked {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-.bus-item {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-}
-.bus-item:hover {
-  box-shadow: var(--card-shadow-hover);
-  transform: translateY(-4px);
-}
-.bus-item-summary {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  align-items: center;
-  gap: 1rem;
-}
-.bus-info h5 {
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 0.25rem;
-}
-.bus-info p {
-  margin-bottom: 0.5rem;
-  color: var(--text-light);
-  font-size: 0.9rem;
-}
-.rating-badge {
-  background-color: var(--success-color);
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 5px 10px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.bus-timing {
-  text-align: center;
-}
-.bus-timing .time {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-.bus-timing .duration {
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-.price-section {
-  text-align: right;
-}
-.price-section .price-label {
-  font-size: 0.85rem;
-  color: var(--text-light);
-}
-.price-section .price {
-  color: var(--text-dark);
-  font-weight: 700;
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-.page-header {
-  background: #fff;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 70px;
-  z-index: 999;
-}
-.page-header .route-info {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-.progress-steps .step {
-  color: var(--text-light);
-}
-.progress-steps .step.active {
-  color: var(--primary-color);
-  font-weight: 700;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 4px;
-}
-.seat-layout-container {
-  background: #fff;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-}
-.seat-deck {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem 1rem;
-  position: relative;
-  background-color: #fdfdfd;
-}
-.deck-label {
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: var(--text-light);
-}
-.steering-wheel {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 1.8rem;
-  color: #9e9e9e;
-}
-.seat-row {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 12px;
-}
-.seat-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 3px;
-}
-.seat,
-.sleeper {
-  border-radius: 4px;
-  border: 1px solid #bdbdbd;
-  width: 32px;
-  height: 32px;
-  background-size: 60%;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.seat {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3e%3cpath d='M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/%3e%3cpath fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z'/%3e%3c/svg%3e");
-}
-.sleeper {
-  width: 70px;
-  height: 32px;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3e%3cpath d='M12 2a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9s9-4.03 9-9a9 9 0 0 0-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1.2-6.25c-.41 0-.75-.34-.75-.75s.34-.75.75-.75.75.34.75.75-.34.75-.75.75zm2.4 0c-.41 0-.75-.34-.75-.75s.34-.75.75-.75.75.34.75.75-.34.75-.75.75zm-1.2-3c-.69 0-1.25-.56-1.25-1.25S11.31 6.5 12 6.5s1.25.56 1.25 1.25S12.69 9.75 12 9.75z'/%3e%3c/svg%3e");
-  background-size: 50%;
-}
-.gangway {
-  width: 32px;
-  height: 32px;
-  border: none;
-}
-.seat-price {
-  font-size: 0.7rem;
-  color: var(--text-dark);
-  margin-top: 2px;
-}
-.seat.available,
-.sleeper.available {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #81c784;
-}
-.seat.available:hover,
-.sleeper.available:hover {
-  background-color: #e8f5e9;
-  border-color: var(--success-color);
-  transform: scale(1.1);
-}
-.seat.booked,
-.sleeper.booked {
-  background-color: #eeeeee;
-  border-color: #e0e0e0;
-  cursor: not-allowed;
-  background-image: none;
-}
-.seat.female,
-.sleeper.female {
-  background-color: #fce4ec;
-  border-color: #f48fb1;
-  background-image: none;
-}
-.seat.selected,
-.sleeper.selected {
-  background-color: var(--success-color);
-  color: white;
-  border-color: var(--success-color-dark);
-  font-weight: bold;
-  background-image: none;
-}
-.seat-types-legend {
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-}
-.seat-types-legend .legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0.5rem;
-}
-.legend-item .seat-box {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-}
-.legend-item .sleeper-box {
-  width: 60px;
-  height: 30px;
-  border-radius: 4px;
-}
-.bus-details-sidebar {
-  position: sticky;
-  top: 150px;
-}
-.bus-details-card {
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-  margin-bottom: 1.5rem;
-}
-.bus-details-card h5 {
-  font-weight: 700;
-}
-.bus-details-tabs .nav-link {
-  color: var(--text-light);
-  font-weight: 600;
-  border: none !important;
-  border-bottom: 3px solid transparent !important;
-}
-.bus-details-tabs .nav-link.active {
-  color: var(--primary-color);
-  background-color: transparent !important;
-  border-bottom: 3px solid var(--primary-color) !important;
-}
-.info-list .info-item {
-  display: flex;
-  align-items: start;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-.info-list .info-item:last-child {
-  border-bottom: none;
-}
-.info-item i {
-  font-size: 1.2rem;
-  color: var(--primary-color);
-  margin-top: 3px;
-}
-#summary-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #fff;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1000;
-  transition: transform 0.3s ease-in-out;
-  transform: translateY(100%);
-}
-#summary-bar.visible {
-  transform: translateY(0);
-}
-.summary-info .seats {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-.summary-info .price {
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: var(--text-dark);
-}
-#summary-bar .btn-primary {
-  font-size: 1.1rem;
-  padding: 14px 35px;
-}
-
-/* ===================================================================
-   7. Footer
-   =================================================================== */
-footer {
-  background-color: #212529; /* A standard dark color */
-}
-footer .text-primary {
-  color: var(--primary-color) !important;
-}
-footer .mr-3 {
-  margin-right: 0.5rem;
-}
-/* ===================================================================
-   ADDITIONAL STYLES FOR NEW HOMEPAGE SECTIONS
-   =================================================================== */
 
 /* How It Works Section */
 .step-box {
@@ -632,11 +229,10 @@ footer .mr-3 {
   border-radius: 15px;
   box-shadow: var(--card-shadow);
   height: 100%;
-  position: relative;
   border-top: 4px solid var(--primary-color);
 }
 .testimonial-card .rating {
-  color: #ffc107; /* Gold color for stars */
+  color: #ffc107;
   font-size: 1.2rem;
   margin-bottom: 1rem;
 }
@@ -658,23 +254,376 @@ footer .mr-3 {
   transform: scale(1.1);
 }
 
-/* App Download Section Tweaks */
-.app-download-section h2.text-white {
-  color: #fff !important;
+/* ===================================================================
+   5. Sidebar (Offcanvas)
+   =================================================================== */
+.offcanvas-header {
+  border-bottom: 1px solid #e9ecef;
+}
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+}
+.sidebar-menu-item {
+  padding: 0.9rem 0.5rem;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-dark);
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+.sidebar-menu-item:hover {
+  background-color: var(--secondary-color);
 }
 
 /* ===================================================================
-   8. Responsive Design (All pages)
+   6. Bus List & Filter Page Styles
+   =================================================================== */
+.filter-section {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  position: sticky;
+  top: 90px;
+}
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.bus-item {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+.bus-item:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-4px);
+}
+.bus-item-summary {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  /* gap: 1rem; */
+}
+.bus-info h5 {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+.rating-badge {
+  background-color: var(--success-color);
+  width: 63px;
+  color: white;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+.price-section .price {
+  font-weight: 700;
+  font-size: 1.75rem;
+}
+
+/* ===================================================================
+   7. MULTI-STEP BOOKING PROCESS STYLES (Seats, Points, Passenger)
+   =================================================================== */
+/* --- Main Process Header --- */
+.process-header-v2 {
+  padding: 0.8rem 0;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1030;
+}
+.process-steps-v2 {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+}
+.process-steps-v2 li {
+  color: var(--text-light);
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid transparent;
+}
+.process-steps-v2 li.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  border-bottom-color: var(--primary-color);
+}
+
+/* --- Summary Bar (Used on all steps) --- */
+.summary-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1050;
+}
+.summary-info .price {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.summary-info .seats {
+  color: var(--text-light);
+}
+
+/* --- Step 1: Seat Selection --- */
+#seat-selection-view .main-layout-v2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  align-items: flex-start;
+}
+#seat-selection-view .left-panel,
+#seat-selection-view .right-panel {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+}
+#seat-selection-view .right-panel {
+  position: sticky;
+  top: 100px;
+}
+.decks-wrapper {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.deck-title {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+.seat-grid {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.seat-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.seat,
+.sleeper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.seat {
+  width: 42px;
+  height: 42px;
+}
+.sleeper {
+  width: 42px;
+  height: 84px;
+}
+.seat.available {
+  border-color: #a5d6a7;
+  background-color: #f0fdf4;
+  color: var(--success-color);
+}
+.seat.female,
+.sleeper.female {
+  background-color: #fdf2f8;
+  border-color: var(--female-color);
+  color: var(--female-color);
+}
+.seat.male,
+.sleeper.male {
+  background-color: #f0f9ff;
+  border-color: var(--info-color);
+  color: var(--info-color);
+}
+.seat.sold,
+.sleeper.sold {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.seat.selected,
+.sleeper.selected {
+  background-color: var(--success-color);
+  border-color: var(--success-color-dark);
+  color: #fff !important;
+}
+.seat.female.selected,
+.sleeper.female.selected {
+  background-color: var(--female-color);
+  border-color: var(--female-color-dark);
+}
+.seat.male.selected,
+.sleeper.male.selected {
+  background-color: var(--info-color);
+  border-color: var(--info-color-dark);
+}
+.seat-legend {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+.legend-body {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+.legend-box.available {
+  background-color: #f0fdf4;
+}
+.legend-box.female {
+  background-color: #fdf2f8;
+}
+.legend-box.male {
+  background-color: #f0f9ff;
+}
+.legend-box.sold {
+  background-color: #f3f4f6;
+}
+
+/* --- Step 2: Boarding/Dropping Point --- */
+.point-selection-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+}
+.point-selection-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+  padding: 1.5rem;
+  height: 100%;
+}
+.point-selection-card h5 {
+  font-weight: 600;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+.point-list {
+  list-style: none;
+  padding: 0;
+}
+.point-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.point-item:last-child {
+  border-bottom: none;
+}
+.point-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.point-location p {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 0;
+}
+.point-item .form-check-input {
+  border-color: var(--primary-color);
+}
+
+/* --- Step 3: Passenger Information --- */
+.passenger-form-card,
+.summary-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.passenger-form-card h5,
+.summary-card h5 {
+  font-weight: 600;
+}
+.gender-selection .btn-check:checked + .btn {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+.gender-selection .btn {
+  border-radius: 20px !important;
+}
+.summary-card p {
+  margin-bottom: 0.25rem;
+  color: var(--text-light);
+}
+.summary-card strong {
+  color: var(--text-dark);
+}
+.summary-point {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.summary-duration {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  padding-left: 3.5rem;
+}
+
+/* ===================================================================
+   8. Footer
+   =================================================================== */
+footer {
+  background-color: #212529;
+  color: #fff;
+  padding: 40px 0;
+}
+footer .text-primary {
+  color: var(--primary-color) !important;
+}
+
+/* ===================================================================
+   9. Responsive Design (All pages)
    =================================================================== */
 @media (max-width: 992px) {
   .hero-section h1 {
     font-size: 2.5rem;
   }
-  .app-download-section .text-center {
-    margin-top: 2rem;
-  }
   .bus-item-summary {
-    grid-template-columns: 1fr;
+    /* grid-template-columns: 1fr; */
     text-align: left;
   }
   .bus-timing,
@@ -682,22 +631,25 @@ footer .mr-3 {
     text-align: left;
     margin-top: 1rem;
   }
-  .filter-section,
-  .bus-details-sidebar {
+  .filter-section {
     position: static;
     margin-bottom: 2rem;
   }
-  .seat-layout-container {
-    flex-direction: column;
+  #seat-selection-view .main-layout-v2 {
+    grid-template-columns: 1fr;
+  }
+  #seat-selection-view .right-panel {
+    position: static;
+    margin-top: 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
   body {
     padding-top: 66px;
-  } /* Adjust for smaller navbar */
+  }
   .section {
-    padding: 40px 0;
+    padding: 10px 0;
   }
   .hero-section {
     padding: 80px 0;
@@ -709,248 +661,206 @@ footer .mr-3 {
   .search-form-container {
     padding: 1.5rem;
   }
-  .page-header {
-    top: 66px;
+  .summary-bar {
     flex-direction: column;
-    align-items: flex-start !important;
-    gap: 10px !important;
-  }
-  #summary-bar {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.75rem;
     text-align: center;
   }
+  /* Booking Process on Mobile */
+  .decks-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+  .deck {
+    width: 100%;
+    max-width: 350px;
+  }
 }
 
-/* Apply a background and remove body padding-top ONLY for this page */
-.seat-selection-page {
-  background-color: var(--body-bg);
-  padding-top: 80px; /* Space for the new fixed process header */
-  padding-bottom: 120px; /* Space for the floating summary bar */
-}
+/* ===================================================================
+   FAQ Page Styles
+   =================================================================== */
 
-/* New Booking Process Header */
-.process-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #fff;
-  padding: 1rem 1.5rem;
-  box-shadow: var(--card-shadow);
-  z-index: 1040; /* Above content, below navbar offcanvas */
+/* --- FAQ Hero Section --- */
+.faq-hero-section {
+  padding: 60px 0;
+  background-color: #e3e3e3; /* A light, complementary pink from your theme */
+  background-image: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0)
+  );
 }
-.process-header .route-info {
-  font-size: 1.1rem;
-  font-weight: 500;
+.faq-hero-section h1 {
+  font-weight: 700;
+  color: var(--text-dark);
 }
-.process-steps {
-  display: flex;
-  gap: 2rem;
-  font-size: 0.9rem;
+.faq-hero-section .lead {
   color: var(--text-light);
-}
-.process-steps .step.active {
-  color: var(--primary-color);
-  font-weight: 700;
-  border-bottom: 3px solid var(--primary-color);
-  padding-bottom: 0.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Left Column: Seat Layout Wrapper */
-.seat-layout-wrapper {
-  position: sticky;
-  top: 100px; /* 80px header + 20px margin */
-}
-.seat-deck {
-  background: #fff;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: var(--card-shadow);
-}
-.deck-label {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-.steering-wheel {
-  font-size: 2rem;
-  color: #adb5bd;
-}
-
-/* Right Column: Bus Details Card */
-.bus-details-card {
+/* --- Main FAQ Section --- */
+.faq-section {
+  max-width: 900px;
+  margin: 0 auto 5rem auto; /* Center the content */
   background-color: #fff;
-  padding: 1.5rem;
+  padding: 2.5rem;
   border-radius: 1rem;
   box-shadow: var(--card-shadow);
 }
-.bus-info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.rating-badge-v2 {
-  background-color: var(--success-color);
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 8px;
+.faq-title {
   font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--text-dark);
   text-align: center;
-}
-.rating-badge-v2 .rating-count {
-  display: block;
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-.image-gallery {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-.image-gallery img {
-  width: 100%;
-  border-radius: 8px;
-  height: 120px;
-  object-fit: cover;
+  margin-bottom: 2rem;
 }
 
-/* Tabs */
-.bus-details-tabs {
+/* --- Tab Navigation --- */
+.faq-tabs .nav-tabs {
   border-bottom: 1px solid var(--border-color);
+  justify-content: center; /* Center the tabs */
+  margin-bottom: 2rem;
 }
-.bus-details-tabs .nav-link {
+.faq-tabs .nav-link {
   color: var(--text-light);
   font-weight: 500;
   border: none;
   border-bottom: 3px solid transparent;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s ease-in-out;
 }
-.bus-details-tabs .nav-link.active {
+.faq-tabs .nav-link:hover {
+  border-bottom-color: var(--primary-hover-color);
+  color: var(--text-dark);
+}
+.faq-tabs .nav-link.active {
   color: var(--primary-color);
   background-color: transparent;
-  border-bottom-color: var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
 }
 
-/* Accordion styles for "Why book" */
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.feature-item i {
-  font-size: 1.5rem;
-  color: var(--text-light);
-}
-.accordion-item {
+/* --- Accordion (FAQ Items) --- */
+.faq-accordion .accordion-item {
   border: none;
-}
-.accordion-button {
-  padding: 0.75rem;
-}
-.accordion-button:not(.collapsed) {
-  background: none;
-  box-shadow: none;
-  color: inherit;
-}
-.accordion-button:focus {
-  box-shadow: none;
-}
-.accordion-button::after {
-  /* Hides the default Bootstrap chevron */
-  display: none;
-}
-.accordion-button i {
-  font-size: 1.5rem;
-  color: var(--text-light);
-  margin-right: 1rem;
-}
-.accordion-body {
-  font-size: 0.9rem;
-}
-.feature-item-expandable .accordion-button {
   border-bottom: 1px solid var(--border-color);
 }
-.feature-item-expandable:last-child .accordion-button {
+.faq-accordion .accordion-item:last-child {
   border-bottom: none;
 }
+.faq-accordion .accordion-header .accordion-button {
+  font-weight: 500;
+  color: var(--text-dark);
+  padding: 1.25rem 0.5rem;
+  transition: background-color 0.2s;
+}
+.faq-accordion .accordion-button:not(.collapsed) {
+  color: var(--primary-color);
+  background-color: transparent;
+  box-shadow: none;
+}
+.faq-accordion .accordion-button:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+.faq-accordion .accordion-button::after {
+  /* Custom accordion icon */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  transition: transform 0.2s ease-in-out;
+}
+.faq-accordion .accordion-button:not(.collapsed)::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f3679a'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  transform: rotate(-180deg);
+}
+.faq-accordion .accordion-body {
+  padding: 0 0.5rem 1.25rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
 
-/* Seat Legend Card */
-.seat-legend-card {
-  background-color: #fff;
-  padding: 1.5rem;
+/* --- Still Need Help / Contact Section --- */
+.still-need-help-section {
+  padding-top: 2rem;
+}
+.contact-card {
+  padding: 2rem;
+  border: 1px solid var(--border-color);
   border-radius: 1rem;
-  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+  height: 100%;
 }
-.seat-legend-card .seat,
-.seat-legend-card .sleeper {
-  cursor: default;
+.contact-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow);
+  border-color: var(--primary-color);
+}
+.contact-card-icon {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+}
+.contact-card h5 {
+  font-weight: 600;
+}
+.contact-card p {
+  color: var(--text-light);
+}
+.contact-card a {
+  text-decoration: none;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+.contact-card a:hover {
+  text-decoration: underline;
 }
 
-/* FINAL Floating Summary Bar */
-.summary-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #212529; /* Dark background */
-  color: #fff;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1050;
-}
-.summary-bar .price {
-  font-weight: 700;
-  font-size: 1.5rem;
-}
-.summary-bar .seats {
-  opacity: 0.8;
+/* Responsive adjustments for the FAQ page */
+@media (max-width: 768px) {
+  .faq-section {
+    padding: 1.5rem;
+  }
+  .faq-tabs .nav-link {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
 }
 
 /* ===================================================================
-   7. About Us Page Styles
+   About Us Page Styles
    =================================================================== */
 
-/* About Us Hero Section */
+/* --- About Us Hero Section --- */
 .about-hero-section {
-  position: relative;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-    url("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1887&auto=format&fit=crop");
+  padding: 80px 0;
+  background-image: linear-gradient(rgb(223 221 222 / 85%), rgb(12 4 7 / 85%)),
+    url("../img/1.jpg");
   background-size: cover;
-  background-position: center 70%;
-  padding: 8rem 0;
+  background-position: center;
   color: #fff;
 }
-
 .about-hero-section h1 {
-  font-size: 3.5rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
 }
-
-.about-hero-section p {
-  font-size: 1.25rem;
+.about-hero-section .lead {
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
   opacity: 0.9;
 }
 
-/* "By the Numbers" Section */
+/* --- By the Numbers Section --- */
 .by-the-numbers-section {
-  background-color: var(--secondary-color);
+  background-color: #cfcfcf;
+  padding: 50px 0;
 }
 .stat-box {
-  text-align: center;
-  padding: 1rem;
+  padding: 20px;
 }
 .stat-number {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--primary-color);
   display: block;
@@ -958,25 +868,26 @@ footer .mr-3 {
 .stat-label {
   font-size: 1rem;
   color: var(--text-dark);
-  font-weight: 500;
+  margin-top: 5px;
 }
 
-/* Our Values Section */
+/* --- Core Values Section --- */
 .value-card {
   background-color: #fff;
-  padding: 2.5rem 1.5rem;
+  padding: 2.5rem;
   border-radius: 1rem;
   text-align: center;
-  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
   height: 100%;
 }
 .value-card:hover {
   transform: translateY(-8px);
   box-shadow: var(--card-shadow-hover);
+  border-color: var(--primary-color);
 }
 .value-icon {
-  font-size: 2.5rem;
+  font-size: 3rem;
   color: var(--primary-color);
   margin-bottom: 1.5rem;
   display: inline-block;
@@ -985,254 +896,66 @@ footer .mr-3 {
   font-weight: 600;
   margin-bottom: 1rem;
 }
+.value-card p {
+  color: var(--text-light);
+  line-height: 1.6;
+}
 
-/* Meet the Team Section */
+/* --- Meet The Team Section --- */
 .team-card {
   text-align: center;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+}
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--card-shadow-hover);
 }
 .team-card img {
-  width: 150px;
-  height: 150px;
   border-radius: 50%;
-  object-fit: cover;
+  width: 120px;
+  height: 120px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 4px solid #fff;
+  border: 4px solid var(--secondary-color);
 }
 .team-card h5 {
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
 
-/* Final CTA Section */
+/* --- Final Call-to-Action (CTA) Section --- */
 .cta-section {
-  padding: 5rem 0;
-  background-image: var(--primary-gradient);
+  padding: 80px 0;
+  background-image: linear-gradient(45deg, #8d6363, #616161);
   color: #fff;
 }
 .cta-section h2 {
   font-weight: 700;
-  font-size: 2.5rem;
 }
 .btn-light-outline {
-  padding: 12px 28px;
-  font-weight: 600;
-  font-size: 1rem;
-  border-radius: 8px;
-  background: transparent;
   border: 2px solid #fff;
   color: #fff;
+  padding: 12px 30px;
+  font-weight: 600;
+  border-radius: 50px;
   transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .btn-light-outline:hover {
-  background: #fff;
-  color: var(--primary-color);
-  transform: translateY(-3px);
-}
-
-/* ===================================================================
-   8. Help Page Styles
-   =================================================================== */
-
-/* Help Hero Section */
-.help-hero-section {
-  background-color: #878787;
-  padding: 5rem 0;
-  color: #fff;
-}
-.help-hero-section h1 {
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.help-search-bar {
-  max-width: 600px;
-  margin: 1.5rem auto 0 auto;
-}
-.help-search-bar .form-control {
-  padding: 1rem 1.5rem;
-  border-radius: 50px;
-  border: none;
-}
-.help-search-bar .btn {
-  border-radius: 50px;
-  padding: 0 2rem;
-}
-
-/* Help Categories */
-.help-category-card {
-  display: block;
   background-color: #fff;
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: var(--card-shadow);
-  color: var(--text-dark);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  height: 100%;
-}
-.help-category-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--card-shadow-hover);
-  color: var(--primary-color);
-}
-.help-category-icon {
-  font-size: 3rem;
-  color: var(--primary-color);
-  margin-bottom: 1rem;
-}
-
-/* FAQ Section */
-.faq-section .accordion-item {
-  background-color: #fff;
-  border: 1px solid var(--border-color);
-  border-radius: 8px !important;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-.faq-section .accordion-button {
-  font-weight: 600;
-  color: var(--text-dark);
-}
-.faq-section .accordion-button:not(.collapsed) {
-  background-color: var(--secondary-color);
-  color: var(--primary-color);
-  box-shadow: none;
-}
-.faq-section .accordion-button:focus {
-  box-shadow: 0 0 0 0.25rem rgba(216, 27, 96, 0.15);
-}
-.faq-section .accordion-body {
-  color: var(--text-light);
-  line-height: 1.7;
-}
-
-/* Contact Us Section */
-.contact-info-card {
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  box-shadow: var(--card-shadow);
-}
-.contact-info-icon {
-  font-size: 2rem;
   color: var(--primary-color);
 }
 
-/* ===================================================================
-   10. FAQ Page Styles (Expanded)
-   =================================================================== */
-
-/* FAQ Hero Section */
-.faq-hero-section {
-  padding: 5rem 0;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-    url("https://images.unsplash.com/photo-1559133939-998d42562145?q=80&w=1933&auto=format&fit=crop");
-  background-size: cover;
-  background-position: center;
-  border-radius: 1rem;
-}
-.faq-hero-section h1 {
-  color: #fff;
-  font-weight: 700;
-}
-.faq-hero-section p {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-}
-
-.faq-section {
-  background-color: #fff;
-  padding: 3rem;
-  border-radius: 1rem;
-  box-shadow: var(--card-shadow);
-  margin-top: -4rem; /* Pulls the FAQ section up over the hero image */
-  position: relative;
-  z-index: 10;
-}
-
-.faq-title {
-  font-weight: 700;
-  margin-bottom: 2rem;
-}
-
-/* Tab Styles */
-.faq-tabs .nav-tabs {
-  border-bottom: 1px solid var(--border-color);
-}
-.faq-tabs .nav-link {
-  border: none;
-  color: var(--text-light);
-  font-weight: 500;
-  padding: 0.75rem 0;
-  margin-right: 2rem;
-  border-bottom: 3px solid transparent;
-}
-.faq-tabs .nav-link.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-  background-color: transparent;
-}
-
-/* Accordion Styles */
-.faq-accordion {
-  padding-top: 1.5rem;
-}
-.faq-accordion .accordion-item {
-  border: none;
-  border-bottom: 1px solid var(--border-color);
-  border-radius: 0 !important;
-}
-.faq-accordion .accordion-button {
-  font-weight: 600;
-  color: var(--text-dark);
-  padding: 1.5rem 0;
-}
-.faq-accordion .accordion-button:focus {
-  box-shadow: none;
-}
-.faq-accordion .accordion-button:not(.collapsed) {
-  background-color: transparent;
-  color: var(--primary-color);
-  box-shadow: none;
-}
-.faq-accordion .accordion-button::after {
-  content: "\f282";
-  font-family: "bootstrap-icons";
-  font-size: 1rem;
-  background-image: none;
-  font-weight: bold;
-  transition: transform 0.3s ease;
-}
-.faq-accordion .accordion-button:not(.collapsed)::after {
-  transform: rotate(-180deg);
-}
-.faq-accordion .accordion-body {
-  color: var(--text-light);
-  line-height: 1.7;
-  padding: 0 0 1.5rem 0;
-}
-
-/* Still Need Help Section */
-.still-need-help-section {
-  padding-top: 4rem;
-}
-.contact-card {
-  background-color: var(--secondary-color);
-  border-radius: 1rem;
-  padding: 2rem;
-  text-align: center;
-  border: 1px solid var(--primary-hover-color);
-}
-.contact-card-icon {
-  font-size: 3rem;
-  color: var(--primary-color);
-}
-.contact-card a {
-  font-weight: 600;
-  color: var(--primary-color);
-  text-decoration: none;
+/* --- Responsive Adjustments for About Page --- */
+@media (max-width: 576px) {
+  .stat-number {
+    font-size: 2rem;
+  }
+  .stat-label {
+    font-size: 0.9rem;
+  }
 }
