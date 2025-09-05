@@ -19,82 +19,278 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
     $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
     if ($action === 'add_bus') {
-        // --- एक नई बस जोड़ने को संभालें ---
-        $bus_name = $_POST['bus_name'] ?? '';
-        $registration_number = $_POST['registration_number'] ?? '';
+        $bus_name = trim($_POST['bus_name'] ?? '');
+        $registration_number = trim($_POST['registration_number'] ?? '');
         $operator_id = (int)($_POST['operator_id'] ?? 0);
-        $bus_type = $_POST['bus_type'] ?? '';
-        $total_seats = (int)($_POST['total_seats'] ?? 0); 
-        $seater_seats = (int)($_POST['seater_seats'] ?? 0);
-        $sleeper_seats = (int)($_POST['sleeper_seats'] ?? 0);
-        $description = $_POST['description'] ?? '';
+        $bus_type = trim($_POST['bus_type'] ?? '');
+        $description = trim($_POST['description'] ?? '');
         $status = $_POST['status'] ?? 'Inactive';
-        
-        $amenities = null; // JSON डेटा को यहाँ से प्रोसेस किया जा सकता है, यदि आवश्यक हो
-      
+        $categories = $_POST['categories'] ?? [];
+
+        // Server-Side Validation
         if (empty($bus_name) || empty($registration_number) || $operator_id <= 0 || empty($bus_type)) {
-            $response['notif_desc'] = 'Bus name, registration number, operator, and type are required.';
+            $response['notif_desc'] = 'Please fill all required fields.';
             echo json_encode($response);
             exit();
         }
 
-        $target_dir = "uploads/bus_images/";
-        $bus_image_path = null;
-        if (isset($_FILES['bus_image']) && $_FILES['bus_image']['error'] === UPLOAD_ERR_OK) {
-            if (!is_dir($target_dir)) {
-                if (!mkdir($target_dir, 0775, true)) {
-                    $response['notif_desc'] = 'Failed to create upload directory.';
-                    echo json_encode($response);
-                    exit();
-                }
-            }
-            $original_name = basename($_FILES['bus_image']['name']);
-            $sanitized_name = preg_replace('/[^a-zA-Z0-9._-]/', '_', $original_name);
-            $image_name = uniqid() . '_' . $sanitized_name;
-
-            $target_file = $target_dir . $image_name;
-
-            if (move_uploaded_file($_FILES['bus_image']['tmp_name'], $target_file)) {
-                $bus_image_path = $target_file;
-            } else {
-                $response['notif_desc'] = 'Failed to upload bus image.';
-                echo json_encode($response);
-                exit();
-            }
-        }
-
         try {
-            $stmt = $_conn_db->prepare("SELECT COUNT(*) FROM buses WHERE registration_number = ?");
-            $stmt->execute([$registration_number]);
-            if ($stmt->fetchColumn() > 0) {
+            // Check for duplicate registration number
+            $stmt_check = $_conn_db->prepare("SELECT COUNT(*) FROM buses WHERE registration_number = ?");
+            $stmt_check->execute([$registration_number]);
+            if ($stmt_check->fetchColumn() > 0) {
                 $response['notif_desc'] = 'A bus with this registration number already exists.';
                 echo json_encode($response);
                 exit();
             }
 
+            $_conn_db->beginTransaction();
+
+            // 1. Insert bus details into the `buses` table (without image column)
             $stmt = $_conn_db->prepare(
-                "INSERT INTO buses (bus_name, registration_number, operator_id, bus_type, total_seats, seater_seats, sleeper_seats, amenities, bus_image, description, status, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+                "INSERT INTO buses (bus_name, registration_number, operator_id, bus_type, description, status, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())"
             );
             $stmt->execute([
-                $bus_name, $registration_number, $operator_id, $bus_type, $total_seats,
-                $seater_seats, $sleeper_seats, $amenities, $bus_image_path, $description, $status
+                $bus_name, $registration_number, $operator_id, $bus_type, $description, $status
             ]);
-
             $new_bus_id = $_conn_db->lastInsertId();
 
+            // 2. Insert categories into the mapping table
+            if (!empty($categories) && is_array($categories)) {
+                $stmt_map = $_conn_db->prepare("INSERT INTO bus_category_map (bus_id, category_id) VALUES (?, ?)");
+                foreach ($categories as $category_id) {
+                    $stmt_map->execute([$new_bus_id, (int)$category_id]);
+                }
+            }
+            
+            // 3. Handle Multiple Image Uploads
+            $upload_dir = "uploads/bus_images/";
+            if (!is_dir($upload_dir)) { mkdir($upload_dir, 0775, true); }
+            
+            // Check if any files were uploaded
+            if (isset($_FILES['bus_images']) && !empty($_FILES['bus_images']['name'][0])) {
+                $stmt_img = $_conn_db->prepare("INSERT INTO bus_images (bus_id, image_path) VALUES (?, ?)");
+
+                // Loop through each uploaded file
+                $file_count = count($_FILES['bus_images']['name']);
+                for ($i = 0; $i < $file_count; $i++) {
+                    if ($_FILES['bus_images']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tmp_name = $_FILES['bus_images']['tmp_name'][$i];
+                        $file_info = pathinfo($_FILES['bus_images']['name'][$i]);
+                        $extension = strtolower($file_info['extension']);
+                        $new_filename = 'bus_' . $new_bus_id . '_' . time() . '_' . uniqid() . '.' . $extension;
+
+                        if (move_uploaded_file($tmp_name, $upload_dir . $new_filename)) {
+                            $stmt_img->execute([$new_bus_id, $new_filename]);
+                        }
+                    }
+                }
+            }
+
+            $_conn_db->commit();
+
+            // Success response
             $response['res'] = 'true';
             $response['notif_type'] = 'success';
             $response['notif_title'] = 'Success';
-            $response['notif_desc'] = 'Bus added successfully! Redirecting to seat layout setup.';
-            $response['notif_popup'] = 'true';
-            $response['goTo'] = 'manage_seats.php?bus_id=' . $new_bus_id; 
-            
+            $response['notif_desc'] = 'Bus added successfully! You can now manage its seats.';
+            $response['goTo'] = 'manage_seats.php?bus_id=' . $new_bus_id;
+
         } catch (PDOException $e) {
-            error_log("Add bus error: " . $e->getMessage());
-            $response['notif_desc'] = 'Database error: ' . $e->getMessage();
+            $_conn_db->rollBack();
+            error_log("Add bus with multiple images error: " . $e->getMessage());
+            $response['notif_desc'] = 'A database error occurred. Please check the logs.';
+        }
+    } 
+
+    // === ACTIONS FOR CATEGORIES (same as before) ===
+    elseif ($action === 'get_all_categories') {
+        try {
+            $stmt = $_conn_db->query("SELECT category_id, category_name FROM bus_categories WHERE status = 'Active' ORDER BY category_name");
+            $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $response['res'] = 'true';
+            $response['categories'] = $categories;
+        } catch (PDOException $e) { $response['notif_desc'] = 'Could not fetch categories.'; }
+    }
+    elseif ($action === 'add_category') {
+        $category_name = trim($_POST['category_name'] ?? '');
+        if (empty($category_name)) {
+            $response['notif_desc'] = 'Category name cannot be empty.';
+        } else {
+            try {
+                $stmt = $_conn_db->prepare("INSERT INTO bus_categories (category_name) VALUES (?)");
+                $stmt->execute([$category_name]);
+                $response['res'] = 'true';
+                $response['notif_desc'] = 'Category added successfully.';
+            } catch (PDOException $e) {
+                if ($e->errorInfo[1] == 1062) { $response['notif_desc'] = 'This category already exists.'; } 
+                else { $response['notif_desc'] = 'Database error.'; }
+            }
+        }
+    }
+    elseif ($action === 'update_category') {
+        $category_id = (int)($_POST['category_id'] ?? 0);
+        $category_name = trim($_POST['category_name'] ?? '');
+        if ($category_id > 0 && !empty($category_name)) {
+            try {
+                $stmt = $_conn_db->prepare("UPDATE bus_categories SET category_name = ? WHERE category_id = ?");
+                $stmt->execute([$category_name, $category_id]);
+                $response['res'] = 'true';
+                $response['notif_desc'] = 'Category updated successfully.';
+            } catch (PDOException $e) { $response['notif_desc'] = 'Database error or category already exists.'; }
+        } else { $response['notif_desc'] = 'Invalid data provided.'; }
+    }
+    elseif ($action === 'delete_category') {
+        $category_id = (int)($_POST['category_id'] ?? 0);
+        if ($category_id > 0) {
+            try {
+                $stmt = $_conn_db->prepare("DELETE FROM bus_categories WHERE category_id = ?");
+                $stmt->execute([$category_id]);
+                $response['res'] = 'true';
+                $response['notif_desc'] = 'Category deleted successfully.';
+            } catch (PDOException $e) { $response['notif_desc'] = 'Database error.'; }
+        } else { $response['notif_desc'] = 'Invalid ID.'; }
+    }
+ 
+      elseif ($action === 'update_bus') {
+        $bus_id = (int)($_POST['bus_id'] ?? 0);
+        $bus_name = trim($_POST['bus_name'] ?? '');
+        $registration_number = trim($_POST['registration_number'] ?? '');
+        $operator_id = (int)($_POST['operator_id'] ?? 0);
+        $bus_type = trim($_POST['bus_type'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $status = $_POST['status'] ?? 'Inactive';
+        $categories = $_POST['categories'] ?? [];
+        $images_to_delete_str = $_POST['images_to_delete'] ?? '';
+    
+        // Validación
+        if ($bus_id <= 0 || empty($bus_name) || empty($registration_number) || $operator_id <= 0) {
+            $response['notif_desc'] = 'Datos inválidos. Por favor, rellena todos los campos obligatorios.';
+            echo json_encode($response);
+            exit();
+        }
+    
+        try {
+            // Comprobar número de registro duplicado, excluyendo el autobús actual
+            $stmt_check = $_conn_db->prepare("SELECT COUNT(*) FROM buses WHERE registration_number = ? AND bus_id != ?");
+            $stmt_check->execute([$registration_number, $bus_id]);
+            if ($stmt_check->fetchColumn() > 0) {
+                $response['notif_desc'] = 'Otro autobús con este número de registro ya existe.';
+                echo json_encode($response);
+                exit();
+            }
+    
+            $_conn_db->beginTransaction();
+    
+            // 1. Actualizar los detalles principales del autobús en la tabla `buses`
+            $sql = "UPDATE buses SET 
+                        bus_name = ?, registration_number = ?, operator_id = ?, 
+                        bus_type = ?, description = ?, status = ?,
+                        updated_at = NOW()
+                    WHERE bus_id = ?";
+            $stmt = $_conn_db->prepare($sql);
+            $stmt->execute([
+                $bus_name, $registration_number, $operator_id, $bus_type, $description, $status, $bus_id
+            ]);
+    
+            // 2. Sincronizar categorías: eliminar las antiguas, insertar las nuevas
+            $stmt_delete_cats = $_conn_db->prepare("DELETE FROM bus_category_map WHERE bus_id = ?");
+            $stmt_delete_cats->execute([$bus_id]);
+            
+            if (!empty($categories) && is_array($categories)) {
+                $stmt_insert_cat = $_conn_db->prepare("INSERT INTO bus_category_map (bus_id, category_id) VALUES (?, ?)");
+                foreach ($categories as $category_id) {
+                    $stmt_insert_cat->execute([$bus_id, (int)$category_id]);
+                }
+            }
+            
+            // 3. Eliminar imágenes marcadas para eliminación
+            if (!empty($images_to_delete_str)) {
+                $images_to_delete_ids = explode(',', $images_to_delete_str);
+                $placeholders = rtrim(str_repeat('?,', count($images_to_delete_ids)), ',');
+                
+                // Obtener las rutas de los archivos para poder eliminarlos del servidor
+                $stmt_get_paths = $_conn_db->prepare("SELECT image_path FROM bus_images WHERE image_id IN ($placeholders)");
+                $stmt_get_paths->execute($images_to_delete_ids);
+                $paths_to_unlink = $stmt_get_paths->fetchAll(PDO::FETCH_COLUMN, 0);
+                
+                foreach ($paths_to_unlink as $path) {
+                    if (file_exists("uploads/bus_images/" . $path)) {
+                        unlink("uploads/bus_images/" . $path);
+                    }
+                }
+                
+                // Eliminar los registros de la base de datos
+                $stmt_delete_img = $_conn_db->prepare("DELETE FROM bus_images WHERE image_id IN ($placeholders)");
+                $stmt_delete_img->execute($images_to_delete_ids);
+            }
+    
+            // 4. Subir nuevas imágenes (la misma lógica que en add_bus)
+            $upload_dir = "uploads/bus_images/";
+            if (isset($_FILES['bus_images']) && !empty($_FILES['bus_images']['name'][0])) {
+                $stmt_img = $_conn_db->prepare("INSERT INTO bus_images (bus_id, image_path) VALUES (?, ?)");
+                $file_count = count($_FILES['bus_images']['name']);
+                for ($i = 0; $i < $file_count; $i++) {
+                    if ($_FILES['bus_images']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tmp_name = $_FILES['bus_images']['tmp_name'][$i];
+                        $file_info = pathinfo($_FILES['bus_images']['name'][$i]);
+                        $extension = strtolower($file_info['extension']);
+                        $new_filename = 'bus_' . $bus_id . '_' . time() . '_' . uniqid() . '.' . $extension;
+                        if (move_uploaded_file($tmp_name, $upload_dir . $new_filename)) {
+                            $stmt_img->execute([$bus_id, $new_filename]);
+                        }
+                    }
+                }
+            }
+    
+            $_conn_db->commit();
+    
+            $response['res'] = 'true';
+            $response['notif_type'] = 'success';
+            $response['notif_title'] = 'Success';
+            $response['notif_desc'] = 'Bus details updated successfully.';
+            $response['goTo'] = 'view_all_buses.php'; // Redirigir a la lista después de la actualización
+    
+        } catch (PDOException $e) {
+            $_conn_db->rollBack();
+            error_log("Update bus error: " . $e->getMessage());
+            $response['notif_desc'] = 'Database error updating bus: ' . $e->getMessage();
+        }
+    }
+    // --- NAYA ELSEIF BLOCK: DELETE BUS ---
+    elseif ($action === 'delete_bus') {
+        $bus_id = (int)($_POST['bus_id'] ?? 0);
+        if ($bus_id <= 0) {
+            $response['notif_desc'] = 'Invalid bus ID provided.';
+            echo json_encode($response);
+            exit();
         }
 
+        try {
+            $_conn_db->beginTransaction();
+
+            // Pehle saari seats delete karein
+            $stmt_seats = $_conn_db->prepare("DELETE FROM seats WHERE bus_id = ?");
+            $stmt_seats->execute([$bus_id]);
+
+            // Phir bus ko delete karein
+            $stmt_bus = $_conn_db->prepare("DELETE FROM buses WHERE bus_id = ?");
+            $stmt_bus->execute([$bus_id]);
+
+            $_conn_db->commit();
+
+            $response['res'] = 'true';
+            $response['notif_type'] = 'success';
+            $response['notif_title'] = 'Deleted';
+            $response['notif_desc'] = 'The bus and all its seats have been deleted.';
+            $response['notif_popup'] = 'false'; // Chhota notification
+
+        } catch (PDOException $e) {
+            $_conn_db->rollBack();
+            error_log("Delete bus error: " . $e->getMessage());
+            $response['notif_desc'] = 'Database error deleting bus: ' . $e->getMessage();
+        }
     } elseif ($action === 'add_seat') {
         // --- एक नई सीट जोड़ने को संभालें ---
         $bus_id = (int)($_POST['bus_id'] ?? 0);
