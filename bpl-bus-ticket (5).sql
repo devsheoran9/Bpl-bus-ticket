@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 05, 2025 at 07:42 AM
+-- Generation Time: Sep 05, 2025 at 09:57 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.1.17
 
@@ -167,6 +167,24 @@ INSERT INTO `operators` (`operator_id`, `operator_name`, `contact_person`, `cont
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `user_name` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `mobile` varchar(20) NOT NULL,
+  `rating` int(11) NOT NULL COMMENT 'Rating from 1 to 5',
+  `review_text` text NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1 = Active/Approved, 0 = Pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `routes`
 --
 
@@ -176,7 +194,6 @@ CREATE TABLE `routes` (
   `route_name` varchar(255) NOT NULL,
   `starting_point` varchar(255) NOT NULL,
   `ending_point` varchar(255) NOT NULL,
-  `departure_time` time DEFAULT NULL,
   `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
   `is_popular` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -186,9 +203,34 @@ CREATE TABLE `routes` (
 -- Dumping data for table `routes`
 --
 
-INSERT INTO `routes` (`route_id`, `bus_id`, `route_name`, `starting_point`, `ending_point`, `departure_time`, `status`, `is_popular`, `created_at`) VALUES
-(6, 5, 'Delhi To Pilani', 'Delhi, kasmiri Gate', 'Pilani,Bus Stand', NULL, 'Active', 0, '2025-09-04 11:50:02'),
-(7, 5, 'Delhi To Pilani', 'Delhi, kasmiri Gate', 'Pilani, Purana Bus Stand', '09:30:00', 'Active', 0, '2025-09-04 11:59:01');
+INSERT INTO `routes` (`route_id`, `bus_id`, `route_name`, `starting_point`, `ending_point`, `status`, `is_popular`, `created_at`) VALUES
+(8, 5, 'Delhi To Pilani', 'Delhi, kasmiri Gate', 'Rohtak', 'Active', 0, '2025-09-05 06:24:21'),
+(9, 5, 'Delhi To Pilani', 'Delhi, kasmiri Gate', 'Pilani', 'Active', 0, '2025-09-05 06:30:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `route_schedules`
+--
+
+CREATE TABLE `route_schedules` (
+  `schedule_id` int(11) NOT NULL,
+  `route_id` int(11) NOT NULL,
+  `operating_day` varchar(10) NOT NULL COMMENT 'e.g., Mon, Tue, Sun',
+  `departure_time` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `route_schedules`
+--
+
+INSERT INTO `route_schedules` (`schedule_id`, `route_id`, `operating_day`, `departure_time`) VALUES
+(1, 8, 'Mon', '14:00:00'),
+(2, 8, 'Tue', '15:00:00'),
+(3, 8, 'Thu', '17:00:00'),
+(23, 9, 'Mon', '02:00:00'),
+(24, 9, 'Wed', '17:00:00'),
+(25, 9, 'Sun', '03:00:00');
 
 -- --------------------------------------------------------
 
@@ -200,11 +242,8 @@ CREATE TABLE `route_stops` (
   `stop_id` int(11) NOT NULL,
   `route_id` int(11) NOT NULL,
   `stop_name` varchar(255) NOT NULL,
-  `break_duration_minutes` int(11) NOT NULL DEFAULT 0,
-  `break_description` varchar(255) DEFAULT NULL,
   `stop_order` int(11) NOT NULL,
-  `arrival_time` time DEFAULT NULL,
-  `departure_time` time DEFAULT NULL,
+  `duration_from_start_minutes` int(11) DEFAULT 0,
   `price_seater_lower` decimal(10,2) DEFAULT NULL,
   `price_seater_upper` decimal(10,2) DEFAULT NULL,
   `price_sleeper_lower` decimal(10,2) DEFAULT NULL,
@@ -215,14 +254,12 @@ CREATE TABLE `route_stops` (
 -- Dumping data for table `route_stops`
 --
 
-INSERT INTO `route_stops` (`stop_id`, `route_id`, `stop_name`, `break_duration_minutes`, `break_description`, `stop_order`, `arrival_time`, `departure_time`, `price_seater_lower`, `price_seater_upper`, `price_sleeper_lower`, `price_sleeper_upper`) VALUES
-(11, 6, 'Rohtak, Purana Bus Stand', 0, NULL, 1, NULL, NULL, 200.00, 300.00, 600.00, 800.00),
-(12, 6, 'Bhiwani,Bus Stand', 0, NULL, 2, NULL, NULL, 400.00, 600.00, 1200.00, 1600.00),
-(13, 6, 'Loharu,Bus Stand', 0, NULL, 3, NULL, NULL, 600.00, 900.00, 1800.00, 2400.00),
-(14, 6, 'Pilani,Bus Stand', 0, NULL, 4, NULL, NULL, 800.00, 1200.00, 2400.00, 3200.00),
-(15, 7, 'Rohtak, Purana Bus Stand', 0, NULL, 1, '12:45:00', '13:00:00', 100.00, 200.00, 400.00, 600.00),
-(16, 7, 'Bhiwani, Bus Stand', 0, NULL, 2, '14:00:00', '15:00:00', 200.00, 400.00, 800.00, 1200.00),
-(17, 7, 'Pilani, Purana Bus Stand', 0, NULL, 3, '17:00:00', '17:00:00', 300.00, 600.00, 1200.00, 1800.00);
+INSERT INTO `route_stops` (`stop_id`, `route_id`, `stop_name`, `stop_order`, `duration_from_start_minutes`, `price_seater_lower`, `price_seater_upper`, `price_sleeper_lower`, `price_sleeper_upper`) VALUES
+(18, 8, 'Rohtak, Purana Bus Stand', 1, 60, NULL, NULL, NULL, NULL),
+(19, 8, 'Rohtak', 2, 60, NULL, NULL, NULL, NULL),
+(47, 9, 'Rohtak, Purana Bus Stand', 1, 60, 200.00, 300.00, 100.00, 200.00),
+(48, 9, 'Loharu', 2, 120, 400.00, 600.00, 200.00, 400.00),
+(49, 9, 'Pilani', 3, 180, 600.00, 900.00, 300.00, 600.00);
 
 -- --------------------------------------------------------
 
@@ -435,24 +472,55 @@ INSERT INTO `seats` (`seat_id`, `bus_id`, `seat_code`, `deck`, `seat_type`, `x_c
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user`
+-- Table structure for table `users`
 --
 
-CREATE TABLE `user` (
+CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `mobile_no` varchar(15) NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `mobile_no` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `ip_address` varchar(255) NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1=Active, 2=Deactivated'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user`
+-- Dumping data for table `users`
 --
 
-INSERT INTO `user` (`id`, `username`, `mobile_no`, `email`, `password`, `created_at`) VALUES
-(1, 'Sanjay Kumar Sheoran', '9728833428', 'sjsheoran111@gmail.com', '$2y$10$qFA9uKTT.WSXlzFdflptfelBvBA/6bT9z8dqJKZlhhi3Gd3TrOf7e', '2025-09-02 08:49:10');
+INSERT INTO `users` (`id`, `username`, `password`, `mobile_no`, `email`, `ip_address`, `status`) VALUES
+(3, 'Sanjay Kumar Sheoran', '$2y$10$z7lBSp5NypMVF1S05ZvNeui70bCZceCut.xYsUwAGecNIoqck5DO6', '9728833428', 'sjsheoran111@gmail.com', '::1', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users_login_token`
+--
+
+CREATE TABLE `users_login_token` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `status` varchar(1) NOT NULL DEFAULT '1' COMMENT '1=active, 2=logout',
+  `date_time` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users_login_token`
+--
+
+INSERT INTO `users_login_token` (`id`, `user_id`, `token`, `status`, `date_time`, `ip_address`) VALUES
+(14, 3, 'ff03b340a2fb6d4fdb3e4fce2623e4badd6e0c841fc269efbba1346009cb0ed1', '2', '2025-09-04 11:37:51', '::1'),
+(15, 3, 'be68cfe4cdbbc42b12d948d7f77f528e075a1eacd329f82f45c97494ca3dcb5f', '2', '2025-09-04 11:38:26', '::1'),
+(16, 3, '81ad60b196d8261e01d20aec24d8cb41393b3ce84f9bbf71cda0298e6e735eab', '2', '2025-09-04 12:14:56', '::1'),
+(17, 3, '279db50551746bb3bfefa5f082e7b395e1ac9696fee0cdb78ef47c47c4fef420', '2', '2025-09-05 05:36:11', '::1'),
+(18, 3, '98f53678c0e1add121fe22c8bfa88f706b6d4246f7625405ce97fba5a2f1de1c', '2', '2025-09-05 05:46:11', '::1'),
+(19, 3, '9105cd12476318f2a3d5935da616fa94f9e1174bae851d17a4960489c6bdbdba', '2', '2025-09-05 06:03:06', '::1'),
+(20, 3, 'f5eec004b9a6278db46e55656dbe16e6b92efd67ee8a007c3d35b07d9707f748', '2', '2025-09-05 06:12:51', '::1'),
+(21, 3, '612767242f31264633b7975cdf333590416cf0285994871ad6416ba5af08db8a', '2', '2025-09-05 07:03:20', '::1'),
+(22, 3, '11340fe980dac87ab49e82eca5004e37a0d97d384ffc26487bd0eb0bc20c081b', '1', '2025-09-05 07:32:36', '::1');
 
 -- --------------------------------------------------------
 
@@ -562,11 +630,25 @@ ALTER TABLE `operators`
   ADD PRIMARY KEY (`operator_id`);
 
 --
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `routes`
 --
 ALTER TABLE `routes`
   ADD PRIMARY KEY (`route_id`),
   ADD KEY `bus_id` (`bus_id`);
+
+--
+-- Indexes for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  ADD PRIMARY KEY (`schedule_id`),
+  ADD KEY `route_id` (`route_id`);
 
 --
 -- Indexes for table `route_stops`
@@ -586,11 +668,18 @@ ALTER TABLE `seats`
   ADD KEY `idx_seats_is_bookable` (`is_bookable`);
 
 --
--- Indexes for table `user`
+-- Indexes for table `users`
 --
-ALTER TABLE `user`
+ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `mobile_no` (`mobile_no`);
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Indexes for table `users_login_token`
+--
+ALTER TABLE `users_login_token`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `user_login_token`
@@ -639,16 +728,28 @@ ALTER TABLE `operators`
   MODIFY `operator_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `routes`
 --
 ALTER TABLE `routes`
-  MODIFY `route_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `route_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `route_stops`
 --
 ALTER TABLE `route_stops`
-  MODIFY `stop_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `stop_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `seats`
@@ -657,10 +758,16 @@ ALTER TABLE `seats`
   MODIFY `seat_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=279;
 
 --
--- AUTO_INCREMENT for table `user`
+-- AUTO_INCREMENT for table `users`
 --
-ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `users_login_token`
+--
+ALTER TABLE `users_login_token`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `user_login_token`
@@ -692,10 +799,22 @@ ALTER TABLE `bus_images`
   ADD CONSTRAINT `fk_bus_images_to_bus` FOREIGN KEY (`bus_id`) REFERENCES `buses` (`bus_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `routes`
 --
 ALTER TABLE `routes`
   ADD CONSTRAINT `routes_ibfk_1` FOREIGN KEY (`bus_id`) REFERENCES `buses` (`bus_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `route_schedules`
+--
+ALTER TABLE `route_schedules`
+  ADD CONSTRAINT `route_schedules_ibfk_1` FOREIGN KEY (`route_id`) REFERENCES `routes` (`route_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `route_stops`
@@ -708,6 +827,12 @@ ALTER TABLE `route_stops`
 --
 ALTER TABLE `seats`
   ADD CONSTRAINT `seats_ibfk_1` FOREIGN KEY (`bus_id`) REFERENCES `buses` (`bus_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `users_login_token`
+--
+ALTER TABLE `users_login_token`
+  ADD CONSTRAINT `users_login_token_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

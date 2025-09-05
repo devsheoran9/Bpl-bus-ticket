@@ -1,6 +1,37 @@
 <?php  
 include 'includes/header.php'; 
+// This code assumes your database connection object `$_conn_db` is available here,
+// likely because it's included in 'includes/header.php'.
+
+$all_from_locations = [];
+$all_to_locations = [];
+
+try {
+    // We need to get all unique starting points and stop names to populate the dropdowns.
+    
+    // 1. Get all main route starting points.
+    $from_query_part1 = "SELECT DISTINCT starting_point FROM routes";
+    
+    // 2. Get all stop names (which can also be starting points for a journey).
+    $from_query_part2 = "SELECT DISTINCT stop_name FROM route_stops";
+    
+    // We use UNION to efficiently get a single, combined list of unique locations.
+    $from_stmt = $_conn_db->query("($from_query_part1) UNION ($from_query_part2) ORDER BY starting_point ASC");
+    $all_from_locations = $from_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    // For "To" locations, we get all main route ending points and all stop names.
+    $to_query_part1 = "SELECT DISTINCT ending_point FROM routes";
+    $to_query_part2 = "SELECT DISTINCT stop_name FROM route_stops";
+    
+    $to_stmt = $_conn_db->query("($to_query_part1) UNION ($to_query_part2) ORDER BY ending_point ASC");
+    $all_to_locations = $to_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+} catch(PDOException $e) {
+    // If the database query fails, the dropdowns will be empty but the page won't crash.
+    // For debugging, you can log the error: error_log("Homepage DB Error: " . $e->getMessage());
+}
 ?>
+
 <main>
     <!-- =======================
     Hero Section
@@ -9,37 +40,29 @@ include 'includes/header.php';
         <div class="container">
             <h1 class="display-4 fw-bold">Safe, Reliable & Comfortable Journeys</h1>
             <p class="lead mb-4">Your one-stop destination for hassle-free bus ticket booking.</p>
+            
             <div class="search-form-container mt-4">
                 <form action="bus_list.php" method="GET">
                     <div class="row g-3 align-items-center">
                         <div class="col-md">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-bus-front"></i></span>
-                                <!-- ID added for JavaScript targeting -->
                                 <select class="form-select border-start-0" name="from" id="from-city" required>
                                     <option selected disabled value="">From</option>
-                                    <option value="Delhi">Delhi</option>
-                                    <option value="Mumbai">Mumbai</option>
-                                    <option value="Bangalore">Bangalore</option>
-                                    <option value="Chennai">Chennai</option>
-                                    <option value="Hyderabad">Hyderabad</option>
-                                    <option value="Kolkata">Kolkata</option>
+                                    <?php foreach ($all_from_locations as $location): ?>
+                                        <option value="<?php echo htmlspecialchars($location); ?>"><?php echo htmlspecialchars($location); ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                <!-- ID added for JavaScript targeting -->
                                 <select class="form-select border-start-0" name="to" id="to-city" required>
                                     <option selected disabled value="">To</option>
-                                    <option value="Lucknow">Lucknow</option>
-                                    <option value="Jaipur">Jaipur</option>
-                                    <option value="Pune">Pune</option>
-                                    <option value="Hyderabad">Hyderabad</option>
-                                    <option value="Bangalore">Bangalore</option>
-                                    <option value="Madurai">Madurai</option>
-                                    <option value="Digha">Digha</option>
+                                    <?php foreach ($all_to_locations as $location): ?>
+                                        <option value="<?php echo htmlspecialchars($location); ?>"><?php echo htmlspecialchars($location); ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -121,7 +144,7 @@ include 'includes/header.php';
     </section>
 
     <!-- =======================
-    NEW! How It Works Section
+    How It Works Section
     ======================== -->
     <section class="section">
         <div class="container">
@@ -154,7 +177,7 @@ include 'includes/header.php';
 
 
     <!-- =======================
-    NEW! Testimonials Section
+    Testimonials Section
     ======================== -->
     <section class="section bg-light-blue">
         <div class="container">
@@ -184,44 +207,6 @@ include 'includes/header.php';
             </div>
         </div>
     </section>
-
-    <!-- =======================
-    NEW! Top Operators Section
-    ======================== -->
-    <!-- <section class="section">
-        <div class="container">
-            <h2 class="section-title text-center">Our Top Bus Operators</h2>
-            <div class="d-flex flex-wrap justify-content-center align-items-center gap-5">
-                <img src="https://via.placeholder.com/150x50.png?text=TravelCo" alt="Operator 1" class="operator-logo">
-                <img src="https://via.placeholder.com/150x50.png?text=GoBus" alt="Operator 2" class="operator-logo">
-                <img src="https://via.placeholder.com/150x50.png?text=SafeJourney" alt="Operator 3" class="operator-logo">
-                <img src="https://via.placeholder.com/150x50.png?text=ExpressLine" alt="Operator 4" class="operator-logo">
-                <img src="https://via.placeholder.com/150x50.png?text=CityLink" alt="Operator 5" class="operator-logo">
-            </div>
-        </div>
-    </section> -->
-
-    <!-- =======================
-    App Download Section
-    ======================== -->
-    <!-- <section class="section bg-dark text-white app-download-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <h2 class="text-white">Book Your Tickets Faster With Our App!</h2>
-                    <p>Download our app for exclusive offers, live bus tracking, and a seamless booking experience right at your fingertips.</p>
-                    <div>
-                        <a href="#"><img src="https://s3.rdbuz.com/web/images/play_store.png" alt="Google Play Store" class="app-store-badge"></a>
-                        <a href="#"><img src="https://s3.rdbuz.com/web/images/app_store.png" alt="Apple App Store" class="app-store-badge"></a>
-                    </div>
-                </div>
-                <div class="col-md-6 text-center">
-                    <img src="https://s3.rdbuz.com/web/images/home/secondary_web.png" alt="Phone Mockup" class="phone-mockup">
-                </div>
-            </div>
-        </div>
-    </section> -->
-
 </main>
 
 <script>
@@ -233,18 +218,26 @@ include 'includes/header.php';
 
         popularRouteLinks.forEach(link => {
             link.addEventListener('click', function(event) {
-                // Prevent the link from navigating
                 event.preventDefault();
 
-                // Get the city names from the data attributes
                 const fromCity = this.dataset.from;
                 const toCity = this.dataset.to;
 
-                // Set the values in the dropdowns
-                fromCitySelect.value = fromCity;
-                toCitySelect.value = toCity;
+                // --- Helper function to check and set dropdown value ---
+                const setDropdownValue = (selectElement, valueToSet) => {
+                    // Check if the option exists before setting it
+                    if (Array.from(selectElement.options).some(opt => opt.value === valueToSet)) {
+                        selectElement.value = valueToSet;
+                    } else {
+                        // Optional: alert the user if a popular route is no longer available
+                        console.warn(`The location "${valueToSet}" is not available in the dropdown.`);
+                    }
+                };
 
-                // Smoothly scroll to the top of the page (to the hero section)
+                setDropdownValue(fromCitySelect, fromCity);
+                setDropdownValue(toCitySelect, toCity);
+
+                // Smoothly scroll to the top of the page
                 heroSection.scrollIntoView({
                     behavior: 'smooth'
                 });

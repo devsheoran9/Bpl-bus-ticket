@@ -1,4 +1,5 @@
  
+ 
 
 
 
@@ -136,7 +137,22 @@ try {
 </div>
 
 <div id="stop-row-template" style="display: none;">
-    <!-- ... (Your stop row template remains the same) ... -->
+    <div class="stop-item">
+        <div class="stop-item-content">
+            <div class="stop-header"><h6>New Intermediate Stop</h6><button type="button" class="btn btn-sm btn-outline-danger remove-stop-btn">&times; Remove</button></div>
+            <div class="row">
+                <div class="col-md-8 mb-3"><label class="form-label small">Stop Name</label><input type="text" class="form-control" name="stop_name[]" placeholder="e.g., Jaipur" required></div>
+                <div class="col-md-4 mb-3"><label class="form-label small">Duration from Start (mins)</label><input type="number" class="form-control" name="duration[]" placeholder="e.g., 240" min="0"></div>
+            </div>
+            <label class="form-label small">Price from Starting Point</label>
+            <div class="price-grid">
+                <input type="number" class="form-control" name="price_sl[]" placeholder="Seater Lower" min="0">
+                <input type="number" class="form-control" name="price_su[]" placeholder="Seater Upper" min="0">
+                <input type="number" class="form-control" name="price_ll[]" placeholder="Sleeper Lower" min="0">
+                <input type="number" class="form-control" name="price_lu[]" placeholder="Sleeper Upper" min="0">
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php include "foot.php"; ?>
