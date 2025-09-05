@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Helper function to display rating stars
+// --- HELPER FUNCTIONS ---
 function render_stars($rating)
 {
     $stars_html = '';
@@ -15,9 +15,36 @@ function render_stars($rating)
     return $stars_html;
 }
 
-// --- UPDATED QUERY ---
-// Fetch only reviews where status is 1 (Active/Approved)
-$reviews_result = $conn->query("SELECT user_name, rating, review_text, created_at FROM reviews WHERE status = 1 ORDER BY created_at DESC");
+// --- NEW ---: Function to securely mask an email address
+function mask_email($email)
+{
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ''; // Return empty if email is missing or invalid
+    }
+    list($first, $last) = explode('@', $email);
+    $first = substr($first, 0, 2) . str_repeat('*', max(1, strlen($first) - 2));
+    return $first . '@' . $last;
+}
+
+// --- PAGINATION LOGIC ---
+$reviews_per_page = 9;
+$total_reviews_result = $conn->query("SELECT COUNT(*) FROM reviews WHERE status = 1");
+$total_reviews = $total_reviews_result->fetch_row()[0];
+$total_pages = ceil($total_reviews / $reviews_per_page);
+$current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page > $total_pages && $total_pages > 0) {
+    $current_page = $total_pages;
+}
+if ($current_page < 1) {
+    $current_page = 1;
+}
+$offset = ($current_page - 1) * $reviews_per_page;
+
+// --- UPDATED SQL QUERY ---: Now fetches the 'email' column
+$stmt = $conn->prepare("SELECT user_name, email, rating, review_text, created_at FROM reviews WHERE status = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$stmt->bind_param("ii", $reviews_per_page, $offset);
+$stmt->execute();
+$reviews_result = $stmt->get_result();
 
 ?>
 <!DOCTYPE html>
@@ -36,51 +63,124 @@ $reviews_result = $conn->query("SELECT user_name, rating, review_text, created_a
             background-color: #f8f9fa;
         }
 
-        .review-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .testimonial-card {
+            background-color: #fff;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
+            overflow: hidden;
         }
 
-        .review-header {
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .testimonial-icon {
+            position: absolute;
+            top: 1.5rem;
+            left: 2.5rem;
+            font-size: 3rem;
+            color: #e9ecef;
+            z-index: 1;
+        }
+
+        .rating-line,
+        .review-text,
+        .author-info {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- NEW ---: Flex container for stars and email */
+        .rating-line {
             display: flex;
             justify-content: space-between;
+            /* Pushes items to opposite ends */
             align-items: center;
-            margin-bottom: 8px;
+            /* Vertically aligns them */
+            margin-bottom: 1rem;
         }
 
-        .review-header .user-name {
-            font-weight: bold;
+        .rating-stars {
             font-size: 1.1rem;
         }
 
-        .review-header .date {
-            font-size: 0.85rem;
+        .masked-email {
+            font-size: 0.8rem;
             color: #6c757d;
+            font-style: normal;
         }
 
-        .review-body {
+        .review-text {
+            font-size: 1rem;
+            color: #495057;
+            line-height: 1.7;
+            font-style: italic;
             flex-grow: 1;
+            word-wrap: break-word;
         }
 
-        .review-body p {
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .author-info {
+            margin-top: 1.5rem;
+            font-style: normal;
+        }
+
+        .author-name {
+            font-weight: 600;
+            color: #d32f2f;
+        }
+
+        .review-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 2px;
         }
 
         .read-more-btn {
             cursor: pointer;
-            color: #d32f2f;
-            font-weight: bold;
+            color: #0d6efd;
+            font-weight: 500;
             text-decoration: none;
+            font-style: normal;
+            font-size: 0.9rem;
         }
 
         .read-more-btn:hover {
             text-decoration: underline;
+        }
+
+        .info-section {
+            background-color: #fff;
+            padding: 3rem;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-section .icon {
+            font-size: 2.5rem;
+            color: #d32f2f;
+            margin-bottom: 1rem;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        .pagination .page-link {
+            color: #d32f2f;
+        }
+
+        .pagination .page-link:hover {
+            color: #a02424;
         }
     </style>
 </head>
@@ -90,67 +190,108 @@ $reviews_result = $conn->query("SELECT user_name, rating, review_text, created_a
     <?php include 'includes/header.php'; ?>
 
     <main class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="text-center mb-5">
             <h1 class="h2">What Our Customers Say</h1>
-            <a href="add_review.php" class="btn btn-danger"><i class="bi bi-pencil-square"></i> Write a Review</a>
+            <p class="lead text-muted col-lg-8 mx-auto">At Fouji Travels, we are committed to providing an exceptional travel experience. Our passengers' feedback is the cornerstone of our service, helping us improve and innovate. Here are real stories from our valued passengers.</p>
         </div>
 
         <?php if ($reviews_result && $reviews_result->num_rows > 0) : ?>
             <div class="row">
                 <?php while ($review = $reviews_result->fetch_assoc()) : ?>
                     <div class="col-lg-4 col-md-6 mb-4 d-flex align-items-stretch">
-                        <div class="review-card">
-                            <div class="review-header">
-                                <span class="user-name"><?php echo htmlspecialchars($review['user_name']); ?></span>
-                                <span class="date"><?php echo date('d M Y', strtotime($review['created_at'])); ?></span>
+                        <div class="testimonial-card">
+                            <div class="testimonial-icon"><i class="bi bi-quote"></i></div>
+
+                            <!-- --- UPDATED HTML STRUCTURE FOR RATING LINE --- -->
+                            <div class="rating-line">
+                                <div class="rating-stars"><?php echo render_stars($review['rating']); ?></div>
+                                <div class="masked-email"><?php echo mask_email($review['email']); ?></div>
                             </div>
-                            <div class="rating-stars mb-2">
-                                <?php echo render_stars($review['rating']); ?>
-                            </div>
-                            <div class="review-body">
+
+                            <div class="review-text">
                                 <?php
-                                $full_text = nl2br(htmlspecialchars($review['review_text']));
-                                $char_limit = 180;
-
-                                if (strlen($review['review_text']) > $char_limit) {
-                                    $short_text = substr($full_text, 0, $char_limit);
-                                    $last_space = strrpos($short_text, ' ');
-                                    $short_text = substr($short_text, 0, $last_space) . '...';
-
-                                    echo "<p class='review-text mb-2'>
-                                                <span class='short-text'>{$short_text}</span>
-                                                <span class='full-text' style='display: none;'>{$full_text}</span>
-                                              </p>
-                                              <a class='read-more-btn small'>Read More</a>";
+                                $full_text = htmlspecialchars($review['review_text']);
+                                $char_limit = 100;
+                                if (mb_strlen($review['review_text']) > $char_limit) {
+                                    $short_text = mb_substr($full_text, 0, $char_limit);
+                                    $last_space = mb_strrpos($short_text, ' ');
+                                    if ($last_space !== false) {
+                                        $short_text = mb_substr($short_text, 0, $last_space);
+                                    }
+                                    echo "<span class='short-text'>&ldquo;{$short_text}...&rdquo;</span><span class='full-text' style='display: none;'>&ldquo;{$full_text}&rdquo;</span><a class='read-more-btn d-block mt-2'>Read More</a>";
                                 } else {
-                                    echo "<p class='mb-0'>{$full_text}</p>";
+                                    echo "&ldquo;{$full_text}&rdquo;";
                                 }
                                 ?>
+                            </div>
+                            <div class="author-info">
+                                <div class="author-name">- <?php echo htmlspecialchars($review['user_name']); ?></div>
+                                <div class="review-date">Reviewed on <?php echo date('d M Y', strtotime($review['created_at'])); ?></div>
                             </div>
                         </div>
                     </div>
                 <?php endwhile; ?>
             </div>
+
+            <?php if ($total_pages > 1): ?>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        <li class="page-item <?php if ($current_page <= 1) {
+                                                    echo 'disabled';
+                                                } ?>">
+                            <a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a>
+                        </li>
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                            <li class="page-item <?php if ($current_page == $i) {
+                                                        echo 'active';
+                                                    } ?>">
+                                <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                            </li>
+                        <?php endfor; ?>
+                        <li class="page-item <?php if ($current_page >= $total_pages) {
+                                                    echo 'disabled';
+                                                } ?>">
+                            <a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            <?php endif; ?>
+
         <?php else : ?>
-            <div class="review-card text-center py-5">
-                <p class="lead mb-0">No approved reviews have been submitted yet.</p>
-                <p class="text-muted">Be the first to share your experience!</p>
+            <div class="col-12">
+                <div class="testimonial-card text-center py-5">
+                    <p class="lead mb-0">No approved reviews have been submitted yet.</p>
+                    <p class="text-muted">Why not be the first to share your experience?</p>
+                    <a href="add_review.php" class="btn btn-danger mt-3"><i class="bi bi-pencil-square"></i> Write a Review</a>
+                </div>
             </div>
         <?php endif; ?>
 
+       
     </main>
+ <div class="info-section text-center mt-5 container-fluid">
+            <div class="icon"><i class="bi bi-card-checklist"></i></div>
+            <h2 class="h3">How to Share Your Story</h2>
+            <p class="col-lg-8 mx-auto text-muted">Have you recently traveled with us? We'd love to hear about your experience! Your feedback helps other travelers make informed decisions and allows us to continually enhance our services. Simply log in to your account and click the 'Write a Review' button.</p>
+            <a href="add_review.php" class="btn btn-outline-danger mt-3">Get Started</a>
+        </div>
 
+        <!-- <div class="text-center py-5 mt-4 bg-white rounded-3 border">
+            <h2 class="h3">Join Thousands of Happy Travelers</h2>
+            <p class="lead text-muted">Experience our top-rated service for yourself on your next journey.</p>
+            <a href="index.php" class="btn btn-danger btn-lg mt-3">Book Your Bus Ticket Now</a>
+        </div>   -->
     <?php $conn->close(); ?>
+    <?php include "includes/footer.php" ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.read-more-btn').forEach(button => {
                 button.addEventListener('click', function(event) {
                     event.preventDefault();
-                    const reviewBody = this.closest('.review-body');
-                    const shortText = reviewBody.querySelector('.short-text');
-                    const fullText = reviewBody.querySelector('.full-text');
-
+                    const reviewTextContainer = this.closest('.review-text');
+                    const shortText = reviewTextContainer.querySelector('.short-text');
+                    const fullText = reviewTextContainer.querySelector('.full-text');
                     if (fullText.style.display === 'none') {
                         shortText.style.display = 'none';
                         fullText.style.display = 'inline';
