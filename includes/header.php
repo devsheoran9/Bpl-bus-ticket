@@ -1,8 +1,9 @@
+
 <?php include "./admin/function/_db.php"?>
 <?php 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-} 
+}
 
 require 'auth_check.php';
 $abc = user_login($type = 'header');
@@ -66,7 +67,7 @@ $abc = user_login($type = 'header');
                 <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
             <?php endif; ?>
 
-            <?php if ($abc !== 'logout_user'){ ?>
+
             <h3 class="sidebar-heading">My details</h3>
             <ul class="sidebar-menu">
                 <li>
@@ -78,18 +79,39 @@ $abc = user_login($type = 'header');
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
+                <?php if ($abc !== 'logout_user') { ?>
+                    <li>
+                        <a href="profile" class="sidebar-menu-item">
+                            <div class="icon-text-group">
+                                <i class="bi bi-person"></i>
+                                <span>Personal information</span>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="add_review" class="sidebar-menu-item">
+                            <div class="icon-text-group">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Add your review</span>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+
+
+                <?php } ?>
                 <li>
-                    <a href="profile" class="sidebar-menu-item">
+                    <a href="reviews" class="sidebar-menu-item">
                         <div class="icon-text-group">
-                            <i class="bi bi-person"></i>
-                            <span>Personal information</span>
+                            <i class="bi bi-chat-left-text"></i>
+                            <span>View Reviews</span>
                         </div>
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
-            </ul>
-            <?php } ?>
 
+            </ul>
             <h3 class="sidebar-heading">FAQS</h3>
             <ul class="sidebar-menu">
                 <li>
