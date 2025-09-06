@@ -1,13 +1,13 @@
 <?php
-require 'db_connect.php';
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login");
-    exit();
-}
+include 'includes/header.php';
+// if (!isset($_SESSION['user_id'])) {
+//     header("Location: login");
+//     exit();
+// }
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include 'includes/header.php';
+
 echo user_login('page');
 
 $user_id = $_SESSION['user_id'];
