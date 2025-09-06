@@ -1,5 +1,7 @@
 <?php include_once('function/_db.php');
-user_login_index_check();?>
+user_login_index_check();
+session_security_check(); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

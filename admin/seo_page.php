@@ -1,7 +1,8 @@
 <?php
 global $_conn_db;
 include_once('function/_db.php');
-check_user_login();
+// check_user_login();
+session_security_check(); 
 
 $name = $_SESSION['user']['name'];
 $email = $_SESSION['user']['email'];

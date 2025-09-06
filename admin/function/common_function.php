@@ -56,7 +56,7 @@ function user_has_permission($permission) {
  * Secures a page by checking for a permission. If the user doesn't have it,
  * it redirects them to the dashboard with an error message.
  *
- * @param string $permission The required permission to access the page.
+ * @param string $permission  
  */
 function check_permission($permission) {
     if (!user_has_permission($permission)) {
@@ -69,5 +69,34 @@ function check_permission($permission) {
         exit();
     }
 }
+function session_security_check() {
+    global $_conn_db;
+
+    // यदि सत्र लॉगिन चर नहीं है, तो लॉगिन पेज पर पुनर्निर्देशित करें
+    if (!isset($_SESSION['user']['login']) || $_SESSION['user']['login'] !== 'true' || !isset($_SESSION['user']['session_token'])) {
+        header('Location: index.php');
+        exit();
+    }
+
+    try {
+        $stmt = $_conn_db->prepare("SELECT session_token FROM admin WHERE id = ?");
+        $stmt->execute([$_SESSION['user']['id']]);
+        $db_token = $stmt->fetchColumn();
+
+        // यदि डेटाबेस टोकन NULL है (जबरन लॉगआउट) या सत्र से मेल नहीं खाता है, तो सत्र को नष्ट कर दें।
+        if ($db_token === NULL || $db_token !== $_SESSION['user']['session_token']) {
+            session_destroy();
+            header('Location: index.php?reason=invalid_session');
+            exit();
+        }
+    } catch (PDOException $e) {
+        // डेटाबेस त्रुटि की स्थिति में, उपयोगकर्ता को लॉग आउट करना सुरक्षित है।
+        error_log("Session security check failed: " . $e->getMessage());
+        session_destroy();
+        header('Location: index.php?reason=session_error');
+        exit();
+    }
+}
+
 include_once ('other_functions.php');
 ?>

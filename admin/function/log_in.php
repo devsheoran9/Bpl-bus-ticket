@@ -1,76 +1,92 @@
 <?php
-include('_db.php');
-$__data_action = 'false';
-$errData = $__go_to ='';
+// function/log_in.php
 
-$username = validate_rhyno_data($_POST["username"]);
-$password = validate_rhyno_data($_POST["password"]);
+include('./_db.php');
 
-if ($errData == '') {
-    // --- STEP 1: MODIFY THIS SQL QUERY ---
-    // Add the `type` column to the SELECT statement
-    $stmt = $_conn_db->prepare("SELECT id, name, email, mobile, password, status, type FROM admin WHERE email = :emails OR mobile = :mobiles");
-    $stmt->execute([
-        'emails' => $username,
-        'mobiles' => $username
-    ]);
-    $fetch = $stmt->fetch(PDO::FETCH_ASSOC);
+// डिफ़ॉल्ट प्रतिक्रिया सेट करें
+$response = [
+    'page'        => 'login', 
+    'res'         => 'false', 
+    'notif_title' => 'Oops!', 
+    'notif_desc'  => 'An unknown error occurred.',  
+    'notif_type'  => 'danger', 
+    'goTo'        => ''
+];
 
-    if ($fetch) {
-        if (password_verify($password, $fetch['password'])) {
-            $status = show_rhyno_data($fetch['status']);
-            if ($status == '1') {
-                $login_id = $_SESSION['user']['id'] = show_rhyno_data($fetch['id']);
-                $login_token = $_SESSION['user']['token'] = rhyno_new_token($login_id);
+// उपयोगकर्ता इनपुट को सुरक्षित करें
+$username = trim($_POST["username"] ?? '');
+$password = trim($_POST["password"] ?? '');
 
-                $_SESSION['user']['login']  = 'true';
-                $_SESSION['user']['name']   = show_rhyno_data($fetch['name']);
-                $_SESSION['user']['email']  = show_rhyno_data($fetch['email']);
-                $_SESSION['user']['mobile'] = show_rhyno_data($fetch['mobile']);
-                
-                // --- STEP 2: ADD THIS LINE ---
-                // Store the user's role/type in the session
-                $_SESSION['user']['type'] = show_rhyno_data($fetch['type']);
-                $_SESSION['user']['permissions'] = json_decode($fetch['permissions'], true) ?? []; // Decode permissions into session
-                try {
-                    $log_stmt = $_conn_db->prepare("INSERT INTO admin_activity_log (admin_id, admin_name, activity_type, ip_address) VALUES (?, ?, 'login', ?)");
-                    $log_stmt->execute([
-                        $_SESSION['user']['id'],
-                        $_SESSION['user']['name'],
-                        $_SERVER['REMOTE_ADDR']
-                    ]);
-                } catch (PDOException $e) {
-                    // Optional: log this error to a file, but don't stop the login process
-                    error_log("Failed to log admin login: " . $e->getMessage());
-                }
-                
-                $__notif_title  = 'Login successfully!';
-                $__notif_disc   = 'Please wait for dashboard...';
-                $__notif_type   = 'success';
-                $__data_action  = 'true';
-                $__go_to        = 'dashboard';
-            } else {
-                $__notif_title = 'Your account is temporary deactivate';
-                $__notif_disc  = 'Please contact us for reactivate your account';
-                $__notif_type  = 'danger';
-            }
+if (empty($username) || empty($password)) {
+    $response['notif_desc'] = 'Username and password are required.';
+    $response['notif_type'] = 'warning';
+    echo json_encode($response);
+    exit();
+}
+
+try {
+    // डेटाबेस से उपयोगकर्ता की जानकारी प्राप्त करें
+    $stmt = $_conn_db->prepare(
+        "SELECT id, name, email, mobile, password, status, type, permissions 
+         FROM admin 
+         WHERE email = :emails OR mobile = :mobiles"
+    );
+    $stmt->execute(['emails' => $username, 'mobiles' => $username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user && password_verify($password, $user['password'])) {
+        if ($user['status'] == '1') {
+            // सत्र टोकन उत्पन्न करें
+            $session_token = bin2hex(random_bytes(32));
+
+            // सत्र चर सेट करें
+            $_SESSION['user'] = [
+                'login'         => 'true',
+                'id'            => (int)$user['id'],
+                'name'          => $user['name'],
+                'email'         => $user['email'],
+                'mobile'        => $user['mobile'],
+                'type'          => $user['type'],
+                'permissions'   => json_decode($user['permissions'] ?? '[]', true),
+                'session_token' => $session_token,
+            ];
+
+            $ip_address = $_SERVER['REMOTE_ADDR'];
+            
+            // admin टेबल में सत्र टोकन और अंतिम लॉगिन विवरण अपडेट करें
+            $update_stmt = $_conn_db->prepare(
+                "UPDATE admin SET session_token = ?, last_login_time = NOW(), last_login_ip = ? WHERE id = ?"
+            );
+            $update_stmt->execute([$session_token, $ip_address, $user['id']]);
+
+            // गतिविधि लॉग में लॉगिन रिकॉर्ड करें
+            $log_stmt = $_conn_db->prepare("INSERT INTO admin_activity_log (admin_id, admin_name, activity_type, ip_address) VALUES (?, ?, 'login', ?)");
+            $log_stmt->execute([$user['id'], $user['name'], $ip_address]);
+            
+            // सफलता प्रतिक्रिया सेट करें
+            $response = [
+                'res'         => 'true',
+                'notif_title' => 'Login Successful!',
+                'notif_desc'  => 'Redirecting to your dashboard...',
+                'notif_type'  => 'success',
+                'goTo'        => 'dashboard.php'
+            ];
+
         } else {
-            $__notif_title = 'Invalid password';
-            $__notif_disc  = 'Please enter a valid password';
-            $__notif_type  = 'danger';
+            $response['notif_title'] = 'Account Deactivated';
+            $response['notif_desc'] = 'Your account is currently inactive. Please contact an administrator.';
         }
     } else {
-        $__notif_title = 'Invalid mobile number or email';
-        $__notif_disc  = 'Please enter a valid number or email';
-        $__notif_type  = 'danger';
+        $response['notif_title'] = 'Invalid Credentials';
+        $response['notif_desc'] = 'The email/mobile or password you entered is incorrect.';
     }
-}else {
-   $__notif_title = 'Oops!';
-   $__notif_disc = $errData;
-   $__notif_type = 'warning';
- }
 
-$dataResult = array('page' => 'login', 'res' => $__data_action, 'notif_title' => $__notif_title, 'notif_desc' => $__notif_disc,  'notif_type' => $__notif_type, 'goTo' => $__go_to);
-echo json_encode($dataResult);  
+} catch (PDOException $e) {
+    error_log("Login Error: " . $e->getMessage());
+    $response['notif_desc'] = 'A database error occurred during login. Please try again later.';
+}
 
+// JSON प्रतिक्रिया भेजें
+header('Content-Type: application/json');
+echo json_encode($response);
 ?>

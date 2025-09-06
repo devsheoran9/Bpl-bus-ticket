@@ -2,7 +2,8 @@
 // आपकी PHP फाइलें वैसे ही रहेंगी
 global $token;
 include_once('function/_db.php');
-check_user_login();
+// check_user_login();
+session_security_check(); 
 ?>
 <!DOCTYPE html>
 <html lang="en">

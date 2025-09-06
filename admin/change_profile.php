@@ -1,7 +1,8 @@
 <?php
 // session_start(); // Assuming session_start() is already in _db.php or an included file
 include_once('function/_db.php'); // Include database connection and helper functions
-check_user_login(); // Ensure user is logged in
+// check_user_login(); 
+session_security_check();  
 
 global $_conn_db; // Access the global PDO connection
 

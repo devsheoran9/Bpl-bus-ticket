@@ -4,7 +4,8 @@
 // It also should define $_conn_db and check_user_login().
 global $_conn_db;
 include_once('function/_db.php'); // Your DB connection and helper functions
-check_user_login(); // This function should also handle redirect if not logged in.
+// check_user_login();  
+session_security_check(); 
 
 // Function to sanitize output (essential for preventing XSS)
 if (!function_exists('show_rhyno_data')) {
