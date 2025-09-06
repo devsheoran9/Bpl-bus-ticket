@@ -1,3 +1,4 @@
+<?php include 'includes/header.php'; ?>
 <?php
 include 'db_connect.php';
 if (session_status() === PHP_SESSION_NONE) {
@@ -47,147 +48,136 @@ $stmt->execute();
 $reviews_result = $stmt->get_result();
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Reviews - Fouji Travels</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
 
-        .testimonial-card {
-            background-color: #fff;
-            border-radius: 1rem;
-            padding: 2.5rem;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-        }
+    .testimonial-card {
+        background-color: #fff;
+        border-radius: 1rem;
+        padding: 2.5rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
 
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        }
+    .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
 
-        .testimonial-icon {
-            position: absolute;
-            top: 1.5rem;
-            left: 2.5rem;
-            font-size: 3rem;
-            color: #e9ecef;
-            z-index: 1;
-        }
+    .testimonial-icon {
+        position: absolute;
+        top: 1.5rem;
+        left: 2.5rem;
+        font-size: 3rem;
+        color: #e9ecef;
+        z-index: 1;
+    }
 
-        .rating-line,
-        .review-text,
-        .author-info {
-            position: relative;
-            z-index: 2;
-        }
+    .rating-line,
+    .review-text,
+    .author-info {
+        position: relative;
+        z-index: 2;
+    }
 
-        /* --- NEW ---: Flex container for stars and email */
-        .rating-line {
-            display: flex;
-            justify-content: space-between;
-            /* Pushes items to opposite ends */
-            align-items: center;
-            /* Vertically aligns them */
-            margin-bottom: 1rem;
-        }
+    /* --- NEW ---: Flex container for stars and email */
+    .rating-line {
+        display: flex;
+        justify-content: space-between;
+        /* Pushes items to opposite ends */
+        align-items: center;
+        /* Vertically aligns them */
+        margin-bottom: 1rem;
+    }
 
-        .rating-stars {
-            font-size: 1.1rem;
-        }
+    .rating-stars {
+        font-size: 1.1rem;
+    }
 
-        .masked-email {
-            font-size: 0.8rem;
-            color: #6c757d;
-            font-style: normal;
-        }
+    .masked-email {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-style: normal;
+    }
 
-        .review-text {
-            font-size: 1rem;
-            color: #495057;
-            line-height: 1.7;
-            font-style: italic;
-            flex-grow: 1;
-            word-wrap: break-word;
-        }
+    .review-text {
+        font-size: 1rem;
+        color: #495057;
+        line-height: 1.7;
+        font-style: italic;
+        flex-grow: 1;
+        word-wrap: break-word;
+    }
 
-        .author-info {
-            margin-top: 1.5rem;
-            font-style: normal;
-        }
+    .author-info {
+        margin-top: 1.5rem;
+        font-style: normal;
+    }
 
-        .author-name {
-            font-weight: 600;
-            color: #d32f2f;
-        }
+    .author-name {
+        font-weight: 600;
+        color: #d32f2f;
+    }
 
-        .review-date {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin-top: 2px;
-        }
+    .review-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
 
-        .read-more-btn {
-            cursor: pointer;
-            color: #0d6efd;
-            font-weight: 500;
-            text-decoration: none;
-            font-style: normal;
-            font-size: 0.9rem;
-        }
+    .read-more-btn {
+        cursor: pointer;
+        color: #0d6efd;
+        font-weight: 500;
+        text-decoration: none;
+        font-style: normal;
+        font-size: 0.9rem;
+    }
 
-        .read-more-btn:hover {
-            text-decoration: underline;
-        }
+    .read-more-btn:hover {
+        text-decoration: underline;
+    }
 
-        .info-section {
-            background-color: #fff;
-            padding: 3rem;
-            border-radius: 1rem;
-            margin-bottom: 3rem;
-            border: 1px solid #e9ecef;
-        }
+    .info-section {
+        background-color: #fff;
+        padding: 3rem;
+        border-radius: 1rem;
+        margin-bottom: 3rem;
+        border: 1px solid #e9ecef;
+    }
 
-        .info-section .icon {
-            font-size: 2.5rem;
-            color: #d32f2f;
-            margin-bottom: 1rem;
-        }
+    .info-section .icon {
+        font-size: 2.5rem;
+        color: #d32f2f;
+        margin-bottom: 1rem;
+    }
 
-        .pagination .page-item.active .page-link {
-            background-color: #d32f2f;
-            border-color: #d32f2f;
-        }
+    .pagination .page-item.active .page-link {
+        background-color: #d32f2f;
+        border-color: #d32f2f;
+    }
 
-        .pagination .page-link {
-            color: #d32f2f;
-        }
+    .pagination .page-link {
+        color: #d32f2f;
+    }
 
-        .pagination .page-link:hover {
-            color: #a02424;
-        }
-    </style>
+    .pagination .page-link:hover {
+        color: #a02424;
+    }
+</style>
 </head>
 
 <body>
 
-    <?php include 'includes/header.php'; ?>
 
     <main class="container py-5">
         <div class="text-center mb-5">
@@ -267,16 +257,16 @@ $reviews_result = $stmt->get_result();
             </div>
         <?php endif; ?>
 
-       
-    </main>
- <div class="info-section text-center mt-5 container-fluid">
-            <div class="icon"><i class="bi bi-card-checklist"></i></div>
-            <h2 class="h3">How to Share Your Story</h2>
-            <p class="col-lg-8 mx-auto text-muted">Have you recently traveled with us? We'd love to hear about your experience! Your feedback helps other travelers make informed decisions and allows us to continually enhance our services. Simply log in to your account and click the 'Write a Review' button.</p>
-            <a href="add_review.php" class="btn btn-outline-danger mt-3">Get Started</a>
-        </div>
 
-        <!-- <div class="text-center py-5 mt-4 bg-white rounded-3 border">
+    </main>
+    <div class="info-section text-center mt-5 container-fluid">
+        <div class="icon"><i class="bi bi-card-checklist"></i></div>
+        <h2 class="h3">How to Share Your Story</h2>
+        <p class="col-lg-8 mx-auto text-muted">Have you recently traveled with us? We'd love to hear about your experience! Your feedback helps other travelers make informed decisions and allows us to continually enhance our services. Simply log in to your account and click the 'Write a Review' button.</p>
+        <a href="add_review.php" class="btn btn-outline-danger mt-3">Get Started</a>
+    </div>
+
+    <!-- <div class="text-center py-5 mt-4 bg-white rounded-3 border">
             <h2 class="h3">Join Thousands of Happy Travelers</h2>
             <p class="lead text-muted">Experience our top-rated service for yourself on your next journey.</p>
             <a href="index.php" class="btn btn-danger btn-lg mt-3">Book Your Bus Ticket Now</a>

@@ -1,7 +1,6 @@
+<?php include 'includes/header.php';
+?>
 <?php
-// add_review.php
-
-// Include your database connection and start the session
 include 'db_connect.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -72,9 +71,6 @@ if ($loggedIn) {
 </head>
 
 <body>
-
-    <?php include 'includes/header.php'; // Include your standard site header 
-    ?>
 
     <main class="container">
         <div class="row justify-content-center">
