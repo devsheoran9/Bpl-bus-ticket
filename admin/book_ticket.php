@@ -4,7 +4,17 @@ include_once('function/_db.php');
 session_security_check();
 
 try {
-    $routes = $_conn_db->query("SELECT r.route_id, r.route_name FROM routes r WHERE r.status = 'Active' ORDER BY r.route_name")->fetchAll(PDO::FETCH_ASSOC);
+    $query = "
+        SELECT 
+            r.route_id, 
+            CONCAT(r.route_name, ' (', b.bus_name, ')') AS display_name
+        FROM routes r
+        JOIN buses b ON r.bus_id = b.bus_id
+        WHERE r.status = 'Active'
+        ORDER BY r.route_name, b.bus_name
+    ";
+    $routes = $_conn_db->query($query)->fetchAll(PDO::FETCH_ASSOC);
+    // --- FIX END ---
 } catch (PDOException $e) {
     $routes = [];
 }
@@ -17,7 +27,6 @@ try {
     <title>Book a Ticket</title>
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     <style>
-        /* CSS styles remain the same, no changes needed here */
         :root {
             --seat-available-border: #28a745;
             --seat-selected-bg: #0dcaf0;
@@ -67,25 +76,20 @@ try {
             height: 100%;
         }
 
-        .seat.seater,
-        .seat.sleeper {
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
-            border-bottom-left-radius: 2px;
-            border-bottom-right-radius: 2px;
+        .seat.seater {
+            width: 40px;
+            height: 40px;
         }
 
-        .seat.driver {
-            border-radius: 50%;
+        .seat.sleeper {
+            width: 40px;
+            height: 80px;
+        }
+
+        .seat.driver,
+        .seat.aisle {
             background-color: #6c757d;
             color: #fff;
-            cursor: default;
-        }
-
-        .seat.aisle {
-            background-color: transparent;
-            border: 1px dashed #bbb;
-            box-shadow: none;
             cursor: default;
         }
 
@@ -170,28 +174,37 @@ try {
             <?php include_once('header.php'); ?>
             <div class="container-fluid">
                 <h2 class="my-4">New Ticket Booking</h2>
-                <!-- Step 1 HTML remains the same -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h4 class="mb-0">Step 1: Select Journey Details</h4>
                     </div>
                     <div class="card-body">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-3"><label for="route-select" class="form-label fw-bold">Route</label><select id="route-select" class="form-select">
-                                    <option value="">-- Choose a Route --</option><?php foreach ($routes as $route): ?><option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['route_name']); ?></option><?php endforeach; ?>
-                                </select></div>
+                        <div class="col-md-3">
+    <label for="route-select" class="form-label fw-bold">Route</label>
+    <select id="route-select" class="form-select">
+        <option value="">-- Choose a Route --</option>
+        <?php foreach ($routes as $route): ?>
+            <!-- FIX: Use the new 'display_name' which includes the bus name -->
+            <option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['display_name']); ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
                             <div class="col-md-3"><label for="from-stop-select" class="form-label fw-bold">From</label><select id="from-stop-select" class="form-select" disabled>
                                     <option>-- Select Route First --</option>
                                 </select></div>
                             <div class="col-md-3"><label for="to-stop-select" class="form-label fw-bold">To</label><select id="to-stop-select" class="form-select" disabled>
                                     <option>-- Select Boarding Point --</option>
                                 </select></div>
-                            <div class="col-md-3"><label for="travel-date" class="form-label fw-bold">Travel Date</label><input type="text" id="travel-date" class="form-control" placeholder="Select Date" disabled></div>
+                            <div class="col-md-3">
+                                <label for="travel-date" class="form-label fw-bold">Travel Date</label>
+                                <!-- ADD a value attribute with today's date -->
+                                <input type="text" id="travel-date" class="form-control" placeholder="Select Date" value="<?php echo date('Y-m-d'); ?>">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Step 2 and 3 HTML remains the same -->
                 <div id="seat-selection-area" class="d-none">
                     <div class="row">
                         <div class="col-lg-5 mb-4">
@@ -236,7 +249,8 @@ try {
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h3 class="mb-0">Total Fare:</h3>
                                         <h3 class="mb-0">₹<span id="total-fare">0.00</span></h3>
-                                    </div><button id="confirm-booking-btn" class="btn btn-success w-100 mt-3" disabled>Proceed to Payment</button>
+                                    </div>
+                                    <button id="confirm-booking-btn" class="btn btn-success w-100 mt-3" disabled>Proceed to Payment</button>
                                 </div>
                             </div>
                         </div>
@@ -247,37 +261,46 @@ try {
     </div>
     <?php include "foot.php"; ?>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
+        // Change it to this:
+      
+
+
+
         $(document).ready(function() {
-            // All previous JS code remains the same up until the click handler
             let selectedRouteId, selectedDate, fromStopName, toStopName, busId;
             let selectedSeats = [];
             let allStops = [];
             const datePicker = flatpickr("#travel-date", {
-                minDate: "today",
-                dateFormat: "Y-m-d",
-                onChange: (d, s) => {
-                    selectedDate = s;
-                    if (s) loadSeatLayout();
-                }
-            });
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            defaultDate: "today",  
+            onChange: (d, s) => {
+                selectedDate = s;
+                if (s) loadSeatLayout();
+            }
+        });
+
             $('#route-select').on('change', function() {
                 selectedRouteId = $(this).val();
                 resetPage(1);
                 if (!selectedRouteId) return;
                 $('#from-stop-select').prop('disabled', true).html('<option>Loading...</option>');
                 $.getJSON('function/backend/booking_actions.php', {
-                    action: 'get_stops_for_route',
-                    route_id: selectedRouteId
-                }).done(response => {
-                    if (response.status === 'success') {
-                        allStops = response.stops;
-                        let options = '<option value="">-- Select Boarding Point --</option>';
-                        allStops.forEach(stop => options += `<option value="${stop}">${stop}</option>`);
-                        $('#from-stop-select').html(options).prop('disabled', false);
-                    }
-                });
+                        action: 'get_stops_for_route',
+                        route_id: selectedRouteId
+                    })
+                    .done(response => {
+                        if (response.status === 'success') {
+                            allStops = response.stops;
+                            let options = '<option value="">-- Select Boarding Point --</option>';
+                            allStops.forEach(stop => options += `<option value="${stop}">${stop}</option>`);
+                            $('#from-stop-select').html(options).prop('disabled', false);
+                        }
+                    });
             });
+
             $('#from-stop-select').on('change', function() {
                 fromStopName = $(this).val();
                 const fromIndex = allStops.indexOf(fromStopName);
@@ -289,6 +312,7 @@ try {
                 });
                 $('#to-stop-select').html(options).prop('disabled', false);
             });
+
             $('#to-stop-select').on('change', function() {
                 toStopName = $(this).val();
                 resetPage(3);
@@ -300,19 +324,20 @@ try {
                 $('#seat-selection-area').removeClass('d-none');
                 $('.deck-container').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary"></div></div>');
                 $.getJSON('function/backend/booking_actions.php', {
-                    action: 'get_seat_layout',
-                    route_id: selectedRouteId,
-                    travel_date: selectedDate,
-                    from_stop_name: fromStopName,
-                    to_stop_name: toStopName
-                }).done(response => {
-                    if (response.status === 'success') {
-                        busId = response.bus_id;
-                        renderSeats(response.seats);
-                    } else {
-                        $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
-                    }
-                }).fail(() => $('#lower_deck_container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
+                        action: 'get_seat_layout',
+                        route_id: selectedRouteId,
+                        travel_date: selectedDate,
+                        from_stop_name: fromStopName,
+                        to_stop_name: toStopName
+                    })
+                    .done(response => {
+                        if (response.status === 'success') {
+                            busId = response.bus_id;
+                            renderSeats(response.seats);
+                        } else {
+                            $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
+                        }
+                    }).fail(() => $('#lower_deck_container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
             }
 
             function createSeatElement(seatData) {
@@ -328,33 +353,29 @@ try {
                     priceHtml = '',
                     codeHtml = '';
                 if (seatData.seat_type !== 'AISLE' && seatData.seat_type !== 'DRIVER') codeHtml = `<span class="seat-code">${seatData.seat_code}</span>`;
+
                 let genderClass = '',
                     genderIcon = 'fas fa-user';
-                switch (seatData.seat_type) {
-                    case 'SEATER':
-                    case 'SLEEPER':
-                        if (seatData.gender_preference === 'MALE') {
-                            genderClass = 'gender-male';
-                            genderIcon = 'fas fa-male';
-                        } else if (seatData.gender_preference === 'FEMALE') {
-                            genderClass = 'gender-female';
-                            genderIcon = 'fas fa-female';
-                        }
-                        iconHtml = `<i class="seat-icon ${genderIcon} ${genderClass}"></i>`;
-                        break;
-                    case 'DRIVER':
-                        iconHtml = '<i class="seat-icon fas fa-user-tie"></i>';
-                        break;
-                    case 'AISLE':
-                        iconHtml = '<i class="seat-icon fas fa-arrows-alt-h"></i>';
-                        break;
+                if (seatData.seat_type === 'SEATER' || seatData.seat_type === 'SLEEPER') {
+                    if (seatData.gender_preference === 'MALE') {
+                        genderClass = 'gender-male';
+                        genderIcon = 'fas fa-male';
+                    } else if (seatData.gender_preference === 'FEMALE') {
+                        genderClass = 'gender-female';
+                        genderIcon = 'fas fa-female';
+                    }
+                    iconHtml = `<i class="seat-icon ${genderIcon} ${genderClass}"></i>`;
+                } else if (seatData.seat_type === 'DRIVER') {
+                    iconHtml = '<i class="seat-icon fas fa-user-tie"></i>';
+                } else if (seatData.seat_type === 'AISLE') {
+                    iconHtml = '<i class="seat-icon fas fa-arrows-alt-h"></i>';
                 }
+
                 if (parseInt(seatData.is_bookable) === 1 && !seatData.is_booked) priceHtml = `<span class="seat-price">₹${seatData.price}</span>`;
                 content.append(codeHtml).append(iconHtml).append(priceHtml);
                 seatEl.append(content);
                 if (parseInt(seatData.is_bookable) === 1) {
-                    seatEl.addClass(seatData.is_booked ? 'status-booked' : 'status-available');
-                    seatEl.data('seat-info', {
+                    seatEl.addClass(seatData.is_booked ? 'status-booked' : 'status-available').data('seat-info', {
                         id: seatData.seat_id,
                         code: seatData.seat_code,
                         price: parseFloat(seatData.price)
@@ -374,6 +395,7 @@ try {
                 });
                 $('#upper-deck-wrapper').toggleClass('d-none', !hasUpperDeck);
             }
+
             $(document).on('click', '.seat.status-available', function() {
                 const seatInfo = $(this).data('seat-info');
                 const seatId = seatInfo.id;
@@ -394,7 +416,18 @@ try {
                     $('#passenger-details-form').empty();
                     $('#main-contact-details').removeClass('d-none');
                 }
-                const formHtml = `<div class="card mb-2" id="passenger-form-${seatInfo.id}"><div class="card-body p-3"><h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6><div class="row g-2"><div class="col-md-5"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div><div class="col-md-4"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" required min="1" max="120"></div><div class="col-md-3"><select class="form-select" name="passenger_gender_${seatInfo.id}" required><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div></div></div></div>`;
+                const formHtml = `
+                    <div class="card mb-2" id="passenger-form-${seatInfo.id}">
+                        <div class="card-body p-3">
+                            <h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div>
+                                <div class="col-md-4"><input type="tel" class="form-control" name="passenger_mobile_${seatInfo.id}" placeholder="Mobile" required></div>
+                                <div class="col-md-2"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120"></div>
+                                <div class="col-md-2"><select class="form-select" name="passenger_gender_${seatInfo.id}" required><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
+                            </div>
+                        </div>
+                    </div>`;
                 $('#passenger-details-form').append(formHtml);
             }
 
@@ -409,34 +442,36 @@ try {
                 }
             }
 
-            // --- FINAL FIX: This is the updated click handler ---
             $('#confirm-booking-btn').on('click', function(e) {
                 e.preventDefault();
                 let isValid = true,
                     passengers = [];
                 $('#passenger-details-form .is-invalid').removeClass('is-invalid');
                 selectedSeats.forEach(seat => {
-                    const nameEl = $(`input[name="passenger_name_${seat.id}"]`),
-                        ageEl = $(`input[name="passenger_age_${seat.id}"]`);
+                    const nameEl = $(`input[name="passenger_name_${seat.id}"]`);
+                    const mobileEl = $(`input[name="passenger_mobile_${seat.id}"]`);
+                    const ageEl = $(`input[name="passenger_age_${seat.id}"]`);
                     if (!nameEl.val().trim()) {
                         nameEl.addClass('is-invalid');
                         isValid = false;
                     }
-                    if (!ageEl.val().trim() || parseInt(ageEl.val()) < 1) {
-                        ageEl.addClass('is-invalid');
+                    if (!mobileEl.val().trim()) {
+                        mobileEl.addClass('is-invalid');
                         isValid = false;
                     }
+
                     passengers.push({
                         seat_id: seat.id,
                         seat_code: seat.code,
                         fare: seat.price,
                         name: nameEl.val().trim(),
+                        mobile: mobileEl.val().trim(),
                         age: ageEl.val().trim(),
                         gender: $(`select[name="passenger_gender_${seat.id}"]`).val()
                     });
                 });
                 if (!isValid) {
-                    Swal.fire('Error', 'Please fill all passenger details (Name and Age).', 'error');
+                    Swal.fire('Error', 'Please fill all passenger Name and Mobile details.', 'error');
                     return;
                 }
 
@@ -455,33 +490,38 @@ try {
                 });
             });
 
-            function processBooking(action, passengers) {
-                const btn = $('#confirm-booking-btn');
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+      // book_ticket.php के अंदर का JavaScript
 
-                const bookingData = {
-                    action: action, // DYNAMIC ACTION
-                    route_id: selectedRouteId,
-                    bus_id: busId,
-                    travel_date: selectedDate,
-                    total_fare: $('#total-fare').text(),
-                    passengers: JSON.stringify(passengers),
-                    contact_email: $('#contact-email').val().trim(),
-                    contact_mobile: $('#contact-mobile').val().trim()
-                };
-
+function processBooking(action, passengers) {
+    const btn = $('#confirm-booking-btn');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+    const bookingData = {
+        action: action,
+        route_id: selectedRouteId,
+        bus_id: busId,
+        travel_date: selectedDate,
+        total_fare: $('#total-fare').text(),
+        origin: fromStopName,      // <-- यह लाइन बहुत ज़रूरी है
+        destination: toStopName,  // <-- यह लाइन भी बहुत ज़रूरी है
+        passengers: JSON.stringify(passengers),
+        contact_email: $('#contact-email').val().trim(),
+        contact_mobile: $('#contact-mobile').val().trim()
+    };
+    
+   
+                
                 $.post('function/backend/booking_actions.php', bookingData, null, 'json')
                     .done(response => {
                         if (response.status === 'success') {
-                            if (action === 'confirm_cash_booking') {
-                                Swal.fire('Booking Confirmed!', `Cash payment booking successful. ID: ${response.booking_id}`, 'success').then(() => window.location.reload());
-                            } else { // create_pending_booking
-                                // For online payment, just redirect. Don't store in session storage.
-                                // The backend has already created the pending booking.
-                                Swal.fire('Redirecting to Payment', 'Please complete your payment.', 'info').then(() => {
-                                    window.location.href = `payment_process.php?booking_id=${response.booking_id}`;
-                                });
-                            }
+                            Swal.fire({
+                                title: 'Booking Confirmed!',
+                                text: `Booking ID: ${response.booking_id}`,
+                                icon: 'success',
+                                confirmButtonText: 'View & Share Ticket'
+                            }).then(() => {
+                                // --- NEW: Always redirect to the ticket page ---
+                                window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${response.wtsp_no}&mail=${response.mail}&ticket_no=${response.ticket_no}`;
+                            });
                         } else {
                             Swal.fire('Booking Failed', response.message, 'error');
                         }

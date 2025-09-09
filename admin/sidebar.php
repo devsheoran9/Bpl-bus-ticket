@@ -79,6 +79,33 @@ $is_route_active = in_array($current_page, ['add_route', 'view_routes', 'edit_ro
             </li>
             <?php endif; ?>
            
+            <!-- =============================================== -->
+<!--         TICKET BOOKING MENU START               -->
+<!-- =============================================== -->
+<li class="nav-item">
+    <a class="nav-link d-flex justify-content-between align-items-center <?php echo $is_booking_active ? 'active' : 'collapsed'; ?>"
+       data-bs-toggle="collapse" href="#bookingMenu" role="button" aria-expanded="<?php echo $is_booking_active ? 'true' : 'false'; ?>">
+        <span><i class="fas fa-ticket-alt nav-icon me-2"></i>Ticket Booking</span>
+        <i class="fas fa-chevron-down small"></i>
+    </a>
+    <div class="collapse <?php echo $is_booking_active ? 'show' : ''; ?>" id="bookingMenu">
+        <ul class="nav flex-column ms-3">
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'book_ticket' ? 'active' : ''; ?>" href="book_ticket.php">
+                    <i class="fas fa-plus-circle me-2"></i>New Booking
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'view_bookings' ? 'active' : ''; ?>" href="view_bookings.php">
+                    <i class="fas fa-list-alt me-2"></i>View Bookings
+                </a>
+            </li>
+        </ul>
+    </div>
+</li>
+<!-- =============================================== -->
+<!--          TICKET BOOKING MENU END                -->
+<!-- =============================================== -->
             <!-- Link visible only if user has 'can_manage_employees' permission -->
             <?php if (user_has_permission('can_manage_employees')): ?>
             <li class="nav-item">
