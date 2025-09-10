@@ -2,6 +2,7 @@
 // book_ticket.php
 include_once('function/_db.php');
 session_security_check();
+check_permission('can_book_tickets');
 
 try {
     $query = "
@@ -421,10 +422,10 @@ try {
                         <div class="card-body p-3">
                             <h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6>
                             <div class="row g-2">
-                                <div class="col-md-4"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div>
-                                <div class="col-md-4"><input type="tel" class="form-control" name="passenger_mobile_${seatInfo.id}" placeholder="Mobile" required></div>
-                                <div class="col-md-2"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120"></div>
-                                <div class="col-md-2"><select class="form-select" name="passenger_gender_${seatInfo.id}" required><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
+                                <div class="col-md-6"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div>
+                                <div class="col-md-4 d-none"><input type="hidden" class="form-control d-none" name="passenger_mobile_${seatInfo.id}" placeholder="Mobile" required></div>
+                                <div class="col-md-3"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120"></div>
+                                <div class="col-md-3"><select class="form-select" name="passenger_gender_${seatInfo.id}" required><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
                             </div>
                         </div>
                     </div>`;
@@ -455,10 +456,7 @@ try {
                         nameEl.addClass('is-invalid');
                         isValid = false;
                     }
-                    if (!mobileEl.val().trim()) {
-                        mobileEl.addClass('is-invalid');
-                        isValid = false;
-                    }
+                  
 
                     passengers.push({
                         seat_id: seat.id,

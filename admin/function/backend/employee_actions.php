@@ -2,23 +2,33 @@
 // function/backend/employee_actions.php
 
 header('Content-Type: application/json');
-include('../_db.php');
+// It's better to include files at the top.
+include_once('../_db.php'); 
 
-// सुनिश्चित करें कि उपयोगकर्ता लॉग इन है और एक सत्र है
-if (!isset($_SESSION['user']['id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Authentication required. Please log in again.']);
-    exit();
+// We need to start the session to check for login and permissions
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
-
-// सभी क्रियाओं के लिए अनुमति जांच
-if (!user_has_permission('can_manage_employees')) {
-    echo json_encode(['status' => 'error', 'message' => 'You do not have permission to perform this action.']);
+// Helper function for sending JSON responses
+function send_json_response($status, $message, $data = []) {
+    echo json_encode(['status' => $status, 'message' => $message, 'data' => $data]);
     exit();
 }
 
 try {
+    // Check if user is logged in for all actions
+    if (!isset($_SESSION['user']['id'])) {
+        throw new Exception('Authentication required. Please log in again.');
+    }
+
+    $action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+    // Check general permission for managing employees for all actions
+    if (!user_has_permission('can_manage_employees')) {
+        throw new Exception('You do not have permission to manage employees.');
+    }
+
     switch ($action) {
         // --- ACTION: ADD A NEW EMPLOYEE ---
         case 'add_employee':
@@ -26,84 +36,151 @@ try {
             $mobile = trim($_POST['mobile'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
+            
             if (empty($name) || empty($mobile) || empty($email) || empty($password)) {
                 throw new Exception('All fields are required.');
             }
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                throw new Exception('Invalid email address.');
+                throw new Exception('Invalid email address format.');
             }
+            if (strlen($password) < 6) {
+                throw new Exception('Password must be at least 6 characters long.');
+            }
+
             $stmt = $_conn_db->prepare("SELECT id FROM admin WHERE email = ? OR mobile = ?");
             $stmt->execute([$email, $mobile]);
             if ($stmt->fetch()) {
-                throw new Exception('An account with this email or mobile number already exists.');
+                throw new Exception('An employee with this email or mobile number already exists.');
             }
-            $permissions_array = [];
-            if (!empty($_POST['permissions']) && is_array($_POST['permissions'])) {
-                foreach ($_POST['permissions'] as $perm) {
-                    $permissions_array[htmlspecialchars($perm)] = true;
+
+            $permissions_posted = $_POST['permissions'] ?? [];
+            $permissions_json = [];
+            if (is_array($permissions_posted)) {
+                foreach ($permissions_posted as $perm) {
+                    $safe_perm = htmlspecialchars(trim($perm));
+                    if (!empty($safe_perm)) {
+                        $permissions_json[$safe_perm] = true;
+                    }
                 }
             }
-            $permissions_json = json_encode($permissions_array);
+            $permissions_to_store = json_encode($permissions_json);
+
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $password_salt = 'bcrypt';
+
             $insert_stmt = $_conn_db->prepare("INSERT INTO admin (name, mobile, email, password, password_salt, type, permissions, status) VALUES (?, ?, ?, ?, ?, 'employee', ?, '1')");
-            $insert_stmt->execute([$name, $mobile, $email, $hashed_password, '123456', $permissions_json]);
-            echo json_encode(['status' => 'success', 'message' => 'Employee account created successfully!']);
+            $insert_stmt->execute([$name, $mobile, $email, $hashed_password, $password_salt, $permissions_to_store]);
+            
+            send_json_response('success', 'Employee account created successfully!');
             break;
+
+        // --- ACTION: UPDATE AN EMPLOYEE ---
+        case 'update_employee':
+            $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
+            $name = trim($_POST['name'] ?? '');
+            $mobile = trim($_POST['mobile'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? ''; // Optional
+
+            if (!$employee_id || empty($name) || empty($mobile) || empty($email)) {
+                throw new Exception('Required fields (Name, Mobile, Email) are missing.');
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Invalid email address format.');
+            }
+
+            $stmt = $_conn_db->prepare("SELECT id FROM admin WHERE (email = ? OR mobile = ?) AND id != ?");
+            $stmt->execute([$email, $mobile, $employee_id]);
+            if ($stmt->fetch()) {
+                throw new Exception('An account with this email or mobile number already exists.');
+            }
+
+            $permissions_posted = $_POST['permissions'] ?? [];
+            $permissions_json_arr = [];
+            if (is_array($permissions_posted)) {
+                foreach ($permissions_posted as $perm) {
+                    $safe_perm = htmlspecialchars(trim($perm));
+                    if (!empty($safe_perm)) {
+                        $permissions_json_arr[$safe_perm] = true;
+                    }
+                }
+            }
+            $permissions_to_store = json_encode($permissions_json_arr);
+            
+            $sql = "UPDATE admin SET name = ?, mobile = ?, email = ?, permissions = ? WHERE id = ? AND type = 'employee'";
+            $stmt = $_conn_db->prepare($sql);
+            $stmt->execute([$name, $mobile, $email, $permissions_to_store, $employee_id]);
+
+            if (!empty($password)) {
+                if (strlen($password) < 6) {
+                    throw new Exception('New password must be at least 6 characters long.');
+                }
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $pass_stmt = $_conn_db->prepare("UPDATE admin SET password = ? WHERE id = ?");
+                $pass_stmt->execute([$hashed_password, $employee_id]);
+            }
+            
+            send_json_response('success', 'Employee details updated successfully!');
+            break; // <-- THIS WAS THE MISSING PIECE!
 
         // --- ACTION: TOGGLE EMPLOYEE STATUS ---
         case 'toggle_status':
-            $employee_id = (int)($_POST['employee_id'] ?? 0);
-            $new_status = (int)($_POST['new_status'] ?? 0);
-            if (empty($employee_id) || !in_array($new_status, [1, 2])) {
-                throw new Exception('Invalid data provided.');
+            $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
+            $new_status = filter_input(INPUT_POST, 'new_status', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2]]);
+            
+            if (!$employee_id || !$new_status) {
+                throw new Exception('Invalid data provided for status toggle.');
             }
+            
             $stmt = $_conn_db->prepare("UPDATE admin SET status = ? WHERE id = ? AND type = 'employee'");
             $stmt->execute([$new_status, $employee_id]);
             $status_text = ($new_status == 1) ? 'activated' : 'deactivated';
-            echo json_encode(['status' => 'success', 'message' => 'Employee status has been ' . $status_text . '.']);
+            send_json_response('success', 'Employee status has been ' . $status_text . '.');
             break;
 
         // --- ACTION: DELETE AN EMPLOYEE ---
         case 'delete_employee':
-            $employee_id = (int)($_POST['employee_id'] ?? 0);
-            if (empty($employee_id)) {
+            $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
+            if (!$employee_id) {
                 throw new Exception('Invalid employee ID.');
             }
             $stmt = $_conn_db->prepare("DELETE FROM admin WHERE id = ? AND type = 'employee'");
             $stmt->execute([$employee_id]);
-            echo json_encode(['status' => 'success', 'message' => 'Employee account has been permanently deleted.']);
+            send_json_response('success', 'Employee account has been permanently deleted.');
             break;
 
         // --- ACTION: FORCE LOGOUT A USER ---
         case 'force_logout':
-            $employee_id = (int)($_POST['employee_id'] ?? 0);
-            if (empty($employee_id)) {
+            $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
+            if (!$employee_id) {
                 throw new Exception('Invalid employee ID.');
             }
             $stmt = $_conn_db->prepare("UPDATE admin SET session_token = NULL WHERE id = ? AND type = 'employee'");
             $stmt->execute([$employee_id]);
-            echo json_encode(['status' => 'success', 'message' => 'User session has been terminated.']);
+            send_json_response('success', 'User session has been terminated.');
             break;
 
         // --- ACTION: GET LOGIN HISTORY FOR A USER ---
         case 'get_login_history':
-            $employee_id = (int)($_GET['employee_id'] ?? 0);
-            if (empty($employee_id)) {
+            $employee_id = filter_input(INPUT_GET, 'employee_id', FILTER_VALIDATE_INT);
+            if (!$employee_id) {
                 throw new Exception('Invalid employee ID.');
             }
             $stmt = $_conn_db->prepare("SELECT activity_type, ip_address, log_time FROM admin_activity_log WHERE admin_id = ? ORDER BY log_time DESC LIMIT 50");
             $stmt->execute([$employee_id]);
             $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode(['status' => 'success', 'history' => $history]);
+            send_json_response('success', 'History fetched.', ['history' => $history]);
             break;
 
         default:
             throw new Exception('Invalid action specified.');
     }
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    // Catch logical errors
+    send_json_response('error', $e->getMessage());
 } catch (PDOException $e) {
+    // Catch database-specific errors
     error_log("Employee Action Error: " . $e->getMessage());
-    echo json_encode(['status' => 'error', 'message' => 'A database error occurred. Please check the logs.']);
+    send_json_response('error', 'A database error occurred. Please try again.');
 }
 ?>

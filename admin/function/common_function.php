@@ -37,38 +37,52 @@ $full_location_share = "$scheme$host/$url_folder";//full location with url
 $limit = 8;
 $quotation_limit = 9;
 $location = dirname($parsed_url_path);// Append the requested resource location to the URL
-function user_has_permission($permission) {
-    // Check if user is logged in and has permissions array
-    if (!isset($_SESSION['user']['login']) || !isset($_SESSION['user']['permissions'])) {
+function user_has_permission($permission_key) {
+    // Start session if not already started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // 1. Check if a user is logged in at all.
+    if (!isset($_SESSION['user']['id'])) {
         return false;
     }
 
-    // A main admin with "all_access" can do anything
-    if (!empty($_SESSION['user']['permissions']['all_access'])) {
+    // 2. The 'main_admin' has god-mode. They can do anything.
+    if (isset($_SESSION['user']['type']) && $_SESSION['user']['type'] === 'main_admin') {
         return true;
     }
 
-    // Check for the specific permission
-    return !empty($_SESSION['user']['permissions'][$permission]);
+    // 3. For regular employees, check their specific permissions.
+    // Ensure 'permissions' key exists and is an array.
+    if (isset($_SESSION['user']['permissions']) && is_array($_SESSION['user']['permissions'])) {
+        // Check if the specific permission key exists and is explicitly set to true.
+        if (isset($_SESSION['user']['permissions'][$permission_key]) && $_SESSION['user']['permissions'][$permission_key] === true) {
+            return true;
+        }
+    }
+
+    // 4. If none of the above conditions are met, the user does not have permission.
+    return false;
 }
 
+
 /**
- * Secures a page by checking for a permission. If the user doesn't have it,
- * it redirects them to the dashboard with an error message.
+ * Enforces a permission check.
+ * This is the "hard" check. If the user doesn't have permission,
+ * it stops the script and redirects them.
  *
- * @param string $permission  
+ * @param string $permission_key The permission to enforce.
  */
-function check_permission($permission) {
-    if (!user_has_permission($permission)) {
-        // You can set a session flash message here to show an error
-        $_SESSION['flash_message'] = [
-            'type' => 'danger',
-            'message' => 'You do not have permission to access this page.'
-        ];
-        header('Location: dashboard.php');
+function check_permission($permission_key) {
+    if (!user_has_permission($permission_key)) {
+        // User does not have permission. Redirect them to an error page.
+        // Make sure you have an 'unauthorized.php' page in your admin folder.
+        header('Location: unauthorized.php');
         exit();
     }
 }
+ 
 function session_security_check() {
     global $_conn_db;
 

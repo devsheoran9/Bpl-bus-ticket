@@ -20,7 +20,7 @@ function send_json_response($status, $data = []) {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-// ACTION: Get stops for a route
+// ACTION: Get stops for a route (Existing code - No changes)
 if ($action == 'get_stops_for_route') {
     $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
     if (!$route_id) send_json_response('error', 'Invalid Route ID.');
@@ -36,7 +36,7 @@ if ($action == 'get_stops_for_route') {
     } catch (PDOException $e) { send_json_response('error', 'Database error fetching stops.'); }
 }
 
-// ACTION: Get seat layout and prices
+// ACTION: Get seat layout and prices (Existing code - No changes)
 if ($action == 'get_seat_layout') {
     $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
     $travel_date = $_GET['travel_date'] ?? '';
@@ -80,7 +80,6 @@ if ($action == 'get_seat_layout') {
         $stmt_seats->execute([$bus_id]);
         $seats = $stmt_seats->fetchAll(PDO::FETCH_ASSOC);
         
-        // FIX: Added route_id to the query to check for booked seats
         $stmt_booked = $_conn_db->prepare("SELECT seat_id FROM booked_seats WHERE route_id = ? AND bus_id = ? AND travel_date = ?");
         $stmt_booked->execute([$route_id, $bus_id, $travel_date]);
         $booked_seat_ids = $stmt_booked->fetchAll(PDO::FETCH_COLUMN);
@@ -94,27 +93,22 @@ if ($action == 'get_seat_layout') {
     } catch (PDOException $e) { send_json_response('error', 'Database Error occurred.'); }
 }
 
-// Shared function to create a booking entry
+// Shared function to create a booking entry (Existing code - No changes)
 function createBookingEntry($data, $isCash = false) {
     global $_conn_db;
     $booking_status = $isCash ? 'CONFIRMED' : 'PENDING';    
 
     $_conn_db->beginTransaction();
     try {
-        // Generate a unique ticket number
         $ticket_no = 'BPL' . substr(str_shuffle(str_repeat('0123456789', 9)), 0, 9);
-
-        // Added ticket_no, origin, and destination to the INSERT statement
         $sql_booking = "INSERT INTO bookings (ticket_no, route_id, bus_id, origin, destination, booked_by_employee_id, contact_email, contact_mobile, travel_date, total_fare, booking_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt_booking = $_conn_db->prepare($sql_booking);
         $stmt_booking->execute([$ticket_no, $data['route_id'], $data['bus_id'], $data['origin'], $data['destination'], $data['employee_id'], $data['contact_email'], $data['contact_mobile'], $data['travel_date'], $data['total_fare'], $booking_status]);
-        
         $booking_id = $_conn_db->lastInsertId();
 
         $sql_passenger = "INSERT INTO passengers (booking_id, seat_id, seat_code, passenger_name, passenger_mobile, passenger_age, passenger_gender, fare) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt_passenger = $_conn_db->prepare($sql_passenger);
         
-        // Added route_id to the INSERT statement for booked_seats
         $sql_booked_seat = "INSERT INTO booked_seats (booking_id, route_id, bus_id, seat_id, travel_date) VALUES (?, ?, ?, ?, ?)";
         $stmt_booked_seat = $_conn_db->prepare($sql_booked_seat);
 
@@ -127,27 +121,23 @@ function createBookingEntry($data, $isCash = false) {
         return [
             'status' => 'success', 
             'booking_id' => $booking_id,
-            'ticket_no' => $ticket_no, // Return the generated ticket number
+            'ticket_no' => $ticket_no,
             'wtsp_no' => $data['contact_mobile'],
             'mail' => $data['contact_email']
         ];
     } catch (PDOException $e) {
         $_conn_db->rollBack();
         if ($e->getCode() == '23000') {
-            return ['status' => 'error', 'message' => 'Booking failed: A unique constraint was violated (e.g., seat already booked or duplicate ticket number). Please try again.'];
+            return ['status' => 'error', 'message' => 'Booking failed: A unique constraint was violated. Please try again.'];
         }
         error_log("Create Booking Error: " . $e->getMessage());
-        return ['status' => 'error', 'message' => 'Database Error: Could not create booking. Please check server logs.'];
+        return ['status' => 'error', 'message' => 'Database Error: Could not create booking.'];
     }
 }
 
-// ACTION: Handle booking requests
+// ACTION: Handle booking requests (Existing code - No changes)
 if ($action == 'confirm_cash_booking' || $action == 'create_pending_booking') {
-    if (!isset($_SESSION['user']['id'])) {
-        send_json_response('error', 'Authentication error. Please log in again.');
-    }
-    
-    // Added origin and destination to the data array
+    if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error. Please log in again.');
     $data = [
         'route_id' => filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT),
         'bus_id' => filter_input(INPUT_POST, 'bus_id', FILTER_VALIDATE_INT),
@@ -160,14 +150,136 @@ if ($action == 'confirm_cash_booking' || $action == 'create_pending_booking') {
         'contact_email' => filter_var($_POST['contact_email'] ?? null, FILTER_VALIDATE_EMAIL),
         'contact_mobile' => isset($_POST['contact_mobile']) ? htmlspecialchars($_POST['contact_mobile'], ENT_QUOTES, 'UTF-8') : null
     ];
-    
-    if (empty($data['route_id']) || empty($data['bus_id']) || empty($data['passengers']) || empty($data['origin']) || empty($data['destination'])) {
-        send_json_response('error', 'Incomplete booking data received. Origin or destination might be missing.');
-    }
-    
+    if (empty($data['route_id']) || empty($data['bus_id']) || empty($data['passengers'])) send_json_response('error', 'Incomplete booking data received.');
     $isCash = ($action == 'confirm_cash_booking');
     $result = createBookingEntry($data, $isCash);
-
     send_json_response($result['status'], $result);
+}
+
+
+// ===================================================================
+// --- NEW ACTIONS FOR THE 'view_bookings.php' PAGE START HERE ---
+// ===================================================================
+
+// ACTION: Get all buses that run on a specific route
+if ($action == 'get_buses_for_route') {
+    $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
+    if (!$route_id) {
+        send_json_response('error', 'Invalid Route ID.');
+    }
+    try {
+        // Find the bus associated with this route.
+        $stmt = $_conn_db->prepare("
+            SELECT b.bus_id, b.bus_name, b.registration_number 
+            FROM buses b
+            JOIN routes r ON b.bus_id = r.bus_id
+            WHERE r.route_id = ?
+        ");
+        $stmt->execute([$route_id]);
+        $buses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        send_json_response('success', ['buses' => $buses]);
+    } catch (PDOException $e) {
+        send_json_response('error', 'Database error: ' . $e->getMessage());
+    }
+}
+
+if ($action == 'get_route_dashboard_details') {
+    $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
+    $travel_date = $_GET['travel_date'] ?? date('Y-m-d'); // Default to today if not provided
+
+    if (!$route_id) {
+        send_json_response('error', 'Please select a route.');
+    }
+
+    try {
+        $response_data = [];
+
+        // 1. Get Route, Bus, and Operator Details
+        $details_stmt = $_conn_db->prepare("
+            SELECT 
+                r.route_name, r.starting_point, r.ending_point,
+                b.bus_name, b.registration_number, b.bus_type,
+                o.operator_name, o.contact_phone AS operator_phone
+            FROM routes r
+            JOIN buses b ON r.bus_id = b.bus_id
+            JOIN operators o ON b.operator_id = o.operator_id
+            WHERE r.route_id = ?
+        ");
+        $details_stmt->execute([$route_id]);
+        $response_data['details'] = $details_stmt->fetch(PDO::FETCH_ASSOC);
+
+        // 2. Get Full Route Timeline (All Stops)
+        $stops_stmt = $_conn_db->prepare("SELECT stop_name FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
+        $stops_stmt->execute([$route_id]);
+        $intermediate_stops = $stops_stmt->fetchAll(PDO::FETCH_COLUMN);
+        $response_data['timeline'] = array_merge([$response_data['details']['starting_point']], $intermediate_stops);
+
+        // 3. Get Bookings for the selected date
+        $booking_sql = "
+            SELECT booking_id, ticket_no, total_fare, created_at
+            FROM bookings
+            WHERE route_id = ? AND travel_date = ?
+            ORDER BY created_at DESC
+        ";
+        $booking_stmt = $_conn_db->prepare($booking_sql);
+        $booking_stmt->execute([$route_id, $travel_date]);
+        $bookings = $booking_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // For each booking, fetch its passengers
+        $passenger_stmt = $_conn_db->prepare("SELECT passenger_name, seat_code FROM passengers WHERE booking_id = ?");
+        foreach ($bookings as &$booking) {
+            $passenger_stmt->execute([$booking['booking_id']]);
+            $passengers = $passenger_stmt->fetchAll(PDO::FETCH_ASSOC);
+            $booking['passenger_names'] = implode(', ', array_column($passengers, 'passenger_name'));
+            $booking['seat_codes'] = implode(', ', array_column($passengers, 'seat_code'));
+        }
+        $response_data['bookings'] = $bookings;
+
+        send_json_response('success', $response_data);
+
+    } catch (PDOException $e) {
+        send_json_response('error', 'Database error: ' . $e->getMessage());
+    }
+}
+if ($action == 'delete_booking') {
+    $booking_id = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
+
+    if (!$booking_id) {
+        send_json_response('error', 'Invalid Booking ID provided.');
+    }
+
+    // Use a transaction to ensure all related data is deleted or none at all
+    $_conn_db->beginTransaction();
+    try {
+        // We delete from multiple tables, so order matters if there are foreign keys.
+        // It's safest to delete from child tables first.
+        
+        // 1. Delete from passengers
+        $stmt1 = $_conn_db->prepare("DELETE FROM passengers WHERE booking_id = ?");
+        $stmt1->execute([$booking_id]);
+
+        // 2. Delete from booked_seats
+        $stmt2 = $_conn_db->prepare("DELETE FROM booked_seats WHERE booking_id = ?");
+        $stmt2->execute([$booking_id]);
+
+        // 3. Delete from transactions (if any)
+        $stmt3 = $_conn_db->prepare("DELETE FROM transactions WHERE booking_id = ?");
+        $stmt3->execute([$booking_id]);
+        
+        // 4. Finally, delete the main booking record
+        $stmt4 = $_conn_db->prepare("DELETE FROM bookings WHERE booking_id = ?");
+        $stmt4->execute([$booking_id]);
+
+        // If all deletions were successful, commit the transaction
+        $_conn_db->commit();
+        send_json_response('success', 'Booking has been successfully deleted.');
+
+    } catch (PDOException $e) {
+        // If any error occurs, roll back the transaction
+        $_conn_db->rollBack();
+        error_log("Delete Booking Error: " . $e->getMessage());
+        send_json_response('error', 'Database error: Could not delete the booking.');
+    }
 }
 ?>

@@ -1,13 +1,53 @@
 <?php
 // generate_ticket_php (ULTRA-CLEAN & SCALABLE DESIGN)
-include_once('function/_db.php');
-session_security_check();
+// This file can now be accessed via booking_id (for admin) or token (for public)
 
-$booking_id = filter_input(INPUT_GET, 'booking_id', FILTER_VALIDATE_INT);
-if (!$booking_id) die("Invalid Booking ID.");
+// The path to _db.php might need adjustment based on the new file location.
+// Assuming the 'function' directory is at the same level as this file.
+include_once('./admin/function/_db.php');
 
+// --- Step 1: Determine access method and get the booking_id ---
+$booking_id = null;
+$token = null;
+$is_admin_view = false;
+
+if (isset($_GET['booking_id'])) {
+    // Admin is viewing, requires a session
+    session_start();
+    if (isset($_SESSION['user']['id'])) {
+        $is_admin_view = true;
+    } else {
+        die("Authentication required to view tickets by ID.");
+    }
+    
+    $booking_id = filter_input(INPUT_GET, 'booking_id', FILTER_VALIDATE_INT);
+    if (!$booking_id) die("Invalid Booking ID.");
+
+} elseif (isset($_GET['token'])) {
+    // Public is viewing via a secure token
+    $token = $_GET['token'];
+    if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
+        die("Invalid ticket link format.");
+    }
+    
+    // Find the booking_id from the token
+    try {
+        $tokenStmt = $_conn_db->prepare("SELECT booking_id FROM ticket_access_tokens WHERE token = ?");
+        $tokenStmt->execute([$token]);
+        $booking_id = $tokenStmt->fetchColumn();
+        if (!$booking_id) {
+            die("This ticket link is invalid or has expired.");
+        }
+    } catch (PDOException $e) {
+        die("Database error. Please try again later.");
+    }
+} else {
+    die("No booking ID or ticket token provided.");
+}
+
+
+// --- Step 2: Fetch all data using the now-known $booking_id ---
 try {
-    // --- Step 1: Query to fetch all details ---
     $stmt = $_conn_db->prepare("
         SELECT 
             b.*, r.route_id, r.route_name, r.starting_point, sch.departure_time,
@@ -21,26 +61,29 @@ try {
     ");
     $stmt->execute([$booking_id]);
     $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$booking_details) die("Booking details not found.");
+    if (!$booking_details) die("Booking details could not be found.");
 
     $passengersStmt = $_conn_db->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- Step 2: Get/Create secure token for QR Code ---
-    // (This logic remains the same)
-    $tokenStmt = $_conn_db->prepare("SELECT token FROM ticket_access_tokens WHERE booking_id = ?");
-    $tokenStmt->execute([$booking_id]);
-    $token = $tokenStmt->fetchColumn();
+    // --- Step 3: Get/Create secure token (especially for when admin views first time) ---
     if (!$token) {
-        $token = bin2hex(random_bytes(16));
-        $insertStmt = $_conn_db->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
-        $insertStmt->execute([$booking_id, $token]);
+        $tokenStmt = $_conn_db->prepare("SELECT token FROM ticket_access_tokens WHERE booking_id = ?");
+        $tokenStmt->execute([$booking_id]);
+        $token = $tokenStmt->fetchColumn();
+        if (!$token) {
+            $token = bin2hex(random_bytes(16));
+            $insertStmt = $_conn_db->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
+            $insertStmt->execute([$booking_id, $token]);
+        }
     }
+    
+    // IMPORTANT: Make sure this URL is correct for the new file location
     $projectBaseUrl = "http://localhost/bpl-bus-ticket";
-    $publicTicketUrl = $projectBaseUrl . '/admin/generate_ticket1.php?token=' . $token;
+    $publicTicketUrl = $projectBaseUrl . '/generate_ticket_html.php?token=' . $token;
 
-    // --- Step 3: Calculate real timings ---
+    // --- Step 4: Calculate real timings ---
     $route_departure_datetime_str = $booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00');
     $route_departure_datetime = new DateTime($route_departure_datetime_str);
     $origin_duration_stmt = $_conn_db->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ? UNION SELECT 0 WHERE ? = (SELECT starting_point FROM routes WHERE route_id = ?) LIMIT 1");
@@ -49,7 +92,6 @@ try {
     $destination_duration_stmt = $_conn_db->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $destination_duration_stmt->execute([$booking_details['route_id'], $booking_details['destination']]);
     $destination_minutes = (int)$destination_duration_stmt->fetchColumn();
-
     $actual_departure_datetime = (clone $route_departure_datetime)->modify("+$origin_minutes minutes");
     $actual_arrival_datetime = (clone $route_departure_datetime)->modify("+$destination_minutes minutes");
     
@@ -58,7 +100,8 @@ try {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bus Ticket - <?php echo htmlspecialchars($booking_details['ticket_no'] ?? 'N/A'); ?></title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -71,7 +114,6 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 
     <style>
-        /* All CSS remains exactly the same */
         :root {
             --brand-blue: #0052CC; --text-dark: #172B4D; --text-light: #6B778C;
             --bg-main: #F4F5F7; --bg-card: #FFFFFF; --border-color: #DFE1E6;
@@ -104,7 +146,6 @@ try {
 <body>
     <div class="ticket-viewport">
         <div id="ticket-wrapper">
-            <!-- The entire HTML of the ticket remains exactly the same -->
             <div class="bus-ticket">
                 <div class="main-panel">
                     <div class="header">
@@ -117,7 +158,6 @@ try {
                             <div class="value"><?php echo htmlspecialchars($booking_details['ticket_no']); ?></div>
                         </div>
                     </div>
-
                     <div class="journey-details">
                         <div class="city">
                             <div class="name"><?php echo htmlspecialchars($booking_details['origin']); ?></div>
@@ -129,7 +169,6 @@ try {
                             <div class="time">Est. <?php echo $actual_arrival_datetime->format('h:i A'); ?></div>
                         </div>
                     </div>
-
                     <div class="passengers-section">
                         <?php foreach ($passengers as $p): ?>
                         <div class="passenger-row">
@@ -165,29 +204,44 @@ try {
     <button id="download-btn" class="download-button">Download Ticket PDF</button>
 
     <script>
-        // Scaling script remains the same
+        // --- Full JavaScript Code Block ---
+
+        // Function for scaling the ticket on small screens
         function scaleTicket() {
             const viewport = document.querySelector('.ticket-viewport');
             const ticket = document.querySelector('#ticket-wrapper');
-            const ticketWidth = 840;
-            const scale = Math.min(viewport.offsetWidth / ticketWidth, 1);
+            const ticketWidth = 840; // The actual width of the ticket in pixels
+
+            // Calculate scale factor, but don't scale up (max 1)
+            const scale = Math.min(viewport.offsetWidth / ticketWidth, 1); 
+            
             ticket.style.transform = `scale(${scale})`;
+            
+            // Adjust the height of the container to avoid extra empty space
             viewport.style.height = `${ticket.offsetHeight * scale}px`;
         }
+
+        // Run scaling on page load and when the window is resized
         window.addEventListener('load', scaleTicket);
         window.addEventListener('resize', scaleTicket);
 
-        // QR Code generation script remains the same
+
+        // JS QR Code Generation
         (function() {
             const qrData = "<?php echo $publicTicketUrl; ?>";
-            const qr = qrcode(0, 'M');
+            const qr = qrcode(0, 'M'); // type 0 = auto, M = medium error correction
             qr.addData(qrData);
             qr.make();
-            document.getElementById('qrcode').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0 });
+            
+            document.getElementById('qrcode').innerHTML = qr.createSvgTag({
+                cellSize: 4, 
+                margin: 0, 
+                scalable: true
+            });
             document.querySelector('#qrcode svg').setAttribute('style', 'width:120px; height:120px; border-radius:8px;');
         })();
 
-        // --- FIX: UPDATED PDF DOWNLOAD SCRIPT FOR A4 PORTRAIT ---
+        // PDF download script for A4 Portrait
         window.jsPDF = window.jspdf.jsPDF;
         document.getElementById('download-btn').addEventListener('click', function () {
             const btn = this;
@@ -199,7 +253,11 @@ try {
             // Temporarily remove scaling to get full quality image
             ticketWrapper.style.transform = 'scale(1)';
 
-            html2canvas(ticketWrapper, { scale: 3, useCORS: true, backgroundColor: '#FFFFFF' }).then(canvas => {
+            html2canvas(ticketWrapper, { 
+                scale: 3, 
+                useCORS: true, 
+                backgroundColor: '#FFFFFF' 
+            }).then(canvas => {
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
@@ -239,7 +297,10 @@ try {
                 // Re-apply scaling for the on-screen view
                 scaleTicket();
 
-                setTimeout(() => { btn.textContent = 'Download Ticket PDF'; btn.disabled = false; }, 1000);
+                setTimeout(() => { 
+                    btn.textContent = 'Download Ticket PDF'; 
+                    btn.disabled = false; 
+                }, 1000);
             });
         });
     </script>

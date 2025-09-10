@@ -4,7 +4,9 @@
 global $_conn_db;
 include_once('function/_db.php');
 session_security_check(); // सुनिश्चित करता है कि उपयोगकर्ता लॉग इन है और सत्र मान्य है
-
+$can_add_routes = user_has_permission('can_manage_routes');
+$can_edit_routes = user_has_permission('can_edit_routes');
+$can_delete_routes = user_has_permission('can_delete_routes');
 // --- डेटा प्राप्त करने का तर्क ---
 $routes_list = [];
 $all_stops = [];
@@ -129,10 +131,14 @@ try {
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal<?php echo $route['route_id']; ?>">
                                     <i class="fas fa-calendar-alt me-1"></i>View Schedule
                                 </button>
-                                <a href="add_route.php?action=edit&id=<?php echo $route['route_id']; ?>" class="btn btn-sm btn-info ms-auto"><i class="fas fa-edit me-1"></i>Edit</a>
-                                <button type="button" class="btn btn-sm btn-danger delete-route-btn" data-route-id="<?php echo $route['route_id']; ?>">
-                                    <i class="fas fa-trash me-1"></i>Delete
-                                </button>
+                                <?php if ($can_edit_routes): ?>
+                                        <a href="add_route.php?action=edit&id=<?php echo $route['route_id']; ?>" class="btn btn-sm btn-info"><i class="fas fa-edit me-1"></i>Edit</a>
+                                    <?php endif; ?>
+                                <?php if ($can_delete_routes): ?>
+                                        <button type="button" class="btn btn-sm btn-danger delete-route-btn" data-route-id="<?php echo $route['route_id']; ?>">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </button>
+                                    <?php endif; ?>
                             </div>
                         </div>
 
