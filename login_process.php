@@ -1,68 +1,59 @@
 <?php
-session_start();
-require 'db_connect.php';
+// Assuming your header.php or another file already starts the session.
+// If not, uncomment the next line:
+// session_start(); 
+
+require "./admin/function/_db.php"; // Using your provided path
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $mobile_no = $_POST['mobile_no'];
+    $login_identifier = $_POST['login_identifier'];
     $password = $_POST['password'];
 
-    // Find user by mobile number and check if their status is active (e.g., status = 1)
-    $stmt = $conn->prepare("SELECT id, username, password, status FROM users WHERE mobile_no = ?");
-    $stmt->bind_param("s", $mobile_no);
-    $stmt->execute();
-    $stmt->store_result();
+    // FIX 1: Use two DIFFERENT named placeholders in the query
+    $stmt = $_conn_db->prepare("SELECT id, username, email, password, status FROM users WHERE mobile_no = :mobile OR email = :email");
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $username, $hashed_password, $user_status);
-        $stmt->fetch();
+    // FIX 2: Provide a value for BOTH placeholders in the execute() array
+    $stmt->execute([
+        ':mobile' => $login_identifier,
+        ':email'  => $login_identifier
+    ]);
 
-        // Verify password AND check if the user account is active
-        if (password_verify($password, $hashed_password)) {
+    if ($stmt->rowCount() > 0) {
+        $user = $stmt->fetch();
 
-            if ($user_status != 1) { // Checks the main 'users' table status
-                // Account is disabled or banned
-                echo "Your account is not active. Please contact support.";
-                header("refresh:3;url=login.php");
+        if (password_verify($password, $user['password'])) {
+            if ($user['status'] != 1) {
+                $_SESSION['error_message'] = "Your account is not active. Please contact support.";
+                header("Location: login.php");
                 exit();
             }
 
-            // Correct password and active account, start session
             $_SESSION['loggedin'] = true;
-            $_SESSION['user_id'] = $id;
-            $_SESSION['username'] = $username;
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['email'] = $user['email'];
 
-            // Generate a unique token for this specific login session
             $token = bin2hex(random_bytes(32));
             $ip_address = $_SERVER['REMOTE_ADDR'];
-
-            // =================================================================
-            // ** NEW AND IMPORTANT LINE **
-            // We must save this unique token in the session itself.
             $_SESSION['login_token'] = $token;
-            // =================================================================
 
-            // Insert the new token into the database with status 1 (active)
-            $token_stmt = $conn->prepare("INSERT INTO users_login_token (user_id, token, ip_address, status) VALUES (?, ?, ?, 1)");
-            $token_stmt->bind_param("iss", $id, $token, $ip_address);
-            $token_stmt->execute();
-            $token_stmt->close();
+            $token_stmt = $_conn_db->prepare("INSERT INTO users_login_token (user_id, token, ip_address, status) VALUES (:user_id, :token, :ip, 1)");
+            $token_stmt->execute([
+                ':user_id' => $user['id'],
+                ':token' => $token,
+                ':ip' => $ip_address
+            ]);
 
-            // Redirect to the homepage
             header("Location: index.php");
             exit();
         } else {
-            // Incorrect password
-            echo "Invalid mobile number or password.";
-            header("refresh:2;url=login.php");
+            $_SESSION['error_message'] = "Invalid credentials. Please try again.";
+            header("Location: login.php");
             exit();
         }
     } else {
-        // User not found
-        echo "Invalid mobile number or password.";
-        header("refresh:2;url=login.php");
+        $_SESSION['error_message'] = "Invalid credentials. Please try again.";
+        header("Location: login.php");
         exit();
     }
-
-    $stmt->close();
-    $conn->close();
 }

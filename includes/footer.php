@@ -63,22 +63,7 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Custom Script for Navbar -->
-    <script>
-        // Change navbar style on scroll
-        const nav = document.querySelector('.navbar');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                // When scrolled, make it solid white
-                nav.classList.add('bg-white', 'navbar-light');
-                nav.classList.remove('navbar-dark');
-            } else {
-                // At the top, make it transparent
-                nav.classList.remove('bg-white', 'navbar-light');
-                nav.classList.add('navbar-dark');
-            }
-        });
-    </script>
+ 
 </body>
 </html>
 
