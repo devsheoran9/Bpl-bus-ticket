@@ -120,6 +120,7 @@ if (!$initial_schedule_id) {
                 $seat['final_status'] = $seat['status'];
             }
             $seat['booked_by_gender'] = $is_booked ? strtoupper($booked_seats_info[$seat['seat_code']]) : null;
+
             if (strtoupper($seat['deck']) === 'LOWER') {
                 $lower_deck_seats[] = $seat;
                 $lower_deck_height = max($lower_deck_height, $seat['y_coordinate'] + $seat['height']);
@@ -135,6 +136,7 @@ if (!$initial_schedule_id) {
         $error_message = "An error occurred: " . $e->getMessage();
     }
 }
+
 
 function get_seat_classes($seat)
 {
@@ -977,14 +979,14 @@ function get_transform_style($orientation)
                         genderSelectHtml = `<select name="passenger_gender_${uniqueId}" class="form-select" required><option value="" selected disabled>Select Gender</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>`;
                     }
                     const formHtml = `
-                    <div class="panel-card mb-3 passenger-form" id="passenger-form-${uniqueId}">
-                        <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatCode}</span></h6>
-                        <div class="row">
-                            <div class="col-md-5 mb-3"><label class="form-label">Name</label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
-                            <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1"></div>
-                            <div class="col-md-4 mb-3"><label class="form-label">Gender</label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
-                        </div>
-                    </div>`;
+                <div class="panel-card mb-3 passenger-form" id="passenger-form-${uniqueId}">
+                    <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatCode}</span></h6>
+                    <div class="row">
+                        <div class="col-md-5 mb-3"><label class="form-label">Name</label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
+                        <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1"></div>
+                        <div class="col-md-4 mb-3"><label class="form-label">Gender</label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
+                    </div>
+                </div>`;
                     container.insertAdjacentHTML('beforeend', formHtml);
                     passengerCount++;
                 }
@@ -997,14 +999,12 @@ function get_transform_style($orientation)
                 let passengersData = [];
 
                 document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
                 selectedSeats.forEach((seatData, seatCode) => {
                     const uniqueId = seatCode.replace(/[^a-zA-Z0-9]/g, '');
                     const nameEl = form.querySelector(`input[name="passenger_name_${uniqueId}"]`);
                     const ageEl = form.querySelector(`input[name="passenger_age_${uniqueId}"]`);
                     const genderEl = form.querySelector(`select[name="passenger_gender_${uniqueId}"]`);
                     const ageValue = parseInt(ageEl ? ageEl.value : '0', 10);
-
                     if (!nameEl || !nameEl.value.trim()) {
                         isValid = false;
                         if (nameEl) {
@@ -1026,7 +1026,6 @@ function get_transform_style($orientation)
                             if (!firstInvalidElement) firstInvalidElement = genderEl;
                         }
                     }
-
                     passengersData.push({
                         seat_code: seatCode,
                         fare: seatData.price,
@@ -1035,7 +1034,6 @@ function get_transform_style($orientation)
                         gender: genderEl ? genderEl.value : ''
                     });
                 });
-
                 form.querySelectorAll('[name^="contact_"][required]').forEach(input => {
                     if (!input.value.trim()) {
                         input.classList.add('is-invalid');
@@ -1050,57 +1048,131 @@ function get_transform_style($orientation)
                     return;
                 }
 
-                const formData = new FormData(form);
-                formData.append('origin', document.querySelector('input[name="boarding_point"]:checked').value);
-                formData.append('destination', document.querySelector('input[name="dropping_point"]:checked').value);
-                formData.append('total_fare', document.getElementById('total-price').textContent);
-                formData.append('passengers', JSON.stringify(passengersData));
+                // Use a plain object for jQuery AJAX
+                const bookingData = {
+                    route_id: form.querySelector('input[name="route_id"]').value,
+                    bus_id: form.querySelector('input[name="bus_id"]').value,
+                    schedule_id: form.querySelector('input[name="schedule_id"]').value,
+                    travel_date: form.querySelector('input[name="travel_date"]').value,
+                    contact_name: form.querySelector('input[name="contact_name"]').value,
+                    contact_mobile: form.querySelector('input[name="contact_mobile"]').value,
+                    contact_email: form.querySelector('input[name="contact_email"]').value,
+                    origin: document.querySelector('input[name="boarding_point"]:checked').value,
+                    destination: document.querySelector('input[name="dropping_point"]:checked').value,
+                    total_fare: document.getElementById('total-price').textContent,
+                    passengers: JSON.stringify(passengersData)
+                };
 
-                actionBtn.disabled = true;
-                actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
-
-                fetch('process_booking.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => {
-                                throw new Error(text || 'Server error')
-                            });
+                $.ajax({
+                    url: 'process_booking.php',
+                    type: 'POST',
+                    data: bookingData,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        actionBtn.disabled = true;
+                        actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Preparing Payment...';
+                    },
+                    success: function(data) {
+                        if (!data.success) {
+                            // Use the error message from the server's JSON response
+                            throw new Error(data.message);
                         }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // === MODIFIED REDIRECT LOGIC ===
-                        if (data.success) {
-                            // Start building the redirect URL
-                            let redirectUrl = `booking_confirmation.php?id=${data.booking_id}`;
-                            // If the server told us a new user was created, add the flag
-                            if (data.new_user) {
-                                redirectUrl += '&new_user=true';
+
+                        const options = {
+                            "key": data.razorpay_key_id,
+                            "amount": data.amount,
+                            "currency": "INR",
+                            "name": "BPL Bus Booking",
+                            "description": "Bus Ticket Payment",
+                            "order_id": data.razorpay_order_id,
+                            "handler": function(response) {
+                                verifyPayment(response, data.booking_id, data.new_user);
+                            },
+                            "prefill": {
+                                "name": data.contact_name,
+                                "email": data.contact_email,
+                                "contact": data.contact_mobile
+                            },
+                            "theme": {
+                                "color": "#007bff"
                             }
-                            // Redirect to the correctly formed URL
-                            window.location.href = redirectUrl;
-                        } else {
-                            // The message here will now come from the JSON response
-                            alert('Booking Failed: ' + data.message);
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function(response) {
+                            alert("Payment Failed: " + response.error.description);
                             actionBtn.disabled = false;
                             actionBtn.textContent = 'Proceed to Payment';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Fetch Error:', error);
-                        // Try to parse the error if it's JSON
-                        try {
-                            const errData = JSON.parse(error.message);
-                            alert('An error occurred: ' + errData.message);
-                        } catch (e) {
-                            alert('An unexpected error occurred. Please try again.');
-                        }
+                        });
+
+                        rzp.open();
                         actionBtn.disabled = false;
                         actionBtn.textContent = 'Proceed to Payment';
-                    });
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error("AJAX Error:", jqXHR.responseText); // Log the raw HTML response
+                        alert('An error occurred while preparing your payment. This is often due to a server configuration issue.');
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Proceed to Payment';
+                    }
+                });
+            }
+
+            function verifyPayment(paymentResponse, bookingId, isNewUser) {
+                const verificationData = {
+                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                    razorpay_order_id: paymentResponse.razorpay_order_id,
+                    razorpay_signature: paymentResponse.razorpay_signature,
+                    booking_id: bookingId,
+                    is_new_user: isNewUser
+                };
+                const actionBtn = document.getElementById('action-btn');
+
+                $.ajax({
+                    url: 'payment_verify.php',
+                    type: 'POST',
+                    data: verificationData,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying Payment...';
+                        actionBtn.disabled = true;
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            let redirectUrl = `booking_confirmation.php?id=${bookingId}`;
+                            if (isNewUser) {
+                                redirectUrl += '&new_user=true';
+                            }
+                            window.location.href = redirectUrl;
+                        } else {
+                            // Handles cases where the server responds with { success: false, message: '...' }
+                            alert('Payment Verification Failed: ' + data.message);
+                            actionBtn.textContent = 'Proceed to Payment';
+                            actionBtn.disabled = false;
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // *** FIX: This block provides detailed error messages ***
+                        let errorMessage = 'A critical error occurred while verifying your payment. Please contact support immediately.';
+
+                        // Try to get a specific message from the server's JSON response (for 400 errors)
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                            errorMessage = jqXHR.responseJSON.message;
+                        } else if (jqXHR.status === 0) {
+                            errorMessage = 'Network error. Please check your internet connection and try again.';
+                        } else {
+                            // For non-JSON errors (like a fatal PHP error notice being returned as text)
+                            console.error("AJAX Verification Error:", {
+                                status: jqXHR.status,
+                                responseText: jqXHR.responseText
+                            });
+                        }
+
+                        alert(errorMessage);
+                        actionBtn.textContent = 'Proceed to Payment';
+                        actionBtn.disabled = false;
+                    }
+                });
             }
 
             function updateFinalSummary() {
