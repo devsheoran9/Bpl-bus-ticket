@@ -113,7 +113,7 @@ try {
                 <div class="row g-4">
                     <?php if (!empty($popular_routes)): ?>
                         <?php foreach ($popular_routes as $route): ?>
-                            <div class="col-lg-3 col-md-6">
+                            <div class="col-lg-4 col-md-6">
                                 <a href="#" class="text-decoration-none popular-route-link" data-from="<?php echo htmlspecialchars($route['starting_point']); ?>" data-to="<?php echo htmlspecialchars($route['ending_point']); ?>">
                                     <div class="route-card">
                                         <?php echo htmlspecialchars($route['starting_point']); ?> <i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($route['ending_point']); ?>

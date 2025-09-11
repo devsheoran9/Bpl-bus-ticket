@@ -1,5 +1,4 @@
 <?php
-// Include the main site header for styling, session, and DB connection
 include 'includes/header.php';
 
 // --- 1. Security & Input Validation ---
@@ -11,7 +10,6 @@ if (!$booking_id) {
 $is_new_user = isset($_GET['new_user']) && $_GET['new_user'] === 'true';
 
 if (!$is_new_user) {
-    // This is a regular user viewing an old ticket. Check if they are logged in.
     if (!isset($_SESSION['user_id'])) {
         header("Location: login.php");
         exit();
@@ -22,6 +20,7 @@ if (!$is_new_user) {
 // Initialize variables
 $booking_details = null;
 $passengers = [];
+$transaction_details = null; // Variable to hold transaction data
 
 try {
     // --- 2. Database Fetching (Using PDO from header) ---
@@ -57,6 +56,11 @@ try {
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll();
 
+    // Fetch transaction details to get the payment ID
+    $transStmt = $pdo->prepare("SELECT gateway_payment_id FROM transactions WHERE booking_id = ? ORDER BY transaction_id DESC LIMIT 1");
+    $transStmt->execute([$booking_id]);
+    $transaction_details = $transStmt->fetch();
+
     // --- 3. Calculate Real Boarding/Dropping Times ---
     $origin_minutes = 0;
     if ($booking_details['origin'] != $booking_details['starting_point']) {
@@ -90,64 +94,70 @@ try {
     die("An error occurred while fetching booking details: " . $e->getMessage());
 }
 ?>
+<!DOCTYPE html>
+<html lang="en">
 
-<style>
-    .confirmation-card {
-        max-width: 850px;
-        margin: 40px auto;
-        border-radius: 12px;
-        border: none;
-    }
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Confirmation - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .confirmation-card {
+            max-width: 850px;
+            margin: 40px auto;
+            border-radius: 12px;
+            border: none;
+        }
 
-    .details-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.25rem;
-    }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+        }
 
-    .details-grid dt {
-        font-weight: 500;
-        color: #6c757d;
-    }
+        .details-grid dt {
+            font-weight: 500;
+            color: #6c757d;
+        }
 
-    .details-grid dd {
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 0;
-    }
+        .details-grid dd {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0;
+        }
 
-    .journey-arrow {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        .journey-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .new-account-info {
-        background-color: #e3eeff;
-        border: 1px solid #b8d6fb;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
+        .new-account-info {
+            background-color: #e3eeff;
+            border: 1px solid #b8d6fb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .password-field-wrapper {
-        position: relative;
-    }
+        .password-field-wrapper {
+            position: relative;
+        }
 
-    .password-field-wrapper input {
-        padding-right: 40px;
-    }
+        .password-field-wrapper input {
+            padding-right: 40px;
+        }
 
-    .password-field-wrapper .toggle-password {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #6c757d;
-    }
-</style>
-
+        .password-field-wrapper .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
 
 <body>
     <main class="container my-5 pt-5">
@@ -155,7 +165,7 @@ try {
             <div class="card-body p-lg-5">
                 <div class="text-center mb-4">
                     <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                    <h1 class="h3"><?php echo $is_new_user ? 'Booking Successful' : 'Booking Confirmed!'; ?></h1>
+                    <h1 class="h3"><?php echo $is_new_user ? 'Booking Successful & Account Created!' : 'Booking Confirmed!'; ?></h1>
                     <p class="text-muted">Congratulations! Your ticket has been successfully confirmed. Have a safe journey!</p>
                 </div>
 
@@ -183,7 +193,6 @@ try {
                     </div>
                 <?php endif; ?>
 
-                <!-- Journey Summary -->
                 <div class="card mb-4">
                     <div class="card-header bg-light text-dark">
                         <h5 class="mb-0">Journey Summary</h5>
@@ -206,6 +215,12 @@ try {
                                 <dt>Total Fare Paid</dt>
                                 <dd><strong>₹<?php echo number_format($booking_details['total_fare'], 2); ?></strong></dd>
                             </div>
+                            <?php if ($transaction_details && !empty($transaction_details['gateway_payment_id'])): ?>
+                                <div class="grid-item">
+                                    <dt>Payment ID</dt>
+                                    <dd><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></dd>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <hr>
                         <div class="row align-items-center">
@@ -224,7 +239,6 @@ try {
                     </div>
                 </div>
 
-                <!-- Passenger Details -->
                 <div class="card">
                     <div class="card-header bg-light text-dark">
                         <h5 class="mb-0">Passenger Details</h5>
@@ -257,7 +271,7 @@ try {
 
                 <div class="text-center mt-4 pt-3 border-top">
                     <p class="text-muted small">A copy of the ticket has also been sent to your registered email address.</p>
-                    <a href="view_ticket.php?id=<?php echo htmlspecialchars($booking_id); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
+                    <a href="view_ticket.php?id=<?php echo htmlspecialchars($booking_id); ?>&pnr=<?php echo htmlspecialchars($booking_details['ticket_no']); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
                     <a href="index.php" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
                 </div>
             </div>
