@@ -120,6 +120,7 @@ if (!$initial_schedule_id) {
                 $seat['final_status'] = $seat['status'];
             }
             $seat['booked_by_gender'] = $is_booked ? strtoupper($booked_seats_info[$seat['seat_code']]) : null;
+
             if (strtoupper($seat['deck']) === 'LOWER') {
                 $lower_deck_seats[] = $seat;
                 $lower_deck_height = max($lower_deck_height, $seat['y_coordinate'] + $seat['height']);
@@ -758,7 +759,7 @@ function get_transform_style($orientation)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
-    <!-- Add the Razorpay Checkout Script -->
+   <!-- === NEW: Add the Razorpay Checkout Script === -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- --- MODIFIED: JavaScript updated to fix booking error --- -->
