@@ -1,34 +1,44 @@
 <?php
-session_start();
-require 'db_connect.php'; 
+// Include the database connection file which starts the session and creates the $pdo object.
+require "./admin/function/_db.php";
+
+// Security check: Ensure user is logged in and the request is a POST.
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SERVER["REQUEST_METHOD"] != "POST") {
     header("location: login.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id']; 
+$user_id = $_SESSION['user_id'];
+
+// --- HANDLE PROFILE DETAILS UPDATE ---
 if (isset($_POST['update_details'])) {
     $username = trim($_POST['username']);
     $mobile_no = trim($_POST['mobile_no']);
     $email = trim($_POST['email']);
 
-    // Validation
+    // Validation remains the same.
     if (empty($username) || empty($mobile_no) || empty($email)) {
         $_SESSION['error_message'] = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['error_message'] = "Invalid email format.";
     } else {
-        $stmt = $conn->prepare("UPDATE users SET username = ?, mobile_no = ?, email = ? WHERE id = ?");
-        $stmt->bind_param("sssi", $username, $mobile_no, $email, $user_id);
+        // --- DATABASE LOGIC CONVERTED TO PDO ---
+        try {
+            $sql = "UPDATE users SET username = ?, mobile_no = ?, email = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
 
-        if ($stmt->execute()) {
+            // Execute the statement. It returns true on success or throws a PDOException on failure.
+            $stmt->execute([$username, $mobile_no, $email, $user_id]);
+
             $_SESSION['success_message'] = "Profile details updated successfully!";
+            // Also update the username in the session for immediate display in the header.
             $_SESSION['username'] = $username;
-        } else {
-            $_SESSION['error_message'] = "Error updating record: " . $conn->error;
+        } catch (PDOException $e) {
+            // Catch database errors.
+            $_SESSION['error_message'] = "Error updating record: " . $e->getMessage();
         }
-        $stmt->close();
     }
+    // Redirect back to the profile page to show messages.
     header("Location: profile.php");
     exit();
 }
@@ -39,39 +49,43 @@ if (isset($_POST['update_password'])) {
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // Validation
+    // Validation remains the same.
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
         $_SESSION['error_message'] = "Please fill in all password fields.";
     } elseif ($new_password !== $confirm_password) {
         $_SESSION['error_message'] = "New password and confirm password do not match.";
     } else {
-        $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $stmt->bind_result($hashed_password);
-        $stmt->fetch();
-        $stmt->close();
+        // --- DATABASE LOGIC CONVERTED TO PDO ---
+        try {
+            // First, fetch the current hashed password from the database.
+            $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
+            $hashed_password = $user ? $user['password'] : null;
 
-        // Verify the current password
-        if (password_verify($current_password, $hashed_password)) {
-            $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $stmt->bind_param("si", $new_password_hash, $user_id);
+            // Verify the current password.
+            if ($hashed_password && password_verify($current_password, $hashed_password)) {
 
-            if ($stmt->execute()) {
+                // Hash the new password.
+                $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+
+                // Prepare and execute the update statement.
+                $update_stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $update_stmt->execute([$new_password_hash, $user_id]);
+
                 $_SESSION['success_message'] = "Password changed successfully!";
             } else {
-                $_SESSION['error_message'] = "Error updating password: " . $conn->error;
+                $_SESSION['error_message'] = "Incorrect current password.";
             }
-            $stmt->close();
-        } else {
-            $_SESSION['error_message'] = "Incorrect current password.";
+        } catch (PDOException $e) {
+            $_SESSION['error_message'] = "Error updating password: " . $e->getMessage();
         }
     }
+    // Redirect back to the profile page.
     header("Location: profile.php");
     exit();
 }
 
+// If the script is accessed without a valid form submission, just redirect.
 header("Location: profile.php");
 exit();
-?>
