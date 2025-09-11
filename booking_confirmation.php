@@ -94,13 +94,7 @@ try {
     die("An error occurred while fetching booking details: " . $e->getMessage());
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Booking Confirmation - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
     <style>
         .confirmation-card {
             max-width: 850px;
@@ -157,10 +151,10 @@ try {
             color: #6c757d;
         }
     </style>
-</head>
+ 
 
 <body>
-    <main class="container my-5 pt-5">
+    <main class="container   pt-5">
         <div class="card shadow-lg confirmation-card">
             <div class="card-body p-lg-5">
                 <div class="text-center mb-4">
@@ -171,7 +165,7 @@ try {
 
                 <?php if ($is_new_user): ?>
                     <div class="new-account-info text-center">
-                        <h5 class="fw-bold">Your Account Has Been Created!</h5>
+                        <h5 class="fw-bold" style="font-size:18px;">Your Account Has Been Created!</h5>
                         <p class="mb-3">Use these details to log in and manage all your bookings in one place.</p>
                         <div class="row justify-content-center">
                             <div class="col-md-8">

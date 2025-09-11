@@ -1,416 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Booking Confirmation</title>
     <style>
-      /* Basic styles for clients that support them */
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-      }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
     </style>
-  </head>
-  <body
-    style="
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-        Helvetica, Arial, sans-serif;
-      background-color: #f4f7f6;
-      margin: 0;
-    "
-  >
-    <!-- Main Wrapper Table for Email Client Compatibility -->
-    <table
-      width="100%"
-      border="0"
-      cellpadding="0"
-      cellspacing="0"
-      role="presentation"
-    >
-      <tr>
-        <td align="center">
-          <!-- Content Wrapper with a standard max-width of 600px -->
-          <table
-            class="wrapper"
-            width="600"
-            border="0"
-            cellpadding="0"
-            cellspacing="0"
-            role="presentation"
-            style="
-              width: 100%;
-              max-width: 600px;
-              margin: 0 auto;
-              background-color: #ffffff;
-              border-radius: 8px;
-              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
-            "
-          >
-            <!-- Header Section -->
-            <tr>
-              <td class="header" style="text-align: center; padding: 40px 20px">
-                <div
-                  class="icon"
-                  style="
-                    background-color: #28a745;
-                    color: white;
-                    width: 60px;
-                    height: 60px;
-                    line-height: 60px;
-                    border-radius: 50%;
-                    font-size: 30px;
-                    margin: 0 auto 20px;
-                    text-align: center;
-                  "
-                >
-                  &#10003;
-                </div>
-                <h1 style="color: #172b4d; margin: 0; font-size: 24px">
-                  Booking Confirmed!
-                </h1>
-                <p style="color: #6b778c; margin: 10px 0 0">
-                  Congratulations, {{contact_name}}! Your ticket is confirmed.
-                  Have a safe journey!
-                </p>
-              </td>
-            </tr>
-
-            <!-- Account Info Section (This placeholder will be replaced by PHP) -->
-            <tr>
-              <td style="padding: 0 30px">{{account_info}}</td>
-            </tr>
-
-            <!-- Journey Summary Card -->
-            <tr>
-              <td style="padding: 0 5px 5px">
-                <table
-                  width="100%"
-                  border="0"
-                  cellpadding="0"
-                  cellspacing="0"
-                  role="presentation"
-                  style="border: 1px solid #dfe1e6; border-radius: 6px"
-                >
-                  <tr>
-                    <td
-                      class="card-header"
-                      style="
-                        background-color: #fafbfc;
-                        padding: 15px 20px;
-                        border-bottom: 1px solid #dfe1e6;
-                        font-weight: bold;
-                        color: #172b4d;
-                        border-radius: 6px 6px 0 0;
-                      "
-                    >
-                      Journey Summary
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="card-body" style="padding: 20px">
-                      <!-- Summary Grid using a Table for robustness -->
-                      <table
-                        width="100%"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                        role="presentation"
-                      >
-                        <tr>
-                          <td
-                            width="50%"
-                            valign="top"
-                            style="padding-right: 10px"
-                          >
-                            <p
-                              style="
-                                color: #6b778c;
-                                font-size: 14px;
-                                margin: 0 0 5px;
-                              "
-                            >
-                              Ticket No. (PNR)
-                            </p>
-                            <p
-                              style="
-                                color: #172b4d;
-                                font-size: 16px;
-                                font-weight: 500;
-                                margin: 0;
-                              "
-                            >
-                              {{ticket_no}}
-                            </p>
-                          </td>
-                          <td
-                            width="50%"
-                            valign="top"
-                            style="padding-left: 10px"
-                          >
-                            <p
-                              style="
-                                color: #6b778c;
-                                font-size: 14px;
-                                margin: 0 0 5px;
-                              "
-                            >
-                              Travel Date
-                            </p>
-                            <p
-                              style="
-                                color: #172b4d;
-                                font-size: 16px;
-                                font-weight: 500;
-                                margin: 0;
-                              "
-                            >
-                              {{travel_date}}
-                            </p>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            colspan="2"
-                            height="20"
-                            style="font-size: 1px; line-height: 1px"
-                          >
-                            &nbsp;
-                          </td>
-                        </tr>
-                        <!-- Spacer row -->
-                        <tr>
-                          <td
-                            width="50%"
-                            valign="top"
-                            style="padding-right: 10px"
-                          >
-                            <p
-                              style="
-                                color: #6b778c;
-                                font-size: 14px;
-                                margin: 0 0 5px;
-                              "
-                            >
-                              Bus Details
-                            </p>
-                            <p
-                              style="
-                                color: #172b4d;
-                                font-size: 16px;
-                                font-weight: 500;
-                                margin: 0;
-                              "
-                            >
-                              {{bus_details}}
-                            </p>
-                          </td>
-                          <td
-                            width="50%"
-                            valign="top"
-                            style="padding-left: 10px"
-                          >
-                            <p
-                              style="
-                                color: #6b778c;
-                                font-size: 14px;
-                                margin: 0 0 5px;
-                              "
-                            >
-                              Total Fare Paid
-                            </p>
-                            <p
-                              style="
-                                color: #172b4d;
-                                font-size: 16px;
-                                font-weight: bold;
-                                margin: 0;
-                              "
-                            >
-                              ₹{{total_fare}}
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <!-- === FIXED Journey Line using a Table === -->
-                      <table
-                        width="100%"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                        role="presentation"
-                        style="
-                          border-top: 1px solid #dfe1e6;
-                          margin-top: 20px;
-                          padding-top: 20px;
-                        "
-                      >
-                        <tr>
-                          <td width="45%" valign="top" style="text-align: left">
-                            <p
-                              style="color: #6b778c; font-size: 14px; margin: 0"
-                            >
-                              Boarding From
-                            </p>
-                            <p
-                              style="
-                                font-size: 18px;
-                                font-weight: bold;
-                                color: #172b4d;
-                                margin: 5px 0 0;
-                              "
-                            >
-                              {{boarding_from}}
-                            </p>
-                          </td>
-                          <td
-                            width="10%"
-                            valign="middle"
-                            align="center"
-                            style="font-size: 24px; color: #c1c7d0"
-                          >
-                            &rarr;
-                          </td>
-                          <td
-                            width="45%"
-                            valign="top"
-                            style="text-align: right"
-                          >
-                            <p
-                              style="color: #6b778c; font-size: 14px; margin: 0"
-                            >
-                              Dropping At
-                            </p>
-                            <p
-                              style="
-                                font-size: 18px;
-                                font-weight: bold;
-                                color: #172b4d;
-                                margin: 5px 0 0;
-                              "
-                            >
-                              {{dropping_at}}
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 5px;">
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+            <td align="center">
+                <table class="wrapper" width="600" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);">
+                    <!-- Header Section -->
+                    <tr>
+                        <td class="header" style="text-align: center; padding: 40px 20px;">
+                            <div class="icon" style="background-color: #28a745; color: white; width: 60px; height: 60px; line-height: 60px; border-radius: 50%; font-size: 30px; margin: 0 auto 20px; text-align: center;">&#10003;</div>
+                            <h1 style="color: #172b4d; margin: 0; font-size: 24px;">Booking Confirmed!</h1>
+                            <p style="color: #6b778c; margin: 10px 0 0;">Congratulations, {{contact_name}}! Your ticket is confirmed. Have a safe journey!</p>
+                        </td>
+                    </tr>
+                    <!-- Account Info Section -->
+                    <tr>
+                        <td style="padding: 0 10px;">{{account_info}}</td>
+                    </tr>
+                    <!-- Journey Summary Card -->
+                    <tr>
+                        <td style="padding: 5px 10px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border: 1px solid #dfe1e6; border-radius: 6px;">
+                                <tr>
+                                    <td class="card-header" style="background-color: #fafbfc; padding: 15px 20px; border-bottom: 1px solid #dfe1e6; font-weight: bold; color: #172b4d; border-radius: 6px 6px 0 0;">Journey Summary</td>
+                                </tr>
+                                <tr>
+                                    <td class="card-body" style="padding: 20px;">
+                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                            <tr>
+                                                <td width="50%" valign="top" style="padding-right: 10px; padding-bottom: 20px;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0 0 2px;">Ticket No. (PNR)</p>
+                                                    <p style="color: #172b4d; font-size: 14px; font-weight: 500; margin: 0;">{{ticket_no}}</p>
+                                                </td>
+                                                <td width="50%" valign="top" style="padding-left: 10px; padding-bottom: 20px;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0 0 2px;">Travel Date</p>
+                                                    <p style="color: #172b4d; font-size: 14px; font-weight: 500; margin: 0;">{{travel_date}}</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td width="50%" valign="top" style="padding-right: 10px; padding-bottom: 20px;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0 0 2px;">Bus Details</p>
+                                                    <p style="color: #172b4d; font-size: 14px; font-weight: 500; margin: 0;">{{bus_details}}</p>
+                                                </td>
+                                                <td width="50%" valign="top" style="padding-left: 10px; padding-bottom: 20px;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0 0 2px;">Total Fare Paid</p>
+                                                    <p style="color: #172b4d; font-size: 14px; font-weight: bold; margin: 0;">₹{{total_fare}}</p>
+                                                </td>
+                                            </tr>
+                                            <!-- NEW: Payment ID Row -->
+                                            <tr>
+                                                <td width="100%" valign="top" style="padding-right: 10px;">
+                                                    <p style="color: #6b778c; font-size: 14px; margin: 0 0 2px;">Payment ID</p>
+                                                    <p style="color: #172b4d; font-size: 16px; font-weight: 500; margin: 0; word-break: break-all;">{{payment_id}}</p>
+                                                </td>
+                                               
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-top: 1px solid #dfe1e6; margin-top: 20px; padding-top: 20px;">
+                                            <tr>
+                                                <td width="45%" valign="top" style="text-align: left;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0;">Boarding From</p>
+                                                    <p style="font-size: 14px; font-weight: bold; color: #172b4d; margin: 5px 0 0;">{{boarding_from}}</p>
+                                                </td>
+                                                <td width="10%" valign="middle" align="center" style="font-size: 24px; color: #c1c7d0;">&rarr;</td>
+                                                <td width="45%" valign="top" style="text-align: right;">
+                                                    <p style="color: #6b778c; font-size: 12px; margin: 0;">Dropping At</p>
+                                                    <p style="font-size: 14px; font-weight: bold; color: #172b4d; margin: 5px 0 0;">{{dropping_at}}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Passenger Details Card -->
+                    <tr>
+                        <td style="padding: 5px 10px;">
+                            <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border: 1px solid #dfe1e6; border-radius: 6px;">
+                                <tr>
+                                    <td class="card-header" style="background-color: #fafbfc; padding: 15px 20px; border-bottom: 1px solid #dfe1e6; font-weight: bold; color: #172b4d; border-radius: 6px 6px 0 0;">Passenger Details</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <table class="passenger-table" width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                            <thead>
+                                                <tr>
+                                                    <th style="background-color: #fafbfc; color: #6b778c; padding: 10px; text-align: left; font-size: 14px; border-bottom: 1px solid #dfe1e6;">Passenger Name</th>
+                                                    <th style="background-color: #fafbfc; color: #6b778c; padding: 12px; text-align: left; font-size: 14px; border-bottom: 1px solid #dfe1e6;">Age</th>
+                                                    <th style="background-color: #fafbfc; color: #6b778c; padding: 12px; text-align: left; font-size: 14px; border-bottom: 1px solid #dfe1e6;">Gender</th>
+                                                    <th style="background-color: #fafbfc; color: #6b778c; padding: 10px; text-align: right; font-size: 14px; border-bottom: 1px solid #dfe1e6;">Seat No.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- This will be replaced by the PHP loop -->
+                                                {{passenger_rows}}
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Footer Section with Ticket Button -->
+                    <tr>
+                        <td class="footer" style="padding: 30px; text-align: center;">
+                            <!-- NEW: View Ticket Button -->
+                            <a href="{{view_ticket_url}}" target="_blank" style="background-color: #007bff; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View / Print Ticket</a>
+                            <p style="font-size: 12px; color: #97a0af; margin-top: 20px;">Thank you for booking with us.</p>
+                        </td>
+                    </tr>
                 </table>
-              </td>
-            </tr>
-
-            <!-- Passenger Details Card -->
-            <tr>
-              <td style="padding: 0 5px 5px">
-                <table
-                  width="100%"
-                  border="0"
-                  cellpadding="0"
-                  cellspacing="0"
-                  role="presentation"
-                  style="border: 1px solid #dfe1e6; border-radius: 6px"
-                >
-                  <tr>
-                    <td
-                      class="card-header"
-                      style="
-                        background-color: #fafbfc;
-                        padding: 15px 20px;
-                        border-bottom: 1px solid #dfe1e6;
-                        font-weight: bold;
-                        color: #172b4d;
-                        border-radius: 6px 6px 0 0;
-                      "
-                    >
-                      Passenger Details
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 0">
-                      <table
-                        class="passenger-table"
-                        width="100%"
-                        border="0"
-                        cellpadding="0"
-                        cellspacing="0"
-                        role="presentation"
-                      >
-                        <thead>
-                          <tr>
-                            <th
-                              style="
-                                background-color: #343a40;
-                                color: white;
-                                padding: 12px;
-                                text-align: left;
-                                font-size: 14px;
-                              "
-                            >
-                              Passenger Name
-                            </th>
-                            <th
-                              style="
-                                background-color: #343a40;
-                                color: white;
-                                padding: 12px;
-                                text-align: left;
-                                font-size: 14px;
-                              "
-                            >
-                              Age
-                            </th>
-                            <th
-                              style="
-                                background-color: #343a40;
-                                color: white;
-                                padding: 12px;
-                                text-align: left;
-                                font-size: 14px;
-                              "
-                            >
-                              Gender
-                            </th>
-                            <th
-                              style="
-                                background-color: #343a40;
-                                color: white;
-                                padding: 12px;
-                                text-align: right;
-                                font-size: 14px;
-                              "
-                            >
-                              Seat No.
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <!-- This will be replaced by the PHP loop -->
-                          {{passenger_rows}}
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- Footer Section -->
-            <tr>
-              <td
-                class="footer"
-                style="
-                  padding: 30px;
-                  text-align: center;
-                  font-size: 12px;
-                  color: #97a0af;
-                "
-              ></td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+            </td>
+        </tr>
     </table>
-  </body>
+</body>
 </html>

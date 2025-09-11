@@ -682,35 +682,40 @@ function get_transform_style($orientation)
                                         $mobile_no = htmlspecialchars($user['mobile_no'] ?? '');
                                         $email     = htmlspecialchars($user['email'] ?? '');
                                 ?>
-                                        <div class="mb-3">
-                                            <label class="form-label">Name</label>
-                                            <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Phone</label>
-                                            <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
+                                        <div class="row g-1">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Name</label>
+                                                <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Phone</label>
+                                                <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
+                                            </div>
                                         </div>
                                     <?php endif;
                                 else : ?>
-                                    <div class="mb-3">
-                                        <label class="form-label">Name</label>
-                                        <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone</label>
-                                        <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
+                                    <div class="row g-1">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Name</label>
+                                            <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Phone</label>
+                                            <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                                 <div id="passenger-details-forms"></div>
                             </div>
+
                         </div>
 
                         <div class="col-lg-6">
@@ -979,11 +984,12 @@ function get_transform_style($orientation)
                         genderSelectHtml = `<select name="passenger_gender_${uniqueId}" class="form-select" required><option value="" selected disabled>Select Gender</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>`;
                     }
                     const formHtml = `
-                <div class="panel-card mb-3 passenger-form" id="passenger-form-${uniqueId}">
+                <div class="panel-card mb-3 mt-2 passenger-form" id="passenger-form-${uniqueId}">
                     <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatCode}</span></h6>
                     <div class="row">
                         <div class="col-md-5 mb-3"><label class="form-label">Name</label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1"></div>
+                        <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
+                        </div>
                         <div class="col-md-4 mb-3"><label class="form-label">Gender</label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
                     </div>
                 </div>`;
@@ -1094,8 +1100,9 @@ function get_transform_style($orientation)
                                 "contact": data.contact_mobile
                             },
                             "theme": {
-                                "color": "#007bff"
-                            }
+                                "color": "#e97b15ff", // Change this to your brand's primary color (e.g., "#FF0000" for red)
+                                "backdrop_color": "rgba(36, 31, 31, 0.6)" // Optional: changes the overlay background color
+                            },
                         };
 
                         const rzp = new Razorpay(options);

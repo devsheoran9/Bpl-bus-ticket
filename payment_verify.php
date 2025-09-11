@@ -1,27 +1,24 @@
 <?php
 header('Content-Type: application/json');
 
-// Use __DIR__ for robust paths
-require __DIR__ . '/admin/vendor/autoload.php';
-require __DIR__ . '/config.php';
-require __DIR__ . '/admin/function/_db.php'; // Ensure this path is correct
+require './admin/vendor/autoload.php';
+require  'config.php';
+require  './admin/function/_db.php';
 
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Prepare a default response in case of early failure
 $response = ['success' => false, 'message' => 'An unknown error occurred.'];
 
 try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['razorpay_payment_id'])) {
-        throw new Exception("Invalid request or Payment ID is missing.");
+    if (empty($_POST['razorpay_payment_id'])) {
+        throw new Exception("Payment ID is missing from the response.");
     }
 
     $api = new Api(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET);
 
-    // Securely verify the payment signature from Razorpay
     try {
         $attributes = [
             'razorpay_order_id' => $_POST['razorpay_order_id'],
@@ -30,8 +27,7 @@ try {
         ];
         $api->utility->verifyPaymentSignature($attributes);
     } catch (SignatureVerificationError $e) {
-        error_log('Razorpay Signature Verification Failed: ' . $e->getMessage());
-        throw new Exception('Payment verification failed. If the amount was deducted, please contact support with your payment ID.');
+        throw new Exception('Razorpay Signature Verification Failed: ' . $e->getMessage());
     }
 
     $booking_id = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
@@ -44,18 +40,15 @@ try {
     $signature = $_POST['razorpay_signature'];
     $is_new_user = filter_var($_POST['is_new_user'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
 
-    // --- Database Operations ---
     $_conn_db->beginTransaction();
 
-    // 1. Update booking status from PENDING to CONFIRMED. Check rowCount to prevent reprocessing.
     $stmt_booking = $_conn_db->prepare("UPDATE bookings SET booking_status = 'CONFIRMED', payment_status = 'PAID' WHERE booking_id = ? AND booking_status = 'PENDING'");
     $stmt_booking->execute([$booking_id]);
 
     if ($stmt_booking->rowCount() === 0) {
-        throw new Exception("Booking could not be updated. It may have been already processed or does not exist.");
+        throw new Exception("Booking could not be updated. It may have been already processed.");
     }
 
-    // 2. Insert the transaction record into the `transactions` table
     $stmt_trans = $_conn_db->prepare("
         INSERT INTO transactions 
             (booking_id, user_id, payment_gateway, gateway_payment_id, gateway_order_id, gateway_signature, amount, currency, payment_status, method, created_at)
@@ -70,10 +63,16 @@ try {
 
     $response = ['success' => true, 'message' => 'Payment successful and booking confirmed!'];
 
-    // --- Send Confirmation Email (after DB commit) ---
     try {
-        // Re-fetch all necessary details for the email
-        $stmt_details = $_conn_db->prepare("SELECT * FROM bookings WHERE booking_id = ?");
+        // Re-fetch all necessary details for the email, now including the payment ID
+        $stmt_details = $_conn_db->prepare("
+            SELECT b.*, t.gateway_payment_id 
+            FROM bookings b
+            LEFT JOIN transactions t ON b.booking_id = t.booking_id
+            WHERE b.booking_id = ? 
+            ORDER BY t.transaction_id DESC 
+            LIMIT 1
+        ");
         $stmt_details->execute([$booking_id]);
         $booking = $stmt_details->fetch(PDO::FETCH_ASSOC);
 
@@ -108,32 +107,64 @@ try {
                 $account_info_html = "<div style='background-color:#e6f7ff; border:1px solid #91d5ff; padding:15px; border-radius:8px; margin: 20px 0; text-align: center;'><h4 style='margin:0 0 10px 0;'>Welcome! An account has been created for you.</h4><p style='margin:0;'><strong>Username:</strong> " . htmlspecialchars($booking['contact_email']) . " | <strong>Password:</strong> " . htmlspecialchars($booking['contact_mobile']) . "</p><small>(This is your mobile number. You can change it after logging in.)</small></div>";
             }
 
-            // *** FIX: Safely load the email template ***
-            $template_path = __DIR__ . '/email_template.html';
+            $template_path =  'email_template.html';
             if (file_exists($template_path)) {
                 $email_body = file_get_contents($template_path);
-                $email_body = str_replace(['{{contact_name}}', '{{account_info}}', '{{ticket_no}}', '{{travel_date}}', '{{bus_details}}', '{{total_fare}}', '{{boarding_from}}', '{{dropping_at}}', '{{passenger_rows}}'], [htmlspecialchars($booking['contact_name']), $account_info_html, htmlspecialchars($booking['ticket_no']), date('D, d M Y', strtotime($booking['travel_date'])), htmlspecialchars($bus_info['bus_name'] . ' (' . $bus_info['registration_number'] . ')'), number_format($booking['total_fare'], 2), htmlspecialchars($booking['origin']), htmlspecialchars($booking['destination']), $passenger_rows_html], $email_body);
+
+                // *** NEW: Create the full View Ticket URL ***
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                $host = $_SERVER['HTTP_HOST'];
+                $path_parts = pathinfo($_SERVER['PHP_SELF']);
+                $directory = $path_parts['dirname'] == '/' ? '' : $path_parts['dirname'];
+                $base_url = rtrim($protocol . $host . $directory, '/');
+                $view_ticket_url = $base_url . '/view_ticket.php?id=' . urlencode($booking['booking_id']) . '&pnr=' . urlencode($booking['ticket_no']);
+
+                // *** UPDATED: Added new placeholders and values ***
+                $placeholders = [
+                    '{{contact_name}}',
+                    '{{account_info}}',
+                    '{{ticket_no}}',
+                    '{{travel_date}}',
+                    '{{bus_details}}',
+                    '{{total_fare}}',
+                    '{{boarding_from}}',
+                    '{{dropping_at}}',
+                    '{{passenger_rows}}',
+                    '{{payment_id}}',
+                    '{{view_ticket_url}}'
+                ];
+                $replacements = [
+                    htmlspecialchars($booking['contact_name']),
+                    $account_info_html,
+                    htmlspecialchars($booking['ticket_no']),
+                    date('D, d M Y', strtotime($booking['travel_date'])),
+                    htmlspecialchars($bus_info['bus_name'] . ' (' . $bus_info['registration_number'] . ')'),
+                    number_format($booking['total_fare'], 2),
+                    htmlspecialchars($booking['origin']),
+                    htmlspecialchars($booking['destination']),
+                    $passenger_rows_html,
+                    htmlspecialchars($booking['gateway_payment_id'] ?? 'N/A'),
+                    $view_ticket_url
+                ];
+
+                $email_body = str_replace($placeholders, $replacements, $email_body);
                 $mail->Body = $email_body;
             } else {
-                // Fallback to a simple email if the template is missing, and log the error.
-                error_log("Email template file not found at: " . $template_path);
-                $mail->isHTML(false);
-                $mail->Body = "Dear " . htmlspecialchars($booking['contact_name']) . ",\n\nYour booking has been confirmed.\n\nTicket No: " . htmlspecialchars($booking['ticket_no']) . "\nTravel Date: " . date('D, d M Y', strtotime($booking['travel_date'])) . "\nTotal Fare: INR " . number_format($booking['total_fare'], 2) . "\n\nThank you for choosing our service.";
+                error_log("CRITICAL: Email template file not found at " . $template_path);
+                $mail->Body = "Your booking is confirmed. Ticket No: " . htmlspecialchars($booking['ticket_no']);
             }
 
             $mail->send();
         }
     } catch (Exception $e) {
-        // Log the email error for the admin, but don't let it break the user's flow.
-        error_log("Email could not be sent for booking ID {$booking_id}. Mailer Error: " . (isset($mail) ? $mail->ErrorInfo : $e->getMessage()));
+        error_log("Email could not be sent after payment for booking ID {$booking_id}. Mailer Error: {$mail->ErrorInfo}");
     }
 } catch (Throwable $e) {
     if (isset($_conn_db) && $_conn_db->inTransaction()) {
         $_conn_db->rollBack();
     }
-    http_response_code(400); // Send a "Bad Request" status code
+    http_response_code(400);
     $response = ['success' => false, 'message' => $e->getMessage()];
 }
 
-// ALWAYS send a valid JSON response back to the browser
 echo json_encode($response);
