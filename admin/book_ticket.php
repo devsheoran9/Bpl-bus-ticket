@@ -43,8 +43,9 @@ try {
             border: 2px dashed #ccc;
             background-color: #f8f9fa;
             overflow: auto;
-            max-width: 300px;
+            /* FIX: Make it fluid */
             width: 300px;
+            max-width: 300px; 
             margin: 0 auto;
             border-radius: 10px;
         }
@@ -144,14 +145,17 @@ try {
             color: var(--gender-male-color);
         }
 
-        #booking-summary-card {
-            position: sticky;
-            top: 20px;
-        }
-
         #passenger-details-form .card {
             border-left: 4px solid var(--seat-selected-bg);
             animation: fadeIn 0.3s;
+        }
+        
+        /* FIX: Make summary card sticky only on large screens */
+        @media (min-width: 992px) {
+            #booking-summary-card {
+                position: sticky;
+                top: 20px;
+            }
         }
 
         @keyframes fadeIn {
@@ -180,26 +184,31 @@ try {
                         <h4 class="mb-0">Step 1: Select Journey Details</h4>
                     </div>
                     <div class="card-body">
+                        <!-- FIX: Use responsive grid classes for better mobile layout -->
                         <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-    <label for="route-select" class="form-label fw-bold">Route</label>
-    <select id="route-select" class="form-select">
-        <option value="">-- Choose a Route --</option>
-        <?php foreach ($routes as $route): ?>
-            <!-- FIX: Use the new 'display_name' which includes the bus name -->
-            <option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['display_name']); ?></option>
-        <?php endforeach; ?>
-    </select>
-</div>
-                            <div class="col-md-3"><label for="from-stop-select" class="form-label fw-bold">From</label><select id="from-stop-select" class="form-select" disabled>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="route-select" class="form-label fw-bold">Route</label>
+                                <select id="route-select" class="form-select">
+                                    <option value="">-- Choose a Route --</option>
+                                    <?php foreach ($routes as $route): ?>
+                                        <option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['display_name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="from-stop-select" class="form-label fw-bold">From</label>
+                                <select id="from-stop-select" class="form-select" disabled>
                                     <option>-- Select Route First --</option>
-                                </select></div>
-                            <div class="col-md-3"><label for="to-stop-select" class="form-label fw-bold">To</label><select id="to-stop-select" class="form-select" disabled>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <label for="to-stop-select" class="form-label fw-bold">To</label>
+                                <select id="to-stop-select" class="form-select" disabled>
                                     <option>-- Select Boarding Point --</option>
-                                </select></div>
-                            <div class="col-md-3">
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6 col-lg-3">
                                 <label for="travel-date" class="form-label fw-bold">Travel Date</label>
-                                <!-- ADD a value attribute with today's date -->
                                 <input type="text" id="travel-date" class="form-control" placeholder="Select Date" value="<?php echo date('Y-m-d'); ?>">
                             </div>
                         </div>
@@ -207,6 +216,7 @@ try {
                 </div>
 
                 <div id="seat-selection-area" class="d-none">
+                    <!-- FIX: The main columns will stack on mobile, which is the desired behavior -->
                     <div class="row">
                         <div class="col-lg-5 mb-4">
                             <div class="card">
@@ -214,8 +224,9 @@ try {
                                     <h4 class="mb-0">Step 2: Select Seats</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-around">
-                                        <div id="lower-deck-wrapper">
+                                    <!-- FIX: Stack decks vertically on mobile, horizontally on medium+ screens -->
+                                    <div class="d-flex flex-column flex-md-row justify-content-around align-items-center">
+                                        <div id="lower-deck-wrapper" class="mb-4 mb-md-0">
                                             <h6 class="text-center">Lower Deck</h6>
                                             <div class="deck-container" id="lower_deck_container"></div>
                                         </div>
@@ -264,24 +275,22 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>
-        // Change it to this:
-      
-
-
-
         $(document).ready(function() {
             let selectedRouteId, selectedDate, fromStopName, toStopName, busId;
             let selectedSeats = [];
             let allStops = [];
             const datePicker = flatpickr("#travel-date", {
-            minDate: "today",
-            dateFormat: "Y-m-d",
-            defaultDate: "today",  
-            onChange: (d, s) => {
-                selectedDate = s;
-                if (s) loadSeatLayout();
-            }
-        });
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                defaultDate: "today",
+                onChange: (d, s) => {
+                    selectedDate = s;
+                    if (s && selectedRouteId && fromStopName && toStopName) loadSeatLayout();
+                }
+            });
+            
+            // Set initial date
+            selectedDate = datePicker.input.value;
 
             $('#route-select').on('change', function() {
                 selectedRouteId = $(this).val();
@@ -317,7 +326,9 @@ try {
             $('#to-stop-select').on('change', function() {
                 toStopName = $(this).val();
                 resetPage(3);
-                if (toStopName) $('#travel-date').prop('disabled', false);
+                if (toStopName && selectedDate) {
+                     loadSeatLayout();
+                }
             });
 
             function loadSeatLayout() {
@@ -336,9 +347,10 @@ try {
                             busId = response.bus_id;
                             renderSeats(response.seats);
                         } else {
+                            $('.deck-container').empty();
                             $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
                         }
-                    }).fail(() => $('#lower_deck_container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
+                    }).fail(() => $('.deck-container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
             }
 
             function createSeatElement(seatData) {
@@ -422,10 +434,20 @@ try {
                         <div class="card-body p-3">
                             <h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6>
                             <div class="row g-2">
-                                <div class="col-md-6"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div>
-                                <div class="col-md-4 d-none"><input type="hidden" class="form-control d-none" name="passenger_mobile_${seatInfo.id}" placeholder="Mobile" required></div>
-                                <div class="col-md-3"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120"></div>
-                                <div class="col-md-3"><select class="form-select" name="passenger_gender_${seatInfo.id}" required><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select></div>
+                                <div class="col-12 col-sm-6 mb-2 mb-sm-0">
+                                    <input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required>
+                                </div>
+                                <div class="col-6 col-sm-3">
+                                    <input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120" required>
+                                </div>
+                                <div class="col-6 col-sm-3">
+                                    <select class="form-select" name="passenger_gender_${seatInfo.id}" required>
+                                        <option value="MALE">Male</option>
+                                        <option value="FEMALE">Female</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" name="passenger_mobile_${seatInfo.id}">
                             </div>
                         </div>
                     </div>`;
@@ -450,26 +472,28 @@ try {
                 $('#passenger-details-form .is-invalid').removeClass('is-invalid');
                 selectedSeats.forEach(seat => {
                     const nameEl = $(`input[name="passenger_name_${seat.id}"]`);
-                    const mobileEl = $(`input[name="passenger_mobile_${seat.id}"]`);
                     const ageEl = $(`input[name="passenger_age_${seat.id}"]`);
                     if (!nameEl.val().trim()) {
                         nameEl.addClass('is-invalid');
                         isValid = false;
                     }
-                  
+                     if (!ageEl.val().trim() || parseInt(ageEl.val()) < 1) {
+                        ageEl.addClass('is-invalid');
+                        isValid = false;
+                    }
 
                     passengers.push({
                         seat_id: seat.id,
                         seat_code: seat.code,
                         fare: seat.price,
                         name: nameEl.val().trim(),
-                        mobile: mobileEl.val().trim(),
+                        mobile: '', // Mobile per passenger is removed
                         age: ageEl.val().trim(),
                         gender: $(`select[name="passenger_gender_${seat.id}"]`).val()
                     });
                 });
                 if (!isValid) {
-                    Swal.fire('Error', 'Please fill all passenger Name and Mobile details.', 'error');
+                    Swal.fire('Error', 'Please fill all passenger Name and valid Age details.', 'error');
                     return;
                 }
 
@@ -488,46 +512,7 @@ try {
                 });
             });
 
-      // book_ticket.php के अंदर का JavaScript
-
-function processBooking(action, passengers) {
-    const btn = $('#confirm-booking-btn');
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-    const bookingData = {
-        action: action,
-        route_id: selectedRouteId,
-        bus_id: busId,
-        travel_date: selectedDate,
-        total_fare: $('#total-fare').text(),
-        origin: fromStopName,      // <-- यह लाइन बहुत ज़रूरी है
-        destination: toStopName,  // <-- यह लाइन भी बहुत ज़रूरी है
-        passengers: JSON.stringify(passengers),
-        contact_email: $('#contact-email').val().trim(),
-        contact_mobile: $('#contact-mobile').val().trim()
-    };
-    
-   
-                
-                $.post('function/backend/booking_actions.php', bookingData, null, 'json')
-                    .done(response => {
-                        if (response.status === 'success') {
-                            Swal.fire({
-                                title: 'Booking Confirmed!',
-                                text: `Booking ID: ${response.booking_id}`,
-                                icon: 'success',
-                                confirmButtonText: 'View & Share Ticket'
-                            }).then(() => {
-                                // --- NEW: Always redirect to the ticket page ---
-                                window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${response.wtsp_no}&mail=${response.mail}&ticket_no=${response.ticket_no}`;
-                            });
-                        } else {
-                            Swal.fire('Booking Failed', response.message, 'error');
-                        }
-                    })
-                    .fail(() => Swal.fire('Error', 'Could not connect to the server.', 'error'))
-                    .always(() => btn.prop('disabled', false).html('Proceed to Payment'));
-            }
-
+            
             function resetPage(level) {
                 if (level <= 1) {
                     $('#from-stop-select').html('<option>-- Select Route First --</option>').prop('disabled', true);
@@ -537,8 +522,8 @@ function processBooking(action, passengers) {
                     $('#to-stop-select').html('<option>-- Select Boarding Point --</option>').prop('disabled', true);
                 }
                 if (level <= 3) {
-                    datePicker.clear();
-                    $('#travel-date').prop('disabled', true);
+                    // Don't clear the date picker when 'to' stop changes
+                    // datePicker.clear(); 
                 }
                 if (level <= 4) {
                     selectedSeats = [];
@@ -548,7 +533,96 @@ function processBooking(action, passengers) {
                     updateSummary();
                 }
             }
-        });
+            function processBooking(action, passengers) {
+        const btn = $('#confirm-booking-btn');
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+        
+        const bookingData = {
+            action: action,
+            route_id: selectedRouteId, bus_id: busId, travel_date: selectedDate,
+            origin: fromStopName, destination: toStopName, total_fare: $('#total-fare').text(),
+            passengers: JSON.stringify(passengers),
+            contact_email: $('#contact-email').val().trim(), contact_mobile: $('#contact-mobile').val().trim()
+        };
+
+        if (action === 'confirm_cash_booking') {
+            // For cash, just post and get the redirect URL
+            $.post('function/backend/booking_actions.php', bookingData, null, 'json')
+                .done(handleSuccessResponse)
+                .fail(handleAjaxError)
+                .always(() => btn.prop('disabled', false).html('Proceed to Payment'));
+        } else { // create_pending_booking for Razorpay
+            // First, create a pending booking and get a Razorpay Order ID
+            $.post('function/backend/booking_actions.php', bookingData, null, 'json')
+                .done(response => {
+                    if (response.status === 'success') {
+                        // We got the order_id, now open Razorpay
+                        const options = {
+                            "key": "rzp_test_xISbqnYlqqrWvs", // Replace with your Razorpay Key ID
+                            "amount": bookingData.total_fare * 100,
+                            "currency": "INR",
+                            "name": "BPL Bus Tickets",
+                            "description": `Payment for Ticket #${response.ticket_no}`,
+                            "order_id": response.razorpay_order_id,
+                            "handler": function (paymentResponse){
+                                // This function runs after a successful payment
+                                verifyPayment(paymentResponse, response.booking_id);
+                            },
+                            "prefill": {
+                                "name": "Conductor Booking",
+                                "email": bookingData.contact_email,
+                                "contact": bookingData.contact_mobile
+                            },
+                            "theme": { "color": "#0d6efd" }
+                        };
+                        const rzp1 = new Razorpay(options);
+                        rzp1.on('payment.failed', function (response){
+                            Swal.fire('Payment Failed', response.error.description, 'error');
+                            btn.prop('disabled', false).html('Proceed to Payment');
+                        });
+                        rzp1.open();
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                        btn.prop('disabled', false).html('Proceed to Payment');
+                    }
+                }).fail(handleAjaxError);
+        }
+    }
+    
+    function verifyPayment(paymentData, bookingId) {
+        // Send payment details to your server for verification
+        $.post('payment_verify.php', {
+            razorpay_payment_id: paymentData.razorpay_payment_id,
+            razorpay_order_id: paymentData.razorpay_order_id,
+            razorpay_signature: paymentData.razorpay_signature,
+            booking_id: bookingId
+        }, null, 'json')
+        .done(response => {
+            if (response.status === 'success') {
+                Swal.fire('Payment Successful!', response.message, 'success').then(() => {
+                    window.location.href = `ticket_view.php?booking_id=${bookingId}`;
+                });
+            } else {
+                Swal.fire('Verification Failed!', response.message, 'error');
+            }
+        }).fail(handleAjaxError);
+    }
+    
+    function handleSuccessResponse(response) {
+        if (response.status === 'success') {
+             Swal.fire('Booking Confirmed!', `Ticket No: ${response.ticket_no}`, 'success').then(() => {
+                window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
+            });
+        } else {
+            Swal.fire('Booking Failed', response.message, 'error');
+        }
+    }
+
+    function handleAjaxError() {
+        Swal.fire('Error', 'Could not connect to the server.', 'error');
+    }
+});
+    
     </script>
 </body>
 
