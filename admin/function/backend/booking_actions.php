@@ -181,8 +181,8 @@ if ($action == 'create_pending_booking') {
     if (!$total_fare || $total_fare <= 0) { send_json_response('error', 'Invalid total fare.'); }
 
     try {
-        $keyId = 'rzp_test_xISbqnYlqqrWvs';
-        $keySecret = 'RxquG8pfP9f5inluawqEAw92';
+        $keyId = $rozerapi;
+        $keySecret = $rozersecretapi;
         $api = new Api($keyId, $keySecret);
 
         $orderData = [

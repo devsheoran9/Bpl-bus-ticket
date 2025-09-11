@@ -8,8 +8,8 @@ use Razorpay\Api\Errors\SignatureVerificationError;
 
  
 
-$keyId = 'rzp_test_xISbqnYlqqrWvs';
-$keySecret = 'RxquG8pfP9f5inluawqEAw92';
+$keyId = $rozerapi;
+$keySecret = $rozersecretapi;
 
 $success = true;
 $error = "Payment Failed";

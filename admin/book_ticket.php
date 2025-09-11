@@ -213,7 +213,7 @@ try {
 
                 <div id="seat-selection-area" class="d-none">
                     <div class="row">
-                        <div class="col-lg-5 mb-4">
+                        <div class="col-lg-12 mb-4 col-md-12">
                             <div class="card">
                                 <div class="card-header">
                                     <h4 class="mb-0">Step 2: Select Seats</h4>
@@ -232,7 +232,7 @@ try {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-7">
+                        <div class="col-lg-12 col-md-12">
                             <div class="card" id="booking-summary-card">
                                 <div class="card-header">
                                     <h4 class="mb-0">Step 3: Passenger Details & Summary</h4>
@@ -555,7 +555,7 @@ try {
                         .done(response => {
                             if (response.status === 'success' && response.razorpay_order_id) {
                                 const options = {
-                                    "key": "rzp_test_xISbqnYlqqrWvs",
+                                    "key": "<?php echo $rozerapi ?>",
                                     "amount": bookingData.total_fare * 100,
                                     "currency": "INR",
                                     "name": "BPL Bus Tickets",

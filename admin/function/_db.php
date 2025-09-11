@@ -29,4 +29,7 @@ $localIP = gethostbyaddr($ip);
 
 $token = $_SESSION['user']['token'] ?? '';
 include_once('common_function.php');
+
+$rozerapi = 'rzp_test_xISbqnYlqqrWvs';
+$rozersecretapi = 'RxquG8pfP9f5inluawqEAw92';
 ?>
