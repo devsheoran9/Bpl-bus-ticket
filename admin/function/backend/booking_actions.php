@@ -128,9 +128,7 @@ function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
         }
 
         $_conn_db->commit();
-        if ($isCash && !empty($data['contact_email'])) {
-            sendBookingEmail($booking_id, $data['contact_email'], $_conn_db);
-        } 
+        
         // Build the base response
         $response = [
             'status' => 'success',
@@ -174,7 +172,11 @@ if ($action == 'confirm_cash_booking') {
     
     $result = createBookingEntry($data, true); // True for cash
     if ($result['status'] === 'success' && !empty($data['contact_email'])) {
-        sendBookingEmail($result['booking_id'], $data['contact_email'], $_conn_db);
+        // Capture the email status
+        $emailResult = sendBookingEmail($result['booking_id'], $data['contact_email'], $_conn_db);
+        // Add the email status to the main response
+        $result['email_status'] = $emailResult['status'];
+        $result['email_message'] = $emailResult['message'];
     }
     
     send_json_response($result['status'], $result);
