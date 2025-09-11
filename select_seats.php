@@ -1,14 +1,11 @@
 <?php
+// It is assumed db_connect.php starts the session and creates the $pdo object.
 include 'includes/header.php';
 
 $initial_schedule_id = $_GET['schedule_id'] ?? null;
 $from_location = $_GET['from'] ?? null;
 $to_location = $_GET['to'] ?? null;
 $journey_date = $_GET['date'] ?? date('Y-m-d');
-
-if (!$initial_schedule_id) {
-    die("Error: A valid schedule ID is required to proceed.");
-}
 
 // --- Initialize variables ---
 $all_points = [];
@@ -25,144 +22,130 @@ $availability_message = '';
 $actual_schedule_id = null;
 $route_info = null;
 
-try {
-    // --- All PHP code uses the PDO connection from your db_connect.php ---
-    $stmt_get_route = $pdo->prepare("SELECT route_id FROM route_schedules WHERE schedule_id = ?");
-    $stmt_get_route->execute([$initial_schedule_id]);
-    $route_id_info = $stmt_get_route->fetch();
+if (!$initial_schedule_id) {
+    $error_message = "A valid schedule ID is required to proceed.";
+} else {
+    try {
+        $stmt_get_route = $pdo->prepare("SELECT route_id FROM route_schedules WHERE schedule_id = ?");
+        $stmt_get_route->execute([$initial_schedule_id]);
+        $route_id_info = $stmt_get_route->fetch();
 
-    if (!$route_id_info) {
-        throw new Exception("The provided schedule link is invalid.");
-    }
-    $route_id = $route_id_info['route_id'];
+        if (!$route_id_info) {
+            throw new Exception("The provided schedule link is invalid or the bus schedule does not exist.");
+        }
+        $route_id = $route_id_info['route_id'];
 
-    $journey_day_name = date('D', strtotime($journey_date));
-    $stmt_check_day = $pdo->prepare("SELECT schedule_id, departure_time FROM route_schedules WHERE route_id = ? AND operating_day = ?");
-    $stmt_check_day->execute([$route_id, $journey_day_name]);
-    $todays_schedule = $stmt_check_day->fetch();
+        $journey_day_name = date('D', strtotime($journey_date));
+        $stmt_check_day = $pdo->prepare("SELECT schedule_id, departure_time FROM route_schedules WHERE route_id = ? AND operating_day = ?");
+        $stmt_check_day->execute([$route_id, $journey_day_name]);
+        $todays_schedule = $stmt_check_day->fetch();
 
-    if (!$todays_schedule) {
-        $is_bus_available = false;
-        $availability_message = "This bus is not available on " . date('l, d M Y', strtotime($journey_date)) . ".";
-    } else {
-        $actual_schedule_id = $todays_schedule['schedule_id'];
-        $departure_time_str = $todays_schedule['departure_time'];
-        if (date('Y-m-d', strtotime($journey_date)) == date('Y-m-d') && time() > strtotime(date('Y-m-d') . ' ' . $departure_time_str)) {
+        if (!$todays_schedule) {
             $is_bus_available = false;
-            $availability_message = "This bus has already departed for today.";
+            $availability_message = "This bus is not available on " . date('l, d M Y', strtotime($journey_date)) . ".";
         } else {
-            $is_bus_available = true;
-        }
-    }
-
-    $stmt_main_query = $pdo->prepare("SELECT r.bus_id, r.starting_point, r.ending_point, b.bus_name FROM routes r JOIN buses b ON r.bus_id = b.bus_id WHERE r.route_id = ?");
-    $stmt_main_query->execute([$route_id]);
-    $route_info = $stmt_main_query->fetch();
-
-    if (!$route_info) {
-        throw new Exception("Could not find route details.");
-    }
-
-    $departure_time_for_calc = $todays_schedule['departure_time'] ?? '00:00:00';
-    $bus_details = ['name' => $route_info['bus_name'], 'departure_time' => $departure_time_for_calc];
-    $bus_id = $route_info['bus_id'];
-
-    $stmt_images = $pdo->prepare("SELECT image_path FROM bus_images WHERE bus_id = ?");
-    $stmt_images->execute([$bus_id]);
-    $bus_images = $stmt_images->fetchAll(PDO::FETCH_COLUMN, 0);
-
-    $stmt_stops = $pdo->prepare("SELECT * FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
-    $stmt_stops->execute([$route_id]);
-    $stops = $stmt_stops->fetchAll();
-
-    $total_route_duration = 0;
-    $stop_prices_map[$route_info['starting_point']] = ['price_seater_lower' => 0, 'price_seater_upper' => 0, 'price_sleeper_lower' => 0, 'price_sleeper_upper' => 0];
-    foreach ($stops as $stop) {
-        $stop_prices_map[$stop['stop_name']] = [
-            'price_seater_lower' => (float)$stop['price_seater_lower'],
-            'price_seater_upper' => (float)$stop['price_seater_upper'],
-            'price_sleeper_lower' => (float)$stop['price_sleeper_lower'],
-            'price_sleeper_upper' => (float)$stop['price_sleeper_upper']
-        ];
-        $total_route_duration = max($total_route_duration, $stop['duration_from_start_minutes']);
-    }
-
-    $base_departure_time = strtotime($journey_date . ' ' . $bus_details['departure_time']);
-    $points_map = [];
-    $points_map[$route_info['starting_point']] = ['name' => $route_info['starting_point'], 'time' => date('H:i', $base_departure_time), 'order' => 0];
-    foreach ($stops as $stop) {
-        if (!isset($points_map[$stop['stop_name']])) {
-            $points_map[$stop['stop_name']] = ['name' => $stop['stop_name'], 'time' => date('H:i', $base_departure_time + ($stop['duration_from_start_minutes'] * 60)), 'order' => (int)$stop['stop_order']];
-        }
-    }
-    if (!isset($points_map[$route_info['ending_point']])) {
-        $points_map[$route_info['ending_point']] = ['name' => $route_info['ending_point'], 'time' => date('H:i', $base_departure_time + ($total_route_duration * 60)), 'order' => count($points_map)];
-    }
-    $all_points = array_values($points_map);
-    usort($all_points, fn($a, $b) => $a['order'] <=> $b['order']);
-
-    $stmt_layout = $pdo->prepare("SELECT * FROM seats WHERE bus_id = ? ORDER BY deck, y_coordinate, x_coordinate");
-    $stmt_layout->execute([$bus_id]);
-    $all_seats_layout = $stmt_layout->fetchAll();
-
-    if (empty($all_seats_layout)) {
-        throw new Exception("No seat layout has been configured for this bus.");
-    }
-
-    $booked_seats_info = [];
-    if ($is_bus_available) {
-        $stmt_booked = $pdo->prepare("
-            SELECT p.seat_code, p.passenger_gender FROM passengers AS p
-            JOIN bookings AS b ON p.booking_id = b.booking_id
-            WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED'
-        ");
-        $stmt_booked->execute([$route_id, $bus_id, $journey_date]);
-        $booked_results = $stmt_booked->fetchAll();
-        foreach ($booked_results as $row) {
-            $booked_seats_info[$row['seat_code']] = $row['passenger_gender'];
-        }
-    }
-
-    foreach ($all_seats_layout as &$seat) { // Use reference to modify array
-        $is_booked = isset($booked_seats_info[$seat['seat_code']]);
-
-        // --- MODIFIED: More detailed status logic ---
-        if (!$is_bus_available || $is_booked || $seat['is_bookable'] == 0) {
-            $seat['final_status'] = 'SOLD';
-        } else {
-            $seat['final_status'] = $seat['status']; // Use status from DB: AVAILABLE, BLOCKED, DAMAGED
+            $actual_schedule_id = $todays_schedule['schedule_id'];
+            $departure_time_str = $todays_schedule['departure_time'];
+            if (date('Y-m-d', strtotime($journey_date)) == date('Y-m-d') && time() > strtotime(date('Y-m-d') . ' ' . $departure_time_str)) {
+                $is_bus_available = false;
+                $availability_message = "This bus has already departed for today.";
+            } else {
+                $is_bus_available = true;
+            }
         }
 
-        $seat['booked_by_gender'] = $is_booked ? strtoupper($booked_seats_info[$seat['seat_code']]) : null;
+        $stmt_main_query = $pdo->prepare("SELECT r.bus_id, r.starting_point, r.ending_point, b.bus_name FROM routes r JOIN buses b ON r.bus_id = b.bus_id WHERE r.route_id = ?");
+        $stmt_main_query->execute([$route_id]);
+        $route_info = $stmt_main_query->fetch();
 
-        if (strtoupper($seat['deck']) === 'LOWER') {
-            $lower_deck_seats[] = $seat;
-            $lower_deck_height = max($lower_deck_height, $seat['y_coordinate'] + $seat['height']);
-        } else {
-            $upper_deck_seats[] = $seat;
-            $upper_deck_height = max($upper_deck_height, $seat['y_coordinate'] + $seat['height']);
+        if (!$route_info) {
+            throw new Exception("Could not find route details.");
         }
+
+        $bus_details = ['name' => $route_info['bus_name'], 'departure_time' => $todays_schedule['departure_time'] ?? '00:00:00'];
+        $bus_id = $route_info['bus_id'];
+
+        $stmt_images = $pdo->prepare("SELECT image_path FROM bus_images WHERE bus_id = ?");
+        $stmt_images->execute([$bus_id]);
+        $bus_images = $stmt_images->fetchAll(PDO::FETCH_COLUMN, 0);
+
+        $stmt_stops = $pdo->prepare("SELECT * FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
+        $stmt_stops->execute([$route_id]);
+        $stops = $stmt_stops->fetchAll();
+
+        $total_route_duration = 0;
+        $stop_prices_map[$route_info['starting_point']] = ['price_seater_lower' => 0, 'price_seater_upper' => 0, 'price_sleeper_lower' => 0, 'price_sleeper_upper' => 0];
+        foreach ($stops as $stop) {
+            $stop_prices_map[$stop['stop_name']] = ['price_seater_lower' => (float)$stop['price_seater_lower'], 'price_seater_upper' => (float)$stop['price_seater_upper'], 'price_sleeper_lower' => (float)$stop['price_sleeper_lower'], 'price_sleeper_upper' => (float)$stop['price_sleeper_upper']];
+            $total_route_duration = max($total_route_duration, $stop['duration_from_start_minutes']);
+        }
+
+        $base_departure_time = strtotime($journey_date . ' ' . $bus_details['departure_time']);
+        $points_map = [];
+        $points_map[$route_info['starting_point']] = ['name' => $route_info['starting_point'], 'time' => date('H:i', $base_departure_time), 'order' => 0];
+        foreach ($stops as $stop) {
+            if (!isset($points_map[$stop['stop_name']])) {
+                $points_map[$stop['stop_name']] = ['name' => $stop['stop_name'], 'time' => date('H:i', $base_departure_time + ($stop['duration_from_start_minutes'] * 60)), 'order' => (int)$stop['stop_order']];
+            }
+        }
+        if (!isset($points_map[$route_info['ending_point']])) {
+            $points_map[$route_info['ending_point']] = ['name' => $route_info['ending_point'], 'time' => date('H:i', $base_departure_time + ($total_route_duration * 60)), 'order' => count($points_map)];
+        }
+        $all_points = array_values($points_map);
+        usort($all_points, fn($a, $b) => $a['order'] <=> $b['order']);
+
+        $stmt_layout = $pdo->prepare("SELECT * FROM seats WHERE bus_id = ? ORDER BY deck, y_coordinate, x_coordinate");
+        $stmt_layout->execute([$bus_id]);
+        $all_seats_layout = $stmt_layout->fetchAll();
+
+        if (empty($all_seats_layout)) {
+            throw new Exception("No seat layout has been configured for this bus.");
+        }
+
+        $booked_seats_info = [];
+        if ($is_bus_available) {
+            $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED'");
+            $stmt_booked->execute([$route_id, $bus_id, $journey_date]);
+            $booked_results = $stmt_booked->fetchAll();
+            foreach ($booked_results as $row) {
+                $booked_seats_info[$row['seat_code']] = $row['passenger_gender'];
+            }
+        }
+
+        foreach ($all_seats_layout as &$seat) {
+            $is_booked = isset($booked_seats_info[$seat['seat_code']]);
+            if (!$is_bus_available || $is_booked || $seat['is_bookable'] == 0) {
+                $seat['final_status'] = 'SOLD';
+            } else {
+                $seat['final_status'] = $seat['status'];
+            }
+            $seat['booked_by_gender'] = $is_booked ? strtoupper($booked_seats_info[$seat['seat_code']]) : null;
+
+            if (strtoupper($seat['deck']) === 'LOWER') {
+                $lower_deck_seats[] = $seat;
+                $lower_deck_height = max($lower_deck_height, $seat['y_coordinate'] + $seat['height']);
+            } else {
+                $upper_deck_seats[] = $seat;
+                $upper_deck_height = max($upper_deck_height, $seat['y_coordinate'] + $seat['height']);
+            }
+        }
+        unset($seat);
+        $lower_deck_height += 40;
+        $upper_deck_height += 40;
+    } catch (Exception $e) {
+        $error_message = "An error occurred: " . $e->getMessage();
     }
-    unset($seat); // Unset reference
-    $lower_deck_height += 40;
-    $upper_deck_height += 40;
-} catch (Exception $e) {
-    $error_message = "Database Error: " . $e->getMessage();
 }
 
-/** --- MODIFIED: This function now handles BLOCKED and DAMAGED statuses --- */
 function get_seat_classes($seat)
 {
     $classes = ['seat', strtolower($seat['seat_type'])];
-
-    // Determine availability first
     if ($seat['final_status'] === 'AVAILABLE') {
         $classes[] = 'available';
         if (strtoupper($seat['gender_preference']) === 'MALE') $classes[] = 'male-only';
         if (strtoupper($seat['gender_preference']) === 'FEMALE') $classes[] = 'female-only';
     } else {
-        // Handle all unavailable states
-        $classes[] = 'unavailable'; // Generic class for non-clickable seats
+        $classes[] = 'unavailable';
         if ($seat['final_status'] === 'SOLD') {
             $classes[] = 'sold';
             if ($seat['booked_by_gender'] === 'MALE') $classes[] = 'sold-male';
@@ -172,10 +155,9 @@ function get_seat_classes($seat)
         } elseif ($seat['final_status'] === 'DAMAGED') {
             $classes[] = 'status-damaged';
         } else {
-            $classes[] = 'sold'; // Fallback for any other unavailable status
+            $classes[] = 'sold';
         }
     }
-
     return implode(' ', $classes);
 }
 
@@ -194,7 +176,7 @@ function get_transform_style($orientation)
 }
 ?>
 
- 
+
 <style>
     :root {
         --grid-size: 10px;
@@ -235,7 +217,7 @@ function get_transform_style($orientation)
     .deck {
         position: relative;
         background-color: #fcfcfc;
-        background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px);
+        /* background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px); */
         background-size: var(--grid-size) var(--grid-size);
     }
 
@@ -386,7 +368,8 @@ function get_transform_style($orientation)
     .legend-seat.selected-any {
         background-color: var(--seat-color-selected);
     }
-    .carousel-inner img{
+
+    .carousel-inner img {
         max-height: 250px;
         object-fit: cover;
     }
@@ -684,7 +667,7 @@ function get_transform_style($orientation)
                     <input type="hidden" name="travel_date" value="<?php echo htmlspecialchars($journey_date); ?>">
 
                     <div class="row">
-                        <div class="col-lg-7">
+                        <div class="col-lg-6">
                             <div class="panel-card mb-4">
                                 <h5>Contact Details</h5>
                                 <p class="small text-muted">Your ticket will be sent to this email so write correct email.</p>
@@ -698,44 +681,64 @@ function get_transform_style($orientation)
                                         $mobile_no = htmlspecialchars($user['mobile_no'] ?? '');
                                         $email     = htmlspecialchars($user['email'] ?? '');
                                 ?>
-                                        <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly></div>
-                                        <div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly></div>
-                                        <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly></div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Name</label>
+                                            <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
+                                        </div>
                                     <?php endif;
                                 else : ?>
-                                    <div class="mb-3"><label class="form-label">Name</label><input type="text" name="contact_name" class="form-control" placeholder="Full Name" required></div>
-                                    <div class="mb-3"><label class="form-label">Phone</label><input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required></div>
-                                    <div class="mb-3"><label class="form-label">Email</label><input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
-                                    <?php endif; ?>
+                                    <div class="mb-3">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
                                     </div>
-                                    <div id="passenger-details-forms"></div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Phone</label>
+                                        <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
+                                    </div>
+                                <?php endif; ?>
+                                <div id="passenger-details-forms"></div>
                             </div>
-                            <div class="col-lg-5">
-                                <div class="panel-card">
-                                    <h5>Journey Summary</h5>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="panel-card">
+                                <h5>Journey Summary</h5>
+                                <hr>
+                                <div class="summary-body">
+                                    <div class="summary-item">
+                                        <div><strong id="summary-route"></strong>
+                                            <p class="small text-muted mb-0" id="summary-datetime"></p>
+                                        </div>
+                                    </div>
                                     <hr>
-                                    <div class="summary-body">
-                                        <div class="summary-item">
-                                            <div><strong id="summary-route"></strong>
-                                                <p class="small text-muted mb-0" id="summary-datetime"></p>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <div class="summary-item">
-                                            <div><strong id="summary-boarding-point"></strong></div>
-                                        </div>
-                                        <div class="summary-item">
-                                            <div><strong id="summary-dropping-point"></strong></div>
-                                        </div>
-                                        <hr>
-                                        <div class="summary-item">
-                                            <div><strong>Selected Seats</strong></div>
-                                            <div id="summary-seat-numbers" class="border p-2 ms-2 " style="border-radius:5px;"></div>
-                                        </div>
+                                    <div class="summary-item">
+                                        <div><strong id="summary-boarding-point"></strong></div>
+                                    </div>
+                                    <div class="summary-item">
+                                        <div><strong id="summary-dropping-point"></strong></div>
+                                    </div>
+                                    <hr>
+                                    <div class="summary-item">
+                                        <div><strong>Selected Seats</strong></div>
+                                        <div id="summary-seat-numbers" class="border p-2 ms-2 " style="border-radius:5px;"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
                 </form>
             </div>
 
@@ -756,7 +759,8 @@ function get_transform_style($orientation)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
-    
+    <!-- === NEW: Add the Razorpay Checkout Script === -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- --- MODIFIED: JavaScript updated to fix booking error --- -->
     <script>
@@ -993,15 +997,13 @@ function get_transform_style($orientation)
                 let firstInvalidElement = null;
                 let passengersData = [];
 
-                // --- NEW: Enhanced Validation Logic ---
                 document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
                 selectedSeats.forEach((seatData, seatCode) => {
                     const uniqueId = seatCode.replace(/[^a-zA-Z0-9]/g, '');
-                    const nameEl = document.querySelector(`input[name="passenger_name_${uniqueId}"]`);
-                    const ageEl = document.querySelector(`input[name="passenger_age_${uniqueId}"]`);
-                    const genderEl = document.querySelector(`select[name="passenger_gender_${uniqueId}"]`);
-
+                    const nameEl = form.querySelector(`input[name="passenger_name_${uniqueId}"]`);
+                    const ageEl = form.querySelector(`input[name="passenger_age_${uniqueId}"]`);
+                    const genderEl = form.querySelector(`select[name="passenger_gender_${uniqueId}"]`);
                     const ageValue = parseInt(ageEl ? ageEl.value : '0', 10);
 
                     if (!nameEl || !nameEl.value.trim()) {
@@ -1044,7 +1046,7 @@ function get_transform_style($orientation)
                 });
 
                 if (!isValid) {
-                    alert('Please fill in all required fields correctly. Invalid fields are highlighted in red.');
+                    alert('Please fill in all required fields correctly.');
                     if (firstInvalidElement) firstInvalidElement.focus();
                     return;
                 }
@@ -1052,39 +1054,95 @@ function get_transform_style($orientation)
                 const formData = new FormData(form);
                 formData.append('origin', document.querySelector('input[name="boarding_point"]:checked').value);
                 formData.append('destination', document.querySelector('input[name="dropping_point"]:checked').value);
-                formData.append('total_fare', totalPriceEl.textContent);
+                formData.append('total_fare', document.getElementById('total-price').textContent);
                 formData.append('passengers', JSON.stringify(passengersData));
 
                 actionBtn.disabled = true;
                 actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
 
+                // --- NEW PAYMENT FLOW ---
                 fetch('process_booking.php', {
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => {
-                        const contentType = response.headers.get("content-type");
-                        if (!response.ok || !contentType || !contentType.includes("application/json")) {
-                            return response.text().then(text => {
-                                throw new Error(`Server Error or Invalid Response: ${text}`)
-                            });
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        if (data.success) {
-                            window.location.href = `booking_confirmation.php?id=${data.booking_id}`;
-                        } else {
-                            alert('Booking Failed: ' + data.message);
+                        if (!data.success) {
+                            throw new Error(data.message);
+                        }
+
+                        // Data from server to open Razorpay
+                        const options = {
+                            "key": data.razorpay_key_id,
+                            "amount": data.amount,
+                            "currency": "INR",
+                            "name": "BPL Bus Booking",
+                            "description": "Bus Ticket Booking",
+                            "order_id": data.razorpay_order_id,
+                            "handler": function(response) {
+                                // This function is called after successful payment
+                                verifyPayment(response, data.booking_id, data.new_user);
+                            },
+                            "prefill": {
+                                "name": data.contact_name,
+                                "email": data.contact_email,
+                                "contact": data.contact_mobile
+                            },
+                            "theme": {
+                                "color": "#007bff"
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function(response) {
+                            alert("Payment Failed: " + response.error.description);
                             actionBtn.disabled = false;
                             actionBtn.textContent = 'Proceed to Payment';
+                        });
+
+                        // Open the Razorpay checkout
+                        rzp.open();
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Proceed to Payment';
+
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred: ' + error.message);
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Proceed to Payment';
+                    });
+            }
+
+            function verifyPayment(paymentResponse, bookingId, isNewUser) {
+                const verificationData = new FormData();
+                verificationData.append('razorpay_payment_id', paymentResponse.razorpay_payment_id);
+                verificationData.append('razorpay_order_id', paymentResponse.razorpay_order_id);
+                verificationData.append('razorpay_signature', paymentResponse.razorpay_signature);
+                verificationData.append('booking_id', bookingId);
+
+                document.getElementById('action-btn').innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying Payment...';
+
+                fetch('payment_verify.php', {
+                        method: 'POST',
+                        body: verificationData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Payment Successful! Redirecting to your ticket...');
+                            let redirectUrl = `booking_confirmation.php?id=${bookingId}`;
+                            if (isNewUser) {
+                                redirectUrl += '&new_user=true';
+                            }
+                            window.location.href = redirectUrl;
+                        } else {
+                            alert('Payment Verification Failed: ' + data.message);
                         }
                     })
                     .catch(error => {
-                        console.error('Fetch Error:', error);
-                        alert('An unexpected error occurred. Please try again. ' + error.message);
-                        actionBtn.disabled = false;
-                        actionBtn.textContent = 'Proceed to Payment';
+                        console.error('Verification Error:', error);
+                        alert('Could not verify payment. Please contact support.');
                     });
             }
 

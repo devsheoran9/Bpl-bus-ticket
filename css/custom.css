@@ -696,7 +696,7 @@ main {
   font-weight: 600;
   font-size: 1rem;
   color: white;
-  background-color: var(--primary-color);
+  /* background-color: var(--primary-color); */
   border: none;
   border-radius: 50px;
   box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
@@ -706,7 +706,7 @@ main {
   color: white;
   background-color: var(--primary-hover-color);
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
+  box-shadow: 0 6px 25px rgba(226, 85, 85, 0.5);
 }
 #action-btn:disabled {
   background-color: #b0b9c9;
@@ -714,11 +714,9 @@ main {
   cursor: not-allowed;
   transform: none;
 }
-
-/* --- 4. Seat Layout & Legend Styles --- */
-/* This adds the missing styles for your specific seat layout structure */
+ 
 .deck-layout-wrapper {
-  overflow-x: auto; /* Adds horizontal scroll on mobile */
+  overflow-x: auto;  
   padding: 10px 0;
 }
 .deck {
@@ -730,7 +728,7 @@ main {
 }
 .seat {
   position: absolute;
-  box-sizing: border-box; /* Ensures padding/border are included in width/height */
+  box-sizing: border-box;  
 }
 
 /* Seat Legend (to match the colors and styles) */
@@ -1583,7 +1581,7 @@ footer .text-primary {
 }
 .bus-timing .time {
   font-weight: 600;
-  font-size: 1.2rem;
+  /* font-size: 1.2rem; */
   color: var(--text-dark);
 }
 .bus-timing .time .bi {
@@ -1606,7 +1604,7 @@ footer .text-primary {
   text-align: right;
 }
 .price-section .price {
-  font-size: 1.75rem;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-dark);
 }
@@ -1645,20 +1643,20 @@ footer .text-primary {
     position: static;
     margin-bottom: 2rem;
   }
-  .bus-item-main {
+  /* .bus-item-main {
     grid-template-columns: 1fr;
     gap: 1rem;
     text-align: center;
-  }
+  } */
   .bus-timing,
   .price-section {
     text-align: center;
   }
-  .price-section {
+  /* .price-section {
     border-top: 1px solid var(--border-color);
     padding-top: 1rem;
     margin-top: 1rem;
-  }
+  } */
 }
 @media (max-width: 767px) {
   .search-summary-card {

@@ -1,17 +1,18 @@
 <?php
-// Your header or another central file should handle session_start()
 header('Content-Type: application/json');
 
-try {
-    // Use your global PDO database connection file
-    require "./admin/function/_db.php";
+require 'vendor/autoload.php';
+require 'config.php';
+require "./admin/function/_db.php";
 
-    // Only allow POST requests
+use Razorpay\Api\Api;
+
+try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception("Invalid request method.");
     }
 
-    // --- Data Sanitization and Retrieval ---
+    // --- Data Sanitization ---
     $route_id = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
     $bus_id = filter_input(INPUT_POST, 'bus_id', FILTER_VALIDATE_INT);
     $origin = trim($_POST['origin'] ?? '');
@@ -20,134 +21,92 @@ try {
     $contact_email = filter_input(INPUT_POST, 'contact_email', FILTER_VALIDATE_EMAIL);
     $contact_mobile = trim($_POST['contact_mobile'] ?? '');
     $total_fare = filter_input(INPUT_POST, 'total_fare', FILTER_VALIDATE_FLOAT);
-    $passengers_json = $_POST['passengers'] ?? '[]';
-    $passengers = json_decode($passengers_json, true);
-    $user_id = $_SESSION['user_id'] ?? null; // Assuming your session variable is user_id
+    $passengers = json_decode($_POST['passengers'] ?? '[]', true);
+    $user_id = $_SESSION['user_id'] ?? null;
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? '::1';
+    $travel_date = $_POST['travel_date'] ?? null;
 
-    $travel_date_str = $_POST['travel_date'] ?? null;
-    $d = DateTime::createFromFormat('Y-m-d', $travel_date_str);
-    if (!$travel_date_str || !$d || $d->format('Y-m-d') !== $travel_date_str) {
-        throw new Exception("Invalid or missing travel date. Please try again.");
-    }
-    $travel_date = $travel_date_str;
-
-    // --- Server-Side Validation ---
-    if (!$route_id || !$bus_id || empty($origin) || empty($destination) || empty($contact_name) || !$contact_email || empty($contact_mobile) || $total_fare === false) {
-        throw new Exception("Incomplete booking data. Please fill all required fields.");
-    }
-    if (json_last_error() !== JSON_ERROR_NONE || empty($passengers) || !is_array($passengers)) {
-        throw new Exception("Invalid or empty passenger data received.");
+    if (!$route_id || !$bus_id || empty($origin) || empty($destination) || empty($contact_name) || !$contact_email || empty($contact_mobile) || $total_fare === false || !$travel_date || empty($passengers)) {
+        throw new Exception("Incomplete or invalid booking data provided.");
     }
 
-    // --- Database Transaction ---
+    if ($total_fare <= 0) {
+        throw new Exception("Total fare must be greater than zero to proceed with payment.");
+    }
+
     $_conn_db->beginTransaction();
 
-    // Final check for seat availability
-    $seat_codes = array_column($passengers, 'seat_code');
-    $placeholders = implode(',', array_fill(0, count($seat_codes), '?'));
+    $new_user_created = false;
 
-    $check_sql = "
-        SELECT p.seat_code FROM passengers p
-        JOIN bookings b ON p.booking_id = b.booking_id
-        WHERE b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED' AND p.seat_code IN ($placeholders)
-    ";
+    if (!$user_id) {
+        $stmt_find_user = $_conn_db->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt_find_user->execute([$contact_email]);
+        $existing_user = $stmt_find_user->fetch();
 
-    $stmt_check = $_conn_db->prepare($check_sql);
-    $params = array_merge([$bus_id, $travel_date], $seat_codes);
-    $stmt_check->execute($params);
-
-    if ($stmt_check->rowCount() > 0) {
-        $booked_seat = $stmt_check->fetchColumn();
-        $_conn_db->rollBack();
-        throw new Exception("Sorry, seat {$booked_seat} is no longer available.");
+        if ($existing_user) {
+            $user_id = $existing_user['id'];
+        } else {
+            $password_hash = password_hash($contact_mobile, PASSWORD_DEFAULT);
+            $stmt_create_user = $_conn_db->prepare("INSERT INTO users (username, password, mobile_no, email, ip_address, status, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())");
+            $stmt_create_user->execute([$contact_name, $password_hash, $contact_mobile, $contact_email, $ip_address]);
+            $user_id = $_conn_db->lastInsertId();
+            $new_user_created = true;
+        }
     }
 
-    // Insert into `bookings` table
+    // --- Create a PENDING booking ---
     $ticket_no = 'BPL' . substr(str_shuffle(str_repeat('0123456789', 9)), 0, 9);
-    $payment_status = 'PENDING';
-    $booking_status = 'CONFIRMED';
-
-    $booking_sql = "
-        INSERT INTO bookings (ticket_no, route_id, bus_id, user_id, origin, destination, contact_name, contact_email, contact_mobile, travel_date, total_fare, payment_status, booking_status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-    ";
+    $booking_sql = "INSERT INTO bookings (ticket_no, route_id, bus_id, user_id, origin, destination, contact_name, contact_email, contact_mobile, travel_date, total_fare, payment_status, booking_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'PENDING', NOW())";
     $stmt_booking = $_conn_db->prepare($booking_sql);
-    $stmt_booking->execute([
-        $ticket_no,
-        $route_id,
-        $bus_id,
-        $user_id,
-        $origin,
-        $destination,
-        $contact_name,
-        $contact_email,
-        $contact_mobile,
-        $travel_date,
-        $total_fare,
-        $payment_status,
-        $booking_status
-    ]);
-
+    $stmt_booking->execute([$ticket_no, $route_id, $bus_id, $user_id, $origin, $destination, $contact_name, $contact_email, $contact_mobile, $travel_date, $total_fare]);
     $booking_id = $_conn_db->lastInsertId();
 
-    // Prepare statements for passenger insertion and seat_id lookup
-    $passenger_sql = "
-        INSERT INTO passengers (booking_id, seat_id, seat_code, passenger_name, passenger_age, passenger_gender, passenger_mobile, fare)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ";
+    // Insert passengers for the pending booking
+    $passenger_sql = "INSERT INTO passengers (booking_id, seat_id, seat_code, passenger_name, passenger_age, passenger_gender, fare) VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt_passenger = $_conn_db->prepare($passenger_sql);
-
-    // --- NEW: Prepare statement to get seat_id from seat_code ---
     $get_seat_id_sql = "SELECT seat_id FROM seats WHERE bus_id = ? AND seat_code = ?";
     $stmt_get_seat_id = $_conn_db->prepare($get_seat_id_sql);
 
-
     foreach ($passengers as $p) {
-        // Sanitize passenger data received from JSON
-        $seat_code = trim($p['seat_code'] ?? '');
-        $name = trim($p['name'] ?? '');
-        $age = filter_var($p['age'] ?? null, FILTER_VALIDATE_INT);
-        $gender = strtoupper(trim($p['gender'] ?? ''));
-        $fare = filter_var($p['fare'] ?? null, FILTER_VALIDATE_FLOAT);
-
-        // --- MODIFIED: Fetch the seat_id from the database ---
-        $stmt_get_seat_id->execute([$bus_id, $seat_code]);
-        $fetched_seat_id = $stmt_get_seat_id->fetchColumn(); // Fetches the single value (seat_id)
-
-        // --- MODIFIED: Updated validation check ---
-        if (!$fetched_seat_id || empty($seat_code) || empty($name) || !$age || $age <= 0 || !in_array($gender, ['MALE', 'FEMALE', 'OTHER']) || $fare === false) {
-            // This error will now trigger for more accurate reasons (e.g., empty name, invalid age)
-            throw new Exception("Invalid details for passenger in seat {$seat_code}. Please check all fields.");
-        }
-
-        // --- MODIFIED: Use the fetched_seat_id for insertion ---
-        $stmt_passenger->execute([
-            $booking_id,
-            $fetched_seat_id, // Use the ID we found in the database
-            $seat_code,
-            $name,
-            $age,
-            $gender,
-            $contact_mobile,
-            $fare
-        ]);
+        $stmt_get_seat_id->execute([$bus_id, $p['seat_code']]);
+        $fetched_seat_id = $stmt_get_seat_id->fetchColumn();
+        if (!$fetched_seat_id) throw new Exception("Invalid seat code: {$p['seat_code']}");
+        $stmt_passenger->execute([$booking_id, $fetched_seat_id, $p['seat_code'], $p['name'], $p['age'], $p['gender'], $p['fare']]);
     }
 
-    // If everything was successful, commit the transaction
+    // --- Create Razorpay Order ---
+    $api = new Api(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET);
+    $orderData = [
+        'receipt'         => (string)$booking_id,
+        'amount'          => $total_fare * 100, // Amount in paise
+        'currency'        => 'INR',
+        'notes'           => ['booking_id' => (string)$booking_id]
+    ];
+    $razorpayOrder = $api->order->create($orderData);
+    $razorpayOrderId = $razorpayOrder['id'];
+
+    // Store the razorpay_order_id in your booking table for reference
+    $stmt_update_order = $_conn_db->prepare("UPDATE bookings SET gateway_order_id = ? WHERE booking_id = ?");
+    $stmt_update_order->execute([$razorpayOrderId, $booking_id]);
+
     $_conn_db->commit();
 
-    echo json_encode(['success' => true, 'message' => 'Booking successful!', 'booking_id' => $booking_id]);
+    // Send all necessary info back to the frontend to open Razorpay
+    echo json_encode([
+        'success'           => true,
+        'booking_id'        => $booking_id,
+        'razorpay_order_id' => $razorpayOrderId,
+        'razorpay_key_id'   => RAZORPAY_KEY_ID,
+        'amount'            => $total_fare * 100,
+        'contact_name'      => $contact_name,
+        'contact_email'     => $contact_email,
+        'contact_mobile'    => $contact_mobile,
+        'new_user'          => $new_user_created
+    ]);
 } catch (Throwable $e) {
-    // If a transaction is active, roll it back
     if (isset($_conn_db) && $_conn_db->inTransaction()) {
         $_conn_db->rollBack();
     }
-    // Use a 400 Bad Request code for validation errors, 500 for true server errors
-    $errorCode = ($e instanceof Exception) ? 400 : 500;
-    http_response_code($errorCode);
-
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
