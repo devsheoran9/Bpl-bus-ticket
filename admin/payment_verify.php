@@ -2,14 +2,14 @@
 // payment_verify.php
 header('Content-Type: application/json');
 include_once('function/_db.php');
-require_once('function/vendor/autoload.php'); // Razorpay Autoloader
+require_once('vendor/autoload.php'); // Razorpay Autoloader
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
 
-session_start();
+ 
 
-$keyId = 'YOUR_KEY_ID';
-$keySecret = 'YOUR_KEY_SECRET';
+$keyId = 'rzp_test_xISbqnYlqqrWvs';
+$keySecret = 'RxquG8pfP9f5inluawqEAw92';
 
 $success = true;
 $error = "Payment Failed";

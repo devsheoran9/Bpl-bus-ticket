@@ -15,7 +15,6 @@ try {
         ORDER BY r.route_name, b.bus_name
     ";
     $routes = $_conn_db->query($query)->fetchAll(PDO::FETCH_ASSOC);
-    // --- FIX END ---
 } catch (PDOException $e) {
     $routes = [];
 }
@@ -43,9 +42,8 @@ try {
             border: 2px dashed #ccc;
             background-color: #f8f9fa;
             overflow: auto;
-            /* FIX: Make it fluid */
             width: 300px;
-            max-width: 300px; 
+            max-width: 300px;
             margin: 0 auto;
             border-radius: 10px;
         }
@@ -149,8 +147,7 @@ try {
             border-left: 4px solid var(--seat-selected-bg);
             animation: fadeIn 0.3s;
         }
-        
-        /* FIX: Make summary card sticky only on large screens */
+
         @media (min-width: 992px) {
             #booking-summary-card {
                 position: sticky;
@@ -184,7 +181,6 @@ try {
                         <h4 class="mb-0">Step 1: Select Journey Details</h4>
                     </div>
                     <div class="card-body">
-                        <!-- FIX: Use responsive grid classes for better mobile layout -->
                         <div class="row g-3 align-items-end">
                             <div class="col-12 col-sm-6 col-lg-3">
                                 <label for="route-select" class="form-label fw-bold">Route</label>
@@ -216,7 +212,6 @@ try {
                 </div>
 
                 <div id="seat-selection-area" class="d-none">
-                    <!-- FIX: The main columns will stack on mobile, which is the desired behavior -->
                     <div class="row">
                         <div class="col-lg-5 mb-4">
                             <div class="card">
@@ -224,7 +219,6 @@ try {
                                     <h4 class="mb-0">Step 2: Select Seats</h4>
                                 </div>
                                 <div class="card-body">
-                                    <!-- FIX: Stack decks vertically on mobile, horizontally on medium+ screens -->
                                     <div class="d-flex flex-column flex-md-row justify-content-around align-items-center">
                                         <div id="lower-deck-wrapper" class="mb-4 mb-md-0">
                                             <h6 class="text-center">Lower Deck</h6>
@@ -273,7 +267,7 @@ try {
     </div>
     <?php include "foot.php"; ?>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         $(document).ready(function() {
             let selectedRouteId, selectedDate, fromStopName, toStopName, busId;
@@ -288,8 +282,7 @@ try {
                     if (s && selectedRouteId && fromStopName && toStopName) loadSeatLayout();
                 }
             });
-            
-            // Set initial date
+
             selectedDate = datePicker.input.value;
 
             $('#route-select').on('change', function() {
@@ -327,7 +320,7 @@ try {
                 toStopName = $(this).val();
                 resetPage(3);
                 if (toStopName && selectedDate) {
-                     loadSeatLayout();
+                    loadSeatLayout();
                 }
             });
 
@@ -336,21 +329,20 @@ try {
                 $('#seat-selection-area').removeClass('d-none');
                 $('.deck-container').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary"></div></div>');
                 $.getJSON('function/backend/booking_actions.php', {
-                        action: 'get_seat_layout',
-                        route_id: selectedRouteId,
-                        travel_date: selectedDate,
-                        from_stop_name: fromStopName,
-                        to_stop_name: toStopName
-                    })
-                    .done(response => {
-                        if (response.status === 'success') {
-                            busId = response.bus_id;
-                            renderSeats(response.seats);
-                        } else {
-                            $('.deck-container').empty();
-                            $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
-                        }
-                    }).fail(() => $('.deck-container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
+                    action: 'get_seat_layout',
+                    route_id: selectedRouteId,
+                    travel_date: selectedDate,
+                    from_stop_name: fromStopName,
+                    to_stop_name: toStopName
+                }).done(response => {
+                    if (response.status === 'success') {
+                        busId = response.bus_id;
+                        renderSeats(response.seats);
+                    } else {
+                        $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
+                        $('#upper_deck_container').empty();
+                    }
+                }).fail(() => $('.deck-container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
             }
 
             function createSeatElement(seatData) {
@@ -385,8 +377,10 @@ try {
                 }
 
                 if (parseInt(seatData.is_bookable) === 1 && !seatData.is_booked) priceHtml = `<span class="seat-price">₹${seatData.price}</span>`;
+
                 content.append(codeHtml).append(iconHtml).append(priceHtml);
                 seatEl.append(content);
+
                 if (parseInt(seatData.is_bookable) === 1) {
                     seatEl.addClass(seatData.is_booked ? 'status-booked' : 'status-available').data('seat-info', {
                         id: seatData.seat_id,
@@ -430,27 +424,20 @@ try {
                     $('#main-contact-details').removeClass('d-none');
                 }
                 const formHtml = `
-                    <div class="card mb-2" id="passenger-form-${seatInfo.id}">
-                        <div class="card-body p-3">
-                            <h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6>
-                            <div class="row g-2">
-                                <div class="col-12 col-sm-6 mb-2 mb-sm-0">
-                                    <input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required>
-                                </div>
-                                <div class="col-6 col-sm-3">
-                                    <input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120" required>
-                                </div>
-                                <div class="col-6 col-sm-3">
-                                    <select class="form-select" name="passenger_gender_${seatInfo.id}" required>
-                                        <option value="MALE">Male</option>
-                                        <option value="FEMALE">Female</option>
-                                        <option value="OTHER">Other</option>
-                                    </select>
-                                </div>
-                                <input type="hidden" name="passenger_mobile_${seatInfo.id}">
+                <div class="card mb-2" id="passenger-form-${seatInfo.id}">
+                    <div class="card-body p-3">
+                        <h6 class="mb-3">Seat: <span class="badge bg-info">${seatInfo.code}</span> (₹${seatInfo.price.toFixed(2)})</h6>
+                        <div class="row g-2">
+                            <div class="col-12 col-sm-6 mb-2 mb-sm-0"><input type="text" class="form-control" name="passenger_name_${seatInfo.id}" placeholder="Passenger Name" required></div>
+                            <div class="col-6 col-sm-3"><input type="number" class="form-control" name="passenger_age_${seatInfo.id}" placeholder="Age" min="1" max="120" required></div>
+                            <div class="col-6 col-sm-3">
+                                <select class="form-select" name="passenger_gender_${seatInfo.id}" required>
+                                    <option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option>
+                                </select>
                             </div>
                         </div>
-                    </div>`;
+                    </div>
+                </div>`;
                 $('#passenger-details-form').append(formHtml);
             }
 
@@ -458,7 +445,7 @@ try {
                 const totalFare = selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
                 $('#total-fare').text(totalFare.toFixed(2));
                 const hasSeats = selectedSeats.length > 0;
-                $('#confirm-booking-btn').prop('disabled', !hasSeats).text(hasSeats ? 'Proceed to Payment' : 'Confirm Booking');
+                $('#confirm-booking-btn').prop('disabled', !hasSeats);
                 $('#main-contact-details').toggleClass('d-none', !hasSeats);
                 if (!hasSeats) {
                     $('#passenger-details-form').html('<p class="text-muted text-center">Please select one or more seats to continue.</p>');
@@ -470,6 +457,12 @@ try {
                 let isValid = true,
                     passengers = [];
                 $('#passenger-details-form .is-invalid').removeClass('is-invalid');
+
+                if (selectedSeats.length === 0) {
+                    Swal.fire('Error', 'Please select at least one seat.', 'error');
+                    return;
+                }
+
                 selectedSeats.forEach(seat => {
                     const nameEl = $(`input[name="passenger_name_${seat.id}"]`);
                     const ageEl = $(`input[name="passenger_age_${seat.id}"]`);
@@ -477,21 +470,21 @@ try {
                         nameEl.addClass('is-invalid');
                         isValid = false;
                     }
-                     if (!ageEl.val().trim() || parseInt(ageEl.val()) < 1) {
+                    if (!ageEl.val().trim() || parseInt(ageEl.val()) < 1) {
                         ageEl.addClass('is-invalid');
                         isValid = false;
                     }
-
                     passengers.push({
                         seat_id: seat.id,
                         seat_code: seat.code,
                         fare: seat.price,
                         name: nameEl.val().trim(),
-                        mobile: '', // Mobile per passenger is removed
                         age: ageEl.val().trim(),
+                        mobile: '',
                         gender: $(`select[name="passenger_gender_${seat.id}"]`).val()
                     });
                 });
+
                 if (!isValid) {
                     Swal.fire('Error', 'Please fill all passenger Name and valid Age details.', 'error');
                     return;
@@ -512,7 +505,6 @@ try {
                 });
             });
 
-            
             function resetPage(level) {
                 if (level <= 1) {
                     $('#from-stop-select').html('<option>-- Select Route First --</option>').prop('disabled', true);
@@ -520,10 +512,6 @@ try {
                 }
                 if (level <= 2) {
                     $('#to-stop-select').html('<option>-- Select Boarding Point --</option>').prop('disabled', true);
-                }
-                if (level <= 3) {
-                    // Don't clear the date picker when 'to' stop changes
-                    // datePicker.clear(); 
                 }
                 if (level <= 4) {
                     selectedSeats = [];
@@ -533,96 +521,106 @@ try {
                     updateSummary();
                 }
             }
+
             function processBooking(action, passengers) {
-        const btn = $('#confirm-booking-btn');
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-        
-        const bookingData = {
-            action: action,
-            route_id: selectedRouteId, bus_id: busId, travel_date: selectedDate,
-            origin: fromStopName, destination: toStopName, total_fare: $('#total-fare').text(),
-            passengers: JSON.stringify(passengers),
-            contact_email: $('#contact-email').val().trim(), contact_mobile: $('#contact-mobile').val().trim()
-        };
+                const btn = $('#confirm-booking-btn');
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
 
-        if (action === 'confirm_cash_booking') {
-            // For cash, just post and get the redirect URL
-            $.post('function/backend/booking_actions.php', bookingData, null, 'json')
-                .done(handleSuccessResponse)
-                .fail(handleAjaxError)
-                .always(() => btn.prop('disabled', false).html('Proceed to Payment'));
-        } else { // create_pending_booking for Razorpay
-            // First, create a pending booking and get a Razorpay Order ID
-            $.post('function/backend/booking_actions.php', bookingData, null, 'json')
-                .done(response => {
-                    if (response.status === 'success') {
-                        // We got the order_id, now open Razorpay
-                        const options = {
-                            "key": "rzp_test_xISbqnYlqqrWvs", // Replace with your Razorpay Key ID
-                            "amount": bookingData.total_fare * 100,
-                            "currency": "INR",
-                            "name": "BPL Bus Tickets",
-                            "description": `Payment for Ticket #${response.ticket_no}`,
-                            "order_id": response.razorpay_order_id,
-                            "handler": function (paymentResponse){
-                                // This function runs after a successful payment
-                                verifyPayment(paymentResponse, response.booking_id);
-                            },
-                            "prefill": {
-                                "name": "Conductor Booking",
-                                "email": bookingData.contact_email,
-                                "contact": bookingData.contact_mobile
-                            },
-                            "theme": { "color": "#0d6efd" }
-                        };
-                        const rzp1 = new Razorpay(options);
-                        rzp1.on('payment.failed', function (response){
-                            Swal.fire('Payment Failed', response.error.description, 'error');
-                            btn.prop('disabled', false).html('Proceed to Payment');
-                        });
-                        rzp1.open();
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
-                        btn.prop('disabled', false).html('Proceed to Payment');
-                    }
-                }).fail(handleAjaxError);
-        }
-    }
-    
-    function verifyPayment(paymentData, bookingId) {
-        // Send payment details to your server for verification
-        $.post('payment_verify.php', {
-            razorpay_payment_id: paymentData.razorpay_payment_id,
-            razorpay_order_id: paymentData.razorpay_order_id,
-            razorpay_signature: paymentData.razorpay_signature,
-            booking_id: bookingId
-        }, null, 'json')
-        .done(response => {
-            if (response.status === 'success') {
-                Swal.fire('Payment Successful!', response.message, 'success').then(() => {
-                    window.location.href = `ticket_view.php?booking_id=${bookingId}`;
-                });
-            } else {
-                Swal.fire('Verification Failed!', response.message, 'error');
+                const bookingData = {
+                    action: action,
+                    route_id: selectedRouteId,
+                    bus_id: busId,
+                    travel_date: selectedDate,
+                    origin: fromStopName,
+                    destination: toStopName,
+                    total_fare: $('#total-fare').text(),
+                    passengers: JSON.stringify(passengers),
+                    contact_email: $('#contact-email').val().trim(),
+                    contact_mobile: $('#contact-mobile').val().trim()
+                };
+
+                // **FIX**: Prevent payment attempt if total is 0
+                if (parseFloat(bookingData.total_fare) <= 0) {
+                    Swal.fire('Error', 'Total fare must be greater than zero.', 'error');
+                    btn.prop('disabled', false).html('Proceed to Payment');
+                    return;
+                }
+
+                if (action === 'confirm_cash_booking') {
+                    $.post('function/backend/booking_actions.php', bookingData, null, 'json')
+                        .done(handleSuccessResponse).fail(handleAjaxError)
+                        .always(() => btn.prop('disabled', false).html('Proceed to Payment'));
+                } else { // create_pending_booking for Razorpay
+                    $.post('function/backend/booking_actions.php', bookingData, null, 'json')
+                        .done(response => {
+                            if (response.status === 'success' && response.razorpay_order_id) {
+                                const options = {
+                                    "key": "rzp_test_xISbqnYlqqrWvs",
+                                    "amount": bookingData.total_fare * 100,
+                                    "currency": "INR",
+                                    "name": "BPL Bus Tickets",
+                                    "description": `Payment for Ticket #${response.ticket_no}`,
+                                    "order_id": response.razorpay_order_id,
+                                    "handler": function(paymentResponse) {
+                                        // **FIX**: Pass all three arguments correctly
+                                        verifyPayment(paymentResponse, response.booking_id, response.razorpay_order_id);
+                                    },
+                                    "prefill": {
+                                        "name": "Conductor Booking",
+                                        "email": bookingData.contact_email,
+                                        "contact": bookingData.contact_mobile
+                                    },
+                                    "theme": {
+                                        "color": "#0d6efd"
+                                    }
+                                };
+                                const rzp1 = new Razorpay(options);
+                                rzp1.on('payment.failed', function(response) {
+                                    Swal.fire('Payment Failed', response.error.description, 'error');
+                                    btn.prop('disabled', false).html('Proceed to Payment');
+                                });
+                                rzp1.open();
+                            } else {
+                                Swal.fire('Error', response.message || 'Could not create payment order.', 'error');
+                                btn.prop('disabled', false).html('Proceed to Payment');
+                            }
+                        }).fail(handleAjaxError);
+                }
             }
-        }).fail(handleAjaxError);
-    }
-    
-    function handleSuccessResponse(response) {
-        if (response.status === 'success') {
-             Swal.fire('Booking Confirmed!', `Ticket No: ${response.ticket_no}`, 'success').then(() => {
-                window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
-            });
-        } else {
-            Swal.fire('Booking Failed', response.message, 'error');
-        }
-    }
 
-    function handleAjaxError() {
-        Swal.fire('Error', 'Could not connect to the server.', 'error');
-    }
-});
-    
+            // **FIX**: Updated function signature to accept razorpayOrderId
+            function verifyPayment(paymentData, bookingId, razorpayOrderId) {
+                $.post('payment_verify.php', {
+                        razorpay_payment_id: paymentData.razorpay_payment_id,
+                        razorpay_order_id: razorpayOrderId, // **FIX**: Use the reliable orderId passed in
+                        razorpay_signature: paymentData.razorpay_signature,
+                        booking_id: bookingId
+                    }, null, 'json')
+                    .done(response => {
+                        if (response.status === 'success') {
+                            Swal.fire('Payment Successful!', response.message, 'success').then(() => {
+                                window.location.href = `ticket_view.php?booking_id=${bookingId}`;
+                            });
+                        } else {
+                            Swal.fire('Verification Failed!', response.message, 'error');
+                        }
+                    }).fail(() => Swal.fire('Error', 'Could not connect to the server to verify payment.', 'error'));
+            }
+
+            function handleSuccessResponse(response) {
+                if (response.status === 'success') {
+                    Swal.fire('Booking Confirmed!', `Ticket No: ${response.ticket_no}`, 'success').then(() => {
+                        window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
+                    });
+                } else {
+                    Swal.fire('Booking Failed', response.message, 'error');
+                }
+            }
+
+            function handleAjaxError() {
+                Swal.fire('Error', 'Could not connect to the server.', 'error');
+            }
+        });
     </script>
 </body>
 

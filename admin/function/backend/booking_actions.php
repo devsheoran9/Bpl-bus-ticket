@@ -102,7 +102,7 @@ if ($action == 'get_seat_layout') {
 }
 
 // Shared function to create a booking entry (Existing code - No changes)
-function createBookingEntry($data, $isCash = false)
+function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
 {
     global $_conn_db;
     $booking_status = $isCash ? 'CONFIRMED' : 'PENDING';
@@ -127,62 +127,75 @@ function createBookingEntry($data, $isCash = false)
         }
 
         $_conn_db->commit();
-        return [
+        
+        // Build the base response
+        $response = [
             'status' => 'success',
             'booking_id' => $booking_id,
             'ticket_no' => $ticket_no,
             'wtsp_no' => $data['contact_mobile'],
             'mail' => $data['contact_email']
         ];
+        
+        // *** ADDED LOGIC ***
+        // If a Razorpay Order ID was provided, add it to the response.
+        if ($razorpayOrderId) {
+            $response['razorpay_order_id'] = $razorpayOrderId;
+        }
+
+        return $response;
+
     } catch (PDOException $e) {
         $_conn_db->rollBack();
-        if ($e->getCode() == '23000') {
-            return ['status' => 'error', 'message' => 'Booking failed: A unique constraint was violated. Please try again.'];
-        }
         error_log("Create Booking Error: " . $e->getMessage());
         return ['status' => 'error', 'message' => 'Database Error: Could not create booking.'];
     }
 }
 
-// ACTION: Handle booking requests (Existing code - No changes)
+// ACTION: Handle cash booking request
 if ($action == 'confirm_cash_booking') {
-    if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error. Please log in again.');
+    if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error.');
     $data = [
         'route_id' => filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT),
         'bus_id' => filter_input(INPUT_POST, 'bus_id', FILTER_VALIDATE_INT),
         'travel_date' => $_POST['travel_date'],
         'total_fare' => filter_input(INPUT_POST, 'total_fare', FILTER_VALIDATE_FLOAT),
-        'origin' => isset($_POST['origin']) ? htmlspecialchars($_POST['origin'], ENT_QUOTES, 'UTF-8') : null,
-        'destination' => isset($_POST['destination']) ? htmlspecialchars($_POST['destination'], ENT_QUOTES, 'UTF-8') : null,
+        'origin' => $_POST['origin'] ?? null,
+        'destination' => $_POST['destination'] ?? null,
         'passengers' => json_decode($_POST['passengers'], true),
         'employee_id' => $_SESSION['user']['id'],
         'contact_email' => filter_var($_POST['contact_email'] ?? null, FILTER_VALIDATE_EMAIL),
-        'contact_mobile' => isset($_POST['contact_mobile']) ? htmlspecialchars($_POST['contact_mobile'], ENT_QUOTES, 'UTF-8') : null
+        'contact_mobile' => $_POST['contact_mobile'] ?? null
     ];
     if (empty($data['route_id']) || empty($data['bus_id']) || empty($data['passengers'])) send_json_response('error', 'Incomplete booking data received.');
-    $isCash = ($action == 'confirm_cash_booking');
-    $result = createBookingEntry($data, $isCash);
+    
+    $result = createBookingEntry($data, true); // True for cash
     send_json_response($result['status'], $result);
 }
+
+// ACTION: Handle online booking request (Razorpay)
 if ($action == 'create_pending_booking') {
     if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error.');
     
     $total_fare = filter_input(INPUT_POST, 'total_fare', FILTER_VALIDATE_FLOAT);
     if (!$total_fare || $total_fare <= 0) { send_json_response('error', 'Invalid total fare.'); }
 
-    $keyId = 'rzp_test_xISbqnYlqqrWvs'; // Replace with your actual Razorpay Key ID
-    $keySecret = 'RxquG8pfP9f5inluawqEAw92'; // Replace with your actual Razorpay Key Secret
-    $api = new Api($keyId, $keySecret);
+    try {
+        $keyId = 'rzp_test_xISbqnYlqqrWvs';
+        $keySecret = 'RxquG8pfP9f5inluawqEAw92';
+        $api = new Api($keyId, $keySecret);
 
-    $orderData = [
-        'receipt'         => 'rcpt_' . bin2hex(random_bytes(6)),
-        'amount'          => $total_fare * 100,
-        'currency'        => 'INR'
-    ];
-    $razorpayOrder = $api->order->create($orderData);
-    if (!$razorpayOrder) { send_json_response('error', 'Could not create Razorpay order.'); }
-    
-    $razorpayOrderId = $razorpayOrder['id'];
+        $orderData = [
+            'receipt'  => 'rcpt_' . bin2hex(random_bytes(6)),
+            'amount'   => $total_fare * 100, // Amount in paise
+            'currency' => 'INR'
+        ];
+        $razorpayOrder = $api->order->create($orderData);
+        $razorpayOrderId = $razorpayOrder['id'];
+        
+    } catch (Exception $e) {
+        send_json_response('error', 'Razorpay API Error: ' . $e->getMessage());
+    }
 
     $data = [
         'route_id' => filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT),
@@ -194,12 +207,15 @@ if ($action == 'create_pending_booking') {
         'passengers' => json_decode($_POST['passengers'], true),
         'employee_id' => $_SESSION['user']['id'],
         'contact_email' => filter_var($_POST['contact_email'] ?? null, FILTER_SANITIZE_EMAIL),
-        'contact_mobile' => isset($_POST['contact_mobile']) ? htmlspecialchars($_POST['contact_mobile']) : null
+        'contact_mobile' => $_POST['contact_mobile'] ?? null
     ];
     
+    // *** MODIFIED CALL ***
+    // Pass the razorpayOrderId to the createBookingEntry function
     $result = createBookingEntry($data, false, $razorpayOrderId);
     send_json_response($result['status'], $result);
 }
+
 
 
 // ===================================================================
