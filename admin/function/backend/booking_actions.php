@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 
 include_once('../_db.php'); 
 require_once('../../vendor/autoload.php'); 
+include_once('../_mailer.php'); 
 use Razorpay\Api\Api;
 
  
@@ -127,7 +128,9 @@ function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
         }
 
         $_conn_db->commit();
-        
+        if ($isCash && !empty($data['contact_email'])) {
+            sendBookingEmail($booking_id, $data['contact_email'], $_conn_db);
+        } 
         // Build the base response
         $response = [
             'status' => 'success',
@@ -142,7 +145,7 @@ function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
         if ($razorpayOrderId) {
             $response['razorpay_order_id'] = $razorpayOrderId;
         }
-
+       
         return $response;
 
     } catch (PDOException $e) {
@@ -170,6 +173,10 @@ if ($action == 'confirm_cash_booking') {
     if (empty($data['route_id']) || empty($data['bus_id']) || empty($data['passengers'])) send_json_response('error', 'Incomplete booking data received.');
     
     $result = createBookingEntry($data, true); // True for cash
+    if ($result['status'] === 'success' && !empty($data['contact_email'])) {
+        sendBookingEmail($result['booking_id'], $data['contact_email'], $_conn_db);
+    }
+    
     send_json_response($result['status'], $result);
 }
 
