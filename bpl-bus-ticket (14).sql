@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 11, 2025 at 08:21 AM
+-- Generation Time: Sep 12, 2025 at 12:39 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.1.17
 
@@ -49,8 +49,8 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `type`, `permissions`, `last_login_time`, `last_login_ip`, `session_token`, `name`, `mobile`, `email`, `password`, `password_salt`, `status`, `ip_address`, `date_time`) VALUES
-(1, 'main_admin', '{\"all_access\": true}', '2025-09-11 10:15:27', '::1', 'a31a7e4bf6951ccb2af628358325ea4a2081efd7c93f3167014c08d92199b059', 'dev', '8930000210', 'admin@gmail.com', '$2y$12$F5HnNj16GzvkVuojDu/9Re/IeDjwwH4.flwKS5hX5FluIrlOlexC6', '123456', '1', '::1', '2025-07-23 13:36:33'),
-(5, 'employee', '[]', '2025-09-10 11:04:01', '::1', NULL, 'SANJAY', '9876543212', 'rohit@gmail.com', '$2y$10$ujvyOF4Zy5C1ACdvfFF2i.FKiyr2Bbo6rIhVYiQU.jxnj748sqOUq', 'bcrypt', '1', NULL, '2025-09-09 11:46:29');
+(1, 'main_admin', '{\"all_access\": true}', '2025-09-12 10:46:56', '::1', '98869d95f0826841d8fe150d4782fb92d1c052a6e79e3445fde84f441f5354c6', 'dev', '8930000210', 'admin@gmail.com', '$2y$12$F5HnNj16GzvkVuojDu/9Re/IeDjwwH4.flwKS5hX5FluIrlOlexC6', '123456', '1', '::1', '2025-07-23 13:36:33'),
+(5, 'employee', '[]', '2025-09-11 15:37:33', '::1', '0afcda5a831a1d8abab63240825fa6fd84fcc5633928342073761170ca46a5d4', 'SANJAY', '9876543212', 'rohit@gmail.com', '$2y$10$ujvyOF4Zy5C1ACdvfFF2i.FKiyr2Bbo6rIhVYiQU.jxnj748sqOUq', 'bcrypt', '1', NULL, '2025-09-09 11:46:29');
 
 -- --------------------------------------------------------
 
@@ -154,7 +154,11 @@ INSERT INTO `admin_activity_log` (`log_id`, `admin_id`, `admin_name`, `activity_
 (80, 1, 'dev', 'login', '::1', '2025-09-10 07:58:14'),
 (81, 5, 'SANJAY', 'logout', '::1', '2025-09-10 10:12:16'),
 (82, 1, 'dev', 'login', '::1', '2025-09-10 11:28:39'),
-(83, 1, 'dev', 'login', '::1', '2025-09-11 04:45:27');
+(83, 1, 'dev', 'login', '::1', '2025-09-11 04:45:27'),
+(84, 1, 'dev', 'login', '::1', '2025-09-11 07:15:35'),
+(85, 5, 'SANJAY', 'login', '::1', '2025-09-11 10:07:33'),
+(86, 1, 'dev', 'login', '::1', '2025-09-12 04:19:22'),
+(87, 1, 'dev', 'login', '::1', '2025-09-12 05:16:56');
 
 -- --------------------------------------------------------
 
@@ -214,7 +218,59 @@ INSERT INTO `booked_seats` (`id`, `bus_id`, `route_id`, `seat_id`, `booking_id`,
 (86, 12, 15, 334, 81, '2025-09-12'),
 (87, 12, 15, 312, 82, '2025-09-12'),
 (88, 12, 15, 336, 83, '2025-09-12'),
-(89, 12, 15, 323, 84, '2025-09-12');
+(89, 12, 15, 323, 84, '2025-09-12'),
+(90, 12, 15, 329, 85, '2025-09-12'),
+(91, 12, 15, 302, 86, '2025-09-12'),
+(92, 12, 15, 318, 87, '2025-09-12'),
+(93, 12, 15, 322, 88, '2025-09-12'),
+(94, 12, 15, 325, 89, '2025-09-12'),
+(95, 12, 15, 317, 90, '2025-09-12'),
+(96, 12, 15, 332, 91, '2025-09-12'),
+(100, 12, 15, 330, 95, '2025-09-12'),
+(101, 12, 15, 326, 96, '2025-09-12'),
+(102, 12, 15, 327, 97, '2025-09-12'),
+(109, 12, 15, 331, 104, '2025-09-12'),
+(110, 12, 15, 333, 105, '2025-09-12'),
+(111, 11, 12, 286, 106, '2025-09-15'),
+(112, 12, 14, 300, 107, '2025-09-11'),
+(113, 12, 15, 351, 108, '2025-09-12'),
+(114, 12, 14, 308, 109, '2025-09-11'),
+(115, 12, 15, 350, 110, '2025-09-12'),
+(116, 11, 12, 294, 111, '2025-09-15'),
+(117, 12, 15, 354, 112, '2025-09-12'),
+(118, 12, 14, 299, 113, '2025-09-11'),
+(120, 12, 14, 305, 115, '2025-09-11'),
+(121, 12, 14, 304, 116, '2025-09-11'),
+(122, 12, 14, 307, 117, '2025-09-11'),
+(123, 12, 14, 320, 118, '2025-09-11'),
+(124, 12, 14, 300, 119, '2025-09-12'),
+(125, 12, 14, 301, 120, '2025-09-11'),
+(126, 12, 14, 306, 121, '2025-09-11'),
+(127, 12, 14, 309, 122, '2025-09-11'),
+(128, 12, 14, 310, 123, '2025-09-11'),
+(129, 12, 14, 311, 124, '2025-09-11'),
+(130, 12, 14, 314, 125, '2025-09-11'),
+(131, 12, 14, 313, 126, '2025-09-11'),
+(132, 12, 14, 334, 127, '2025-09-11'),
+(133, 12, 14, 299, 128, '2025-09-12'),
+(134, 12, 14, 312, 129, '2025-09-11'),
+(135, 12, 14, 336, 130, '2025-09-11'),
+(136, 12, 14, 316, 131, '2025-09-11'),
+(137, 12, 15, 308, 132, '2025-09-17'),
+(138, 12, 15, 307, 133, '2025-09-17'),
+(139, 12, 15, 300, 134, '2025-09-17'),
+(140, 12, 15, 299, 135, '2025-09-17'),
+(141, 12, 15, 305, 136, '2025-09-17'),
+(142, 12, 15, 306, 137, '2025-09-17'),
+(143, 12, 15, 314, 138, '2025-09-17'),
+(144, 12, 14, 305, 139, '2025-09-12'),
+(145, 12, 14, 308, 140, '2025-09-12'),
+(146, 12, 15, 309, 141, '2025-09-17'),
+(147, 12, 15, 310, 142, '2025-09-17'),
+(148, 12, 15, 301, 143, '2025-09-17'),
+(150, 11, 12, 287, 145, '2025-09-15'),
+(152, 11, 12, 291, 147, '2025-09-15'),
+(153, 12, 15, 311, 148, '2025-09-17');
 
 -- --------------------------------------------------------
 
@@ -231,6 +287,7 @@ CREATE TABLE `bookings` (
   `booked_by_employee_id` int(11) DEFAULT NULL,
   `origin` varchar(255) NOT NULL,
   `destination` varchar(255) NOT NULL,
+  `contact_name` varchar(255) DEFAULT NULL,
   `contact_email` varchar(255) DEFAULT NULL,
   `contact_mobile` varchar(20) DEFAULT NULL,
   `travel_date` date NOT NULL,
@@ -245,43 +302,95 @@ CREATE TABLE `bookings` (
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`booking_id`, `ticket_no`, `route_id`, `bus_id`, `user_id`, `booked_by_employee_id`, `origin`, `destination`, `contact_email`, `contact_mobile`, `travel_date`, `total_fare`, `payment_status`, `gateway_order_id`, `booking_status`, `created_at`) VALUES
-(48, 'BPL600460533', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '8905288939', '2025-09-10', 20.00, 'PAID', NULL, 'CONFIRMED', '2025-09-10 07:22:30'),
-(49, 'BPL051458717', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', 'sanjay@gmail.com', '9747823434', '2025-09-13', 140.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 07:27:03'),
-(50, 'BPL675347563', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 08:10:32'),
-(51, 'BPL826289427', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 08:11:25'),
-(53, 'BPL068555884', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-10 09:43:22'),
-(54, 'BPL401795140', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'rohit@gmail.com', '5435435435', '2025-09-10', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-10 09:58:19'),
-(55, 'BPL052567021', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 10:04:28'),
-(56, 'BPL612436558', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 140.00, 'PENDING', NULL, 'PENDING', '2025-09-10 10:18:14'),
-(57, 'BPL894309598', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 140.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 10:51:36'),
-(58, 'BPL210465171', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:35:27'),
-(59, 'BPL583685834', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', '', '', '2025-09-10', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:40:57'),
-(60, 'BPL531264476', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:58:38'),
-(61, 'BPL848524921', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 12:29:16'),
-(62, 'BPL068750391', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '4343244', '2025-09-10', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-10 12:31:48'),
-(63, 'BPL837410459', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 10.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:46:37'),
-(64, 'BPL120859736', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', '', '', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:55:08'),
-(65, 'BPL383358462', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:55:48'),
-(66, 'BPL656359547', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:58:31'),
-(67, 'BPL657788185', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:01:18'),
-(68, 'BPL101443255', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:02:11'),
-(69, 'BPL107749746', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:06:10'),
-(70, 'BPL691790413', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', '', '', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:08:17'),
-(71, 'BPL575391164', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:11:08'),
-(72, 'BPL722261040', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '5435435435', '2025-09-12', 50.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:19:00'),
-(73, 'BPL615494228', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:20:19'),
-(74, 'BPL328396651', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:21:15'),
-(75, 'BPL533303947', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:23:40'),
-(76, 'BPL747402085', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:24:33'),
-(77, 'BPL908268722', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:35:10'),
-(78, 'BPL238856434', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '5435435435', '2025-09-12', 50.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:40:44'),
-(79, 'BPL257349627', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:50:23'),
-(80, 'BPL845537697', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'rohit@gmail.com', '5435435435', '2025-09-12', 40.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:53:45'),
-(81, 'BPL877555537', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohit@gmail.com', '5435435435', '2025-09-12', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:56:19'),
-(82, 'BPL054967275', 15, 12, NULL, 1, 'Jeetpura,Bhiwani', 'Badhra,Haryana', 'rohit@gmail.com', '4343244', '2025-09-12', 10.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:57:47'),
-(83, 'BPL823468202', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', 'rohit@gmail.com', '8905288939', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 06:00:58'),
-(84, 'BPL635747390', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', 'rohitmechu', '4343244', '2025-09-12', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 06:09:36');
+INSERT INTO `bookings` (`booking_id`, `ticket_no`, `route_id`, `bus_id`, `user_id`, `booked_by_employee_id`, `origin`, `destination`, `contact_name`, `contact_email`, `contact_mobile`, `travel_date`, `total_fare`, `payment_status`, `gateway_order_id`, `booking_status`, `created_at`) VALUES
+(48, 'BPL600460533', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '8905288939', '2025-09-10', 20.00, 'PAID', NULL, 'CONFIRMED', '2025-09-10 07:22:30'),
+(49, 'BPL051458717', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'sanjay@gmail.com', '9747823434', '2025-09-13', 140.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 07:27:03'),
+(50, 'BPL675347563', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 08:10:32'),
+(51, 'BPL826289427', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 08:11:25'),
+(53, 'BPL068555884', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-10 09:43:22'),
+(54, 'BPL401795140', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-10 09:58:19'),
+(55, 'BPL052567021', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 10:04:28'),
+(56, 'BPL612436558', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 140.00, 'PENDING', NULL, 'PENDING', '2025-09-10 10:18:14'),
+(57, 'BPL894309598', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 140.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 10:51:36'),
+(58, 'BPL210465171', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:35:27'),
+(59, 'BPL583685834', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, '', '', '2025-09-10', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:40:57'),
+(60, 'BPL531264476', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-10 11:58:38'),
+(61, 'BPL848524921', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-10', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-10 12:29:16'),
+(62, 'BPL068750391', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '4343244', '2025-09-10', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-10 12:31:48'),
+(63, 'BPL837410459', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 10.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:46:37'),
+(64, 'BPL120859736', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, '', '', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:55:08'),
+(65, 'BPL383358462', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:55:48'),
+(66, 'BPL656359547', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 04:58:31'),
+(67, 'BPL657788185', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:01:18'),
+(68, 'BPL101443255', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:02:11'),
+(69, 'BPL107749746', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:06:10'),
+(70, 'BPL691790413', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, '', '', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:08:17'),
+(71, 'BPL575391164', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:11:08'),
+(72, 'BPL722261040', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 50.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:19:00'),
+(73, 'BPL615494228', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:20:19'),
+(74, 'BPL328396651', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:21:15'),
+(75, 'BPL533303947', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:23:40'),
+(76, 'BPL747402085', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:24:33'),
+(77, 'BPL908268722', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:35:10'),
+(78, 'BPL238856434', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 50.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:40:44'),
+(79, 'BPL257349627', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:50:23'),
+(80, 'BPL845537697', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 40.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:53:45'),
+(81, 'BPL877555537', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '5435435435', '2025-09-12', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:56:19'),
+(82, 'BPL054967275', 15, 12, NULL, 1, 'Jeetpura,Bhiwani', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '4343244', '2025-09-12', 10.00, 'PENDING', NULL, 'PENDING', '2025-09-11 05:57:47'),
+(83, 'BPL823468202', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 20.00, 'PENDING', NULL, 'PENDING', '2025-09-11 06:00:58'),
+(84, 'BPL635747390', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechu', '4343244', '2025-09-12', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 06:09:36'),
+(85, 'BPL016961199', 15, 12, NULL, 1, 'Jeetpura,Bhiwani', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 40.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 06:26:19'),
+(86, 'BPL475125214', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 06:38:28'),
+(87, 'BPL852627791', 15, 12, NULL, 1, 'Jeetpura,Bhiwani', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 40.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 06:40:29'),
+(88, 'BPL457405741', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 06:53:01'),
+(89, 'BPL921105378', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 60.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 07:27:51'),
+(90, 'BPL195945003', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 07:32:40'),
+(91, 'BPL598651601', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 07:59:02'),
+(95, 'BPL482914672', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 20.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 08:00:13'),
+(96, 'BPL210195362', 15, 12, NULL, 1, 'Jeetpura,Bhiwani', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 40.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 08:01:38'),
+(97, 'BPL315299072', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 08:08:34'),
+(104, 'BPL197063163', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 09:37:35'),
+(105, 'BPL610457328', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohit@gmail.com', '8905288939', '2025-09-12', 80.00, 'PENDING', NULL, 'PENDING', '2025-09-11 09:42:47'),
+(106, 'BPL998402750', 12, 11, NULL, 1, 'Rohtak, Purana Bus Stand', 'Pilani', NULL, 'rohit@gmail.com', '8905288939', '2025-09-15', 200.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 09:43:47'),
+(107, 'BPL435013370', 14, 12, NULL, 1, 'Atela', 'Badhra Bus stand', NULL, 'rohit@gmail.com', '8905288939', '2025-09-11', 20.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 10:31:01'),
+(108, 'BPL295352398', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 30.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 10:49:24'),
+(109, 'BPL050922578', 14, 12, NULL, 1, 'Atela', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 40.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 10:51:21'),
+(110, 'BPL805696301', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 10:52:40'),
+(111, 'BPL265760228', 12, 11, NULL, 1, 'Rohtak, Purana Bus Stand', 'Loharu', NULL, '', '8905288939', '2025-09-15', 100.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 10:55:11'),
+(112, 'BPL499219376', 15, 12, NULL, 1, 'juiii', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 10.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 10:58:44'),
+(113, 'BPL106153918', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Atela', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:15:43'),
+(115, 'BPL507207190', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:19:10'),
+(116, 'BPL047443865', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 140.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 11:20:24'),
+(117, 'BPL724862730', 14, 12, NULL, 1, 'Atela', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 40.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 11:22:42'),
+(118, 'BPL339707967', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 140.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 11:28:04'),
+(119, 'BPL883942014', 14, 12, NULL, 1, 'Atela', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 20.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:33:05'),
+(120, 'BPL650482215', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:40:04'),
+(121, 'BPL566093287', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:47:45'),
+(122, 'BPL280261323', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 11:49:03'),
+(123, 'BPL888614300', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Atela', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:50:10'),
+(124, 'BPL562834393', 14, 12, NULL, 1, 'Atela', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 20.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 11:58:03'),
+(125, 'BPL692804473', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 12:06:40'),
+(126, 'BPL063402211', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 12:09:21'),
+(127, 'BPL957737881', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 12:12:16'),
+(128, 'BPL963502802', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 80.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-11 12:14:12'),
+(129, 'BPL554667854', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Atela', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 40.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 12:17:09'),
+(130, 'BPL854022429', 14, 12, NULL, 1, 'Atela', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 40.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 12:18:20'),
+(131, 'BPL108920255', 14, 12, NULL, 1, 'Badhra Bus stand', 'Loharu Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-11', 20.00, 'PAID', NULL, 'CONFIRMED', '2025-09-11 12:19:38'),
+(132, 'BPL901527225', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:20:19'),
+(133, 'BPL016896503', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-12 04:33:58'),
+(134, 'BPL321688850', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 60.00, 'PENDING', NULL, 'PENDING', '2025-09-12 04:36:17'),
+(135, 'BPL673688029', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:39:38'),
+(136, 'BPL245228126', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-12 04:41:12'),
+(137, 'BPL378705160', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PENDING', NULL, 'PENDING', '2025-09-12 04:42:23'),
+(138, 'BPL239047690', 15, 12, NULL, 1, 'juiii', 'Badhra,Haryana', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-17', 30.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:44:53'),
+(139, 'BPL402387853', 14, 12, NULL, 1, 'Dadri Bus Stand', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 80.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:46:11'),
+(140, 'BPL053708947', 14, 12, NULL, 1, 'Atela', 'Badhra Bus stand', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-12', 20.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:51:39'),
+(141, 'BPL365571130', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, '', '', '2025-09-17', 60.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 04:55:20'),
+(142, 'BPL170565041', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, '', '8905288939', '2025-09-17', 60.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-12 05:19:01'),
+(143, 'BPL180229416', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'Jeetpura,Bhiwani', NULL, '', '', '2025-09-17', 30.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-12 05:20:35'),
+(145, 'BPL980884888', 12, 11, NULL, 1, 'Delhi, kasmiri Gate', 'Loharu', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-15', 400.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-12 05:21:18'),
+(147, 'BPL110319891', 12, 11, NULL, 1, 'Delhi, kasmiri Gate', 'Loharu', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-15', 400.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 05:22:14'),
+(148, 'BPL259220513', 15, 12, NULL, 1, 'Bhiwani,hashi Gate', 'juiii', NULL, 'devdharm09@gmail.com', '', '2025-09-17', 50.00, 'PAID', NULL, 'CONFIRMED', '2025-09-12 07:19:28');
 
 -- --------------------------------------------------------
 
@@ -312,7 +421,7 @@ CREATE TABLE `buses` (
 INSERT INTO `buses` (`bus_id`, `bus_name`, `registration_number`, `operator_id`, `bus_type`, `total_seats`, `seater_seats`, `sleeper_seats`, `amenities`, `description`, `status`, `created_at`, `updated_at`) VALUES
 (11, 'Bus no 2', 'HR 41 B 3453', 2, 'AC Seater', 0, 0, 0, NULL, 'gfdgf', 'Active', '2025-09-08 15:23:02', '2025-09-10 12:38:23'),
 (12, 'Bus no 1', 'HR 19 B 6566', 2, 'Non-AC Seater', 0, 0, 0, NULL, 'd', 'Active', '2025-09-08 15:25:30', '2025-09-10 12:40:34'),
-(13, 'Hr 323jcdfjkdre', 'HR 61 B 29173', 1, 'AC Seater', 0, 0, 0, NULL, 'ffd', 'Active', '2025-09-10 17:21:25', '2025-09-10 17:21:25');
+(18, 'Hr 323jcdfjkdre', 'HR 61 B 291713', NULL, 'Non-AC Seater', 0, 0, 0, NULL, 'dfdfdf', 'Active', '2025-09-12 13:14:48', '2025-09-12 13:14:48');
 
 -- --------------------------------------------------------
 
@@ -336,8 +445,7 @@ INSERT INTO `bus_categories` (`category_id`, `category_name`, `status`, `created
 (2, 'Expresss', 'Active', '2025-09-03 11:43:00'),
 (3, 'Local', 'Active', '2025-09-03 11:43:00'),
 (4, 'AC', 'Active', '2025-09-03 11:43:00'),
-(5, 'fds', 'Active', '2025-09-03 12:00:38'),
-(6, '4534432443242', 'Active', '2025-09-04 04:29:30');
+(5, 'fds', 'Active', '2025-09-03 12:00:38');
 
 -- --------------------------------------------------------
 
@@ -362,7 +470,8 @@ INSERT INTO `bus_category_map` (`map_id`, `bus_id`, `category_id`) VALUES
 (48, 12, 4),
 (49, 12, 2),
 (50, 12, 3),
-(51, 13, 4);
+(59, 18, 4),
+(60, 18, 2);
 
 -- --------------------------------------------------------
 
@@ -386,10 +495,25 @@ INSERT INTO `bus_images` (`image_id`, `bus_id`, `image_path`, `created_at`) VALU
 (10, 11, 'bus_11_1757325182_68bea77e44194.jpg', '2025-09-08 09:53:02'),
 (11, 12, 'bus_12_1757325330_68bea81293beb.jpg', '2025-09-08 09:55:30'),
 (12, 12, 'bus_12_1757325330_68bea81293ec2.jpg', '2025-09-08 09:55:30'),
-(13, 13, 'bus_13_1757505085_68c1663db5bbf.jpg', '2025-09-10 11:51:25'),
-(14, 13, 'bus_13_1757505085_68c1663db6312.jpg', '2025-09-10 11:51:25'),
-(15, 13, 'bus_13_1757505085_68c1663db64e8.jpg', '2025-09-10 11:51:25'),
-(16, 13, 'bus_13_1757505085_68c1663db697a.jpg', '2025-09-10 11:51:25');
+(25, 18, 'bus_18_1757663088_68c3cf70c82fc.jpg', '2025-09-12 07:44:48'),
+(26, 18, 'bus_18_1757663088_68c3cf70c878c.jpg', '2025-09-12 07:44:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cancellations`
+--
+
+CREATE TABLE `cancellations` (
+  `cancellation_id` int(11) NOT NULL,
+  `booking_id` int(11) NOT NULL,
+  `passenger_id` int(11) NOT NULL,
+  `amount_refunded` decimal(10,2) NOT NULL,
+  `cancellation_reason` varchar(255) DEFAULT NULL,
+  `gateway_refund_id` varchar(255) DEFAULT NULL,
+  `status` enum('COMPLETED','FAILED','PENDING') NOT NULL DEFAULT 'PENDING',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -422,7 +546,30 @@ INSERT INTO `cash_collections_log` (`collection_id`, `booking_id`, `amount_colle
 (25, 57, 140.00, 1, 1, '2025-09-10 11:31:08'),
 (26, 58, 80.00, 1, 1, '2025-09-10 11:39:23'),
 (27, 59, 60.00, 1, 1, '2025-09-10 12:00:01'),
-(28, 60, 60.00, 1, 1, '2025-09-10 12:00:01');
+(28, 60, 60.00, 1, 1, '2025-09-10 12:00:01'),
+(29, 61, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(30, 62, 20.00, 1, 1, '2025-09-11 06:27:28'),
+(31, 63, 10.00, 1, 1, '2025-09-11 06:27:28'),
+(32, 64, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(33, 65, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(34, 66, 20.00, 1, 1, '2025-09-11 06:27:28'),
+(35, 67, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(36, 68, 30.00, 1, 1, '2025-09-11 06:27:28'),
+(37, 69, 80.00, 1, 1, '2025-09-11 06:27:28'),
+(38, 70, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(39, 71, 20.00, 1, 1, '2025-09-11 06:27:28'),
+(40, 72, 50.00, 1, 1, '2025-09-11 06:27:28'),
+(41, 73, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(42, 74, 80.00, 1, 1, '2025-09-11 06:27:28'),
+(43, 75, 80.00, 1, 1, '2025-09-11 06:27:28'),
+(44, 76, 60.00, 1, 1, '2025-09-11 06:27:28'),
+(45, 77, 80.00, 1, 1, '2025-09-11 06:27:28'),
+(46, 78, 50.00, 1, 1, '2025-09-11 06:27:28'),
+(47, 79, 20.00, 1, 1, '2025-09-11 06:27:28'),
+(48, 80, 40.00, 1, 1, '2025-09-11 06:27:28'),
+(49, 81, 30.00, 1, 1, '2025-09-11 06:27:28'),
+(50, 82, 10.00, 1, 1, '2025-09-11 06:27:28'),
+(51, 83, 20.00, 1, 1, '2025-09-11 06:27:28');
 
 -- --------------------------------------------------------
 
@@ -449,7 +596,7 @@ CREATE TABLE `operators` (
 INSERT INTO `operators` (`operator_id`, `operator_name`, `contact_person`, `contact_email`, `contact_phone`, `address`, `status`, `created_at`, `updated_at`) VALUES
 (1, 'Sharma Travels', 'Rahul Sharma', '32@gmail.com', '32342432', 'refdfsd', 'Active', '2025-09-02 15:32:55', '2025-09-10 10:18:54'),
 (2, 'Shanti Express', 'Priya Singh', '4342342@GMAIL.COM', '32342432', '34534', 'Active', '2025-09-02 15:32:55', '2025-09-06 11:58:19'),
-(3, 'Royal Roadways', 'Amit Kumar', '32@gmail.com', '32342432', 'ramraradsd', 'Active', '2025-09-02 15:32:55', '2025-09-10 11:46:10');
+(3, 'dev sheoran', 'Amit Kumar', '32@gmail.com', '32342432', 'ramraradsd', 'Active', '2025-09-02 15:32:55', '2025-09-11 16:02:54');
 
 -- --------------------------------------------------------
 
@@ -466,53 +613,106 @@ CREATE TABLE `passengers` (
   `passenger_mobile` varchar(20) NOT NULL,
   `passenger_age` int(3) DEFAULT NULL,
   `passenger_gender` enum('MALE','FEMALE','OTHER') NOT NULL,
-  `fare` decimal(10,2) NOT NULL
+  `fare` decimal(10,2) NOT NULL,
+  `passenger_status` enum('CONFIRMED','CANCELLED') NOT NULL DEFAULT 'CONFIRMED'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `passengers`
 --
 
-INSERT INTO `passengers` (`passenger_id`, `booking_id`, `seat_id`, `seat_code`, `passenger_name`, `passenger_mobile`, `passenger_age`, `passenger_gender`, `fare`) VALUES
-(51, 48, 301, 'LS1', 'Rohit Choudhary', '', 24, 'MALE', 20.00),
-(52, 49, 306, 'LP4', 'Sanjay Sheoran', '', 23, 'MALE', 80.00),
-(53, 49, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 60.00),
-(54, 50, 300, 'LP2', '12', '', 12, 'MALE', 60.00),
-(55, 51, 306, 'LP4', 'Sanjay Sheoran', '', 22, 'MALE', 60.00),
-(56, 53, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 30.00),
-(57, 54, 308, 'LP5', 'fdf', '', 33, 'MALE', 80.00),
-(58, 55, 305, 'LP3', '23', '', 23, 'MALE', 60.00),
-(59, 56, 310, 'LP7', 'fsdfsd', '', 34, 'MALE', 60.00),
-(60, 56, 302, 'UP1', 'sdff', '', 34, 'MALE', 80.00),
-(61, 57, 299, 'LP1', 'rfdfsd', '', 34, 'MALE', 60.00),
-(62, 57, 304, 'UP2', '34343', '', 34, 'MALE', 80.00),
-(63, 58, 317, 'UP3', 'rohit', '', 35, 'MALE', 80.00),
-(64, 59, 319, 'UP5', '23', '', 23, 'MALE', 60.00),
-(65, 60, 300, 'LP2', '12', '', 23, 'MALE', 60.00),
-(66, 61, 309, 'LP6', 'fdfs', '', 22, 'MALE', 60.00),
-(67, 62, 313, 'LS4', 'fdf', '', 33, 'MALE', 20.00),
-(68, 63, 299, 'LP1', 'rfdfsd', '', 23, 'MALE', 10.00),
-(69, 64, 304, 'UP2', '34343', '', 23, 'MALE', 60.00),
-(70, 65, 305, 'LP3', '23', '', 22, 'MALE', 60.00),
-(71, 66, 301, 'LS1', 'Rohit Choudhary', '', 34, 'MALE', 20.00),
-(72, 67, 306, 'LP4', 'Sanjay Sheoran', '', 22, 'MALE', 60.00),
-(73, 68, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 30.00),
-(74, 69, 320, 'UP6', '23323', '', 32, 'MALE', 80.00),
-(75, 70, 308, 'LP5', 'fdf', '', 23, 'MALE', 60.00),
-(76, 71, 319, 'UP5', '23', '', 23, 'MALE', 20.00),
-(77, 72, 310, 'LP7', '23', '', 22, 'MALE', 50.00),
-(78, 73, 324, 'UP10', 'rohit', '', 22, 'MALE', 60.00),
-(79, 74, 309, 'LP6', '23', '', 23, 'MALE', 80.00),
-(80, 75, 321, 'UP7', 'fdfdf', '', 323, 'MALE', 80.00),
-(81, 76, 311, 'LP8', '23', '', 23, 'MALE', 60.00),
-(82, 77, 314, 'LP9', '23', '43', 23, 'MALE', 80.00),
-(83, 78, 316, 'LP10', 'fdfd', '', 34, 'MALE', 50.00),
-(84, 79, 313, 'LS4', 'fdsf', '', 34, 'MALE', 20.00),
-(85, 80, 315, 'LS5', 'fsdfd', '343434', 34, 'MALE', 40.00),
-(86, 81, 334, 'LS6', 'rer', '', 34, 'MALE', 30.00),
-(87, 82, 312, 'LS3', '232', '', 23, 'MALE', 10.00),
-(88, 83, 336, 'LS7', 'fdfdf', '', 32, 'MALE', 20.00),
-(89, 84, 323, 'UP9', 'ffds34', '', 44, 'MALE', 80.00);
+INSERT INTO `passengers` (`passenger_id`, `booking_id`, `seat_id`, `seat_code`, `passenger_name`, `passenger_mobile`, `passenger_age`, `passenger_gender`, `fare`, `passenger_status`) VALUES
+(51, 48, 301, 'LS1', 'Rohit Choudhary', '', 24, 'MALE', 20.00, 'CONFIRMED'),
+(52, 49, 306, 'LP4', 'Sanjay Sheoran', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(53, 49, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(54, 50, 300, 'LP2', '12', '', 12, 'MALE', 60.00, 'CONFIRMED'),
+(55, 51, 306, 'LP4', 'Sanjay Sheoran', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(56, 53, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(57, 54, 308, 'LP5', 'fdf', '', 33, 'MALE', 80.00, 'CONFIRMED'),
+(58, 55, 305, 'LP3', '23', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(59, 56, 310, 'LP7', 'fsdfsd', '', 34, 'MALE', 60.00, 'CONFIRMED'),
+(60, 56, 302, 'UP1', 'sdff', '', 34, 'MALE', 80.00, 'CONFIRMED'),
+(61, 57, 299, 'LP1', 'rfdfsd', '', 34, 'MALE', 60.00, 'CONFIRMED'),
+(62, 57, 304, 'UP2', '34343', '', 34, 'MALE', 80.00, 'CONFIRMED'),
+(63, 58, 317, 'UP3', 'rohit', '', 35, 'MALE', 80.00, 'CONFIRMED'),
+(64, 59, 319, 'UP5', '23', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(65, 60, 300, 'LP2', '12', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(66, 61, 309, 'LP6', 'fdfs', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(67, 62, 313, 'LS4', 'fdf', '', 33, 'MALE', 20.00, 'CONFIRMED'),
+(68, 63, 299, 'LP1', 'rfdfsd', '', 23, 'MALE', 10.00, 'CONFIRMED'),
+(69, 64, 304, 'UP2', '34343', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(70, 65, 305, 'LP3', '23', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(71, 66, 301, 'LS1', 'Rohit Choudhary', '', 34, 'MALE', 20.00, 'CONFIRMED'),
+(72, 67, 306, 'LP4', 'Sanjay Sheoran', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(73, 68, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(74, 69, 320, 'UP6', '23323', '', 32, 'MALE', 80.00, 'CONFIRMED'),
+(75, 70, 308, 'LP5', 'fdf', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(76, 71, 319, 'UP5', '23', '', 23, 'MALE', 20.00, 'CONFIRMED'),
+(77, 72, 310, 'LP7', '23', '', 22, 'MALE', 50.00, 'CONFIRMED'),
+(78, 73, 324, 'UP10', 'rohit', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(79, 74, 309, 'LP6', '23', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(80, 75, 321, 'UP7', 'fdfdf', '', 323, 'MALE', 80.00, 'CONFIRMED'),
+(81, 76, 311, 'LP8', '23', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(82, 77, 314, 'LP9', '23', '43', 23, 'MALE', 80.00, 'CONFIRMED'),
+(83, 78, 316, 'LP10', 'fdfd', '', 34, 'MALE', 50.00, 'CONFIRMED'),
+(84, 79, 313, 'LS4', 'fdsf', '', 34, 'MALE', 20.00, 'CONFIRMED'),
+(85, 80, 315, 'LS5', 'fsdfd', '343434', 34, 'MALE', 40.00, 'CONFIRMED'),
+(86, 81, 334, 'LS6', 'rer', '', 34, 'MALE', 30.00, 'CONFIRMED'),
+(87, 82, 312, 'LS3', '232', '', 23, 'MALE', 10.00, 'CONFIRMED'),
+(88, 83, 336, 'LS7', 'fdfdf', '', 32, 'MALE', 20.00, 'CONFIRMED'),
+(89, 84, 323, 'UP9', 'ffds34', '', 44, 'MALE', 80.00, 'CONFIRMED'),
+(90, 85, 329, 'UP14', 'errer', '', 34, 'MALE', 40.00, 'CONFIRMED'),
+(91, 86, 302, 'UP1', 'sdff', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(92, 87, 318, 'UP4', 'ghfgf', '', 45, 'MALE', 40.00, 'CONFIRMED'),
+(93, 88, 322, 'UP8', '23233', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(94, 89, 325, 'UP11', 'fddsfd', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(95, 90, 317, 'UP3', 'rohit', '', 12, 'MALE', 60.00, 'CONFIRMED'),
+(96, 91, 332, 'UP17', 'rohit', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(100, 95, 330, 'UP15', 'sd', '', 21, 'MALE', 20.00, 'CONFIRMED'),
+(101, 96, 326, 'UP12', 'rohit', '', 22, 'MALE', 40.00, 'CONFIRMED'),
+(102, 97, 327, 'UP13', 'wer', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(109, 104, 331, 'UP16', 'gf', '', 34, 'MALE', 80.00, 'CONFIRMED'),
+(110, 105, 333, 'UP18', '43434', '', 33, 'MALE', 80.00, 'CONFIRMED'),
+(111, 106, 286, 'LP1', 'fdfdf', '', 22, 'MALE', 200.00, 'CONFIRMED'),
+(112, 107, 300, 'LP2', '12', '', 12, 'MALE', 20.00, 'CONFIRMED'),
+(113, 108, 351, 'LS8', 'fdfd', '', 33, 'MALE', 30.00, 'CONFIRMED'),
+(114, 109, 308, 'LP5', 'dfs', '', 23, 'MALE', 40.00, 'CONFIRMED'),
+(115, 110, 350, 'LP11', 'gfdgf', '', 23, 'MALE', 30.00, 'CONFIRMED'),
+(116, 111, 294, 'LP5', '4324234234', '', 34, 'MALE', 100.00, 'CONFIRMED'),
+(117, 112, 354, 'LP12', 'rohit', '', 12, 'MALE', 10.00, 'CONFIRMED'),
+(118, 113, 299, 'LP1', 'rfdfsd', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(120, 115, 305, 'LP3', 'fdf', '', 22, 'MALE', 80.00, 'CONFIRMED'),
+(121, 116, 304, 'UP2', '34343', '', 23, 'MALE', 140.00, 'CONFIRMED'),
+(122, 117, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 40.00, 'CONFIRMED'),
+(123, 118, 320, 'UP6', '23', '', 23, 'MALE', 140.00, 'CONFIRMED'),
+(124, 119, 300, 'LP2', '12', '', 33, 'MALE', 20.00, 'CONFIRMED'),
+(125, 120, 301, 'LS1', 'Rohit Choudhary', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(126, 121, 306, 'LP4', 'Sanjay Sheoran', '', 33, 'MALE', 80.00, 'CONFIRMED'),
+(127, 122, 309, 'LP6', 'errere', '', 22, 'MALE', 80.00, 'CONFIRMED'),
+(128, 123, 310, 'LP7', 'fsdfsd', '', 12, 'MALE', 60.00, 'CONFIRMED'),
+(129, 124, 311, 'LP8', 'errer', '', 22, 'MALE', 20.00, 'CONFIRMED'),
+(130, 125, 314, 'LP9', 'dfdf', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(131, 126, 313, 'LS4', 'dd', '', 23, 'MALE', 60.00, 'CONFIRMED'),
+(132, 127, 334, 'LS6', 'fdf', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(133, 128, 299, 'LP1', 'rfdfsd', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(134, 129, 312, 'LS3', '23', '', 23, 'MALE', 40.00, 'CONFIRMED'),
+(135, 130, 336, 'LS7', '121212', '', 12, 'MALE', 40.00, 'CONFIRMED'),
+(136, 131, 316, 'LP10', 'fddrf', '', 3, 'MALE', 20.00, 'CONFIRMED'),
+(137, 132, 308, 'LP5', 'dfs', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(138, 133, 307, 'LS2', 'Dev Sheoran', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(139, 134, 300, 'LP2', '12', '', 22, 'MALE', 60.00, 'CONFIRMED'),
+(140, 135, 299, 'LP1', 'rfdfsd', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(141, 136, 305, 'LP3', '23', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(142, 137, 306, 'LP4', 'Sanjay Sheoran', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(143, 138, 314, 'LP9', 'dfdf', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(144, 139, 305, 'LP3', 'fdf', '', 23, 'MALE', 80.00, 'CONFIRMED'),
+(145, 140, 308, 'LP5', 'fdf', '', 23, 'MALE', 20.00, 'CONFIRMED'),
+(146, 141, 309, 'LP6', 'fdfd', '', 343, 'MALE', 60.00, 'CONFIRMED'),
+(147, 142, 310, 'LP7', 'fsdfsd', '', 12, 'MALE', 60.00, 'CONFIRMED'),
+(148, 143, 301, 'LS1', 'Rohit Choudhary', '', 22, 'MALE', 30.00, 'CONFIRMED'),
+(150, 145, 287, 'LP2', '543534', '', 22, 'MALE', 400.00, 'CONFIRMED'),
+(152, 147, 291, 'LP4', '23', '', 23, 'MALE', 400.00, 'CONFIRMED'),
+(153, 148, 311, 'LP8', 'Are Dev Sir', '', 23, 'MALE', 50.00, 'CONFIRMED');
 
 -- --------------------------------------------------------
 
@@ -557,7 +757,8 @@ INSERT INTO `routes` (`route_id`, `bus_id`, `route_name`, `starting_point`, `end
 (12, 11, 'Delhi To Pilani', 'Delhi, kasmiri Gate', 'Pilani', 'Active', 0, '2025-09-08 09:57:42'),
 (13, 11, 'Pilani To Delhi', 'Pilani', 'Rohtak, Purana Bus Stand', 'Active', 1, '2025-09-08 09:59:57'),
 (14, 12, 'Dadri,Haryana To Loharu,Haryana', 'Dadri Bus Stand', 'Loharu Bus stand', 'Active', 1, '2025-09-10 07:16:08'),
-(15, 12, 'Bhiwani to Badhra', 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'Active', 0, '2025-09-10 07:20:46');
+(15, 12, 'Bhiwani to Badhra', 'Bhiwani,hashi Gate', 'Badhra,Haryana', 'Active', 0, '2025-09-10 07:20:46'),
+(23, 12, 'Barwas to Loharu', 'Barwas', 'Loharu', 'Active', 1, '2025-09-12 10:35:31');
 
 -- --------------------------------------------------------
 
@@ -586,10 +787,43 @@ INSERT INTO `route_schedules` (`schedule_id`, `route_id`, `operating_day`, `depa
 (39, 14, 'Fri', '06:00:00'),
 (40, 14, 'Sat', '08:00:00'),
 (41, 14, 'Sun', '02:00:00'),
-(42, 15, 'Mon', '00:00:00'),
-(43, 15, 'Wed', '02:00:00'),
-(44, 15, 'Fri', '03:00:00'),
-(45, 15, 'Sun', '04:00:00');
+(53, 23, 'Mon', '00:00:00'),
+(54, 15, 'Mon', '00:00:00'),
+(55, 15, 'Wed', '02:00:00'),
+(56, 15, 'Fri', '03:00:00'),
+(57, 15, 'Sun', '04:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `route_staff_assignments`
+--
+
+CREATE TABLE `route_staff_assignments` (
+  `assignment_id` int(11) DEFAULT NULL,
+  `route_id` int(11) NOT NULL COMMENT 'Foreign key to the routes table',
+  `staff_id` int(11) NOT NULL COMMENT 'Foreign key to the staff table',
+  `role` varchar(100) NOT NULL COMMENT 'e.g., Driver, Co-Driver, Conductor, Helper'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `route_staff_assignments`
+--
+
+INSERT INTO `route_staff_assignments` (`assignment_id`, `route_id`, `staff_id`, `role`) VALUES
+(NULL, 23, 20, 'Driver'),
+(NULL, 23, 20, 'Co-Driver'),
+(NULL, 23, 26, 'Conductor'),
+(NULL, 23, 26, 'Co-Conductor'),
+(NULL, 23, 37, 'Helper'),
+(NULL, 23, 38, 'Helper'),
+(NULL, 23, 36, 'Helper'),
+(NULL, 15, 20, 'Driver'),
+(NULL, 15, 20, 'Co-Driver'),
+(NULL, 15, 26, 'Conductor'),
+(NULL, 15, 26, 'Co-Conductor'),
+(NULL, 15, 37, 'Helper'),
+(NULL, 15, 38, 'Helper');
 
 -- --------------------------------------------------------
 
@@ -622,9 +856,11 @@ INSERT INTO `route_stops` (`stop_id`, `route_id`, `stop_name`, `stop_order`, `du
 (65, 14, 'Atela', 1, 50, 40.00, 60.00, 60.00, 80.00),
 (66, 14, 'Badhra Bus stand', 2, 80, 60.00, 80.00, 80.00, 120.00),
 (67, 14, 'Loharu Bus stand', 3, 100, 80.00, 100.00, 100.00, 140.00),
-(68, 15, 'juiii', 1, 40, 20.00, 40.00, 50.00, 60.00),
-(69, 15, 'Jeetpura,Bhiwani', 2, 80, 30.00, 60.00, 60.00, 80.00),
-(70, 15, 'Badhra,Haryana', 3, 120, 40.00, 70.00, 80.00, 120.00);
+(77, 23, 'Basirwas', 1, 10, 20.00, 40.00, 40.00, 60.00),
+(78, 23, 'Loharu', 2, 20, 40.00, 60.00, 60.00, 80.00),
+(79, 15, 'juiii', 1, 40, 20.00, 40.00, 50.00, 60.00),
+(80, 15, 'Jeetpura,Bhiwani', 2, 80, 30.00, 60.00, 60.00, 80.00),
+(81, 15, 'Badhra,Haryana', 3, 120, 40.00, 70.00, 80.00, 120.00);
 
 -- --------------------------------------------------------
 
@@ -675,7 +911,7 @@ INSERT INTO `seats` (`seat_id`, `bus_id`, `seat_code`, `deck`, `seat_type`, `x_c
 (302, 12, 'UP1', 'UPPER', 'SLEEPER', 150, 60, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-08 15:25:43', '2025-09-10 12:34:56'),
 (304, 12, 'UP2', 'UPPER', 'SLEEPER', 70, 60, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-08 15:25:49', '2025-09-10 12:35:06'),
 (305, 12, 'LP3', 'LOWER', 'SLEEPER', 190, 160, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:21', '2025-09-10 12:30:22'),
-(306, 12, 'LP4', 'LOWER', 'SLEEPER', 50, 120, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:28', '2025-09-10 12:30:29'),
+(306, 12, 'LP4', 'LOWER', 'SLEEPER', 50, 120, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:28', '2025-09-11 15:35:39'),
 (307, 12, 'LS2', 'LOWER', 'SEATER', 140, 160, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:33', '2025-09-10 12:30:34'),
 (308, 12, 'LP5', 'LOWER', 'SLEEPER', 140, 210, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:36', '2025-09-10 12:30:37'),
 (309, 12, 'LP6', 'LOWER', 'SLEEPER', 190, 250, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:41', '2025-09-10 12:30:42'),
@@ -684,7 +920,7 @@ INSERT INTO `seats` (`seat_id`, `bus_id`, `seat_code`, `deck`, `seat_type`, `x_c
 (312, 12, 'LS3', 'LOWER', 'SEATER', 140, 390, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:54', '2025-09-10 12:30:55'),
 (313, 12, 'LS4', 'LOWER', 'SEATER', 50, 210, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:30:58', '2025-09-10 12:31:00'),
 (314, 12, 'LP9', 'LOWER', 'SLEEPER', 50, 260, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:31:02', '2025-09-10 12:31:04'),
-(315, 12, 'LS5', 'LOWER', 'SEATER', 50, 350, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:31:08', '2025-09-10 12:31:09'),
+(315, 12, 'LS5', 'LOWER', 'SEATER', 200, 510, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:31:08', '2025-09-11 15:34:53'),
 (316, 12, 'LP10', 'LOWER', 'SLEEPER', 50, 400, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:31:13', '2025-09-10 12:31:25'),
 (317, 12, 'UP3', 'UPPER', 'SLEEPER', 200, 60, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:34:54', '2025-09-10 12:34:54'),
 (318, 12, 'UP4', 'UPPER', 'SLEEPER', 200, 150, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:35:13', '2025-09-10 12:35:47'),
@@ -717,7 +953,52 @@ INSERT INTO `seats` (`seat_id`, `bus_id`, `seat_code`, `deck`, `seat_type`, `x_c
 (346, 11, 'UP9', 'UPPER', 'SLEEPER', 210, 230, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:39:33', '2025-09-10 12:39:34'),
 (347, 11, 'UP10', 'UPPER', 'SLEEPER', 40, 320, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:39:37', '2025-09-10 12:39:39'),
 (348, 11, 'UP11', 'UPPER', 'SLEEPER', 90, 320, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:39:41', '2025-09-10 12:39:43'),
-(349, 11, 'UP12', 'UPPER', 'SLEEPER', 210, 320, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:39:47', '2025-09-10 12:39:49');
+(349, 11, 'UP12', 'UPPER', 'SLEEPER', 210, 320, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-10 12:39:47', '2025-09-10 12:39:49'),
+(350, 12, 'LP11', 'LOWER', 'SLEEPER', 50, 490, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-11 15:33:48', '2025-09-11 15:33:49'),
+(351, 12, 'LS8', 'LOWER', 'SEATER', 150, 500, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-11 15:33:52', '2025-09-11 15:33:52'),
+(352, 12, 'LS9', 'LOWER', 'SEATER', 50, 10, 40, 40, 'VERTICAL_DOWN', 0.00, 'MALE', 0, 'AVAILABLE', '2025-09-11 15:34:16', '2025-09-11 15:34:40'),
+(353, 12, 'LG1', 'LOWER', 'AISLE', 50, 350, 40, 40, 'VERTICAL_UP', 0.00, 'ANY', 0, 'AVAILABLE', '2025-09-11 15:34:50', '2025-09-11 15:34:56'),
+(354, 12, 'LP12', 'LOWER', 'SLEEPER', 150, 550, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-11 15:35:16', '2025-09-11 15:35:20'),
+(361, 18, 'LP1', 'LOWER', 'SLEEPER', 40, 20, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:15', '2025-09-12 13:19:16'),
+(362, 18, 'LP2', 'LOWER', 'SLEEPER', 100, 20, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:19', '2025-09-12 13:19:38'),
+(363, 18, 'LP3', 'LOWER', 'SLEEPER', 190, 20, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:27', '2025-09-12 13:19:34'),
+(364, 18, 'LP4', 'LOWER', 'SLEEPER', 190, 110, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:31', '2025-09-12 13:19:36'),
+(365, 18, 'LP5', 'LOWER', 'SLEEPER', 100, 110, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:41', '2025-09-12 13:19:43'),
+(366, 18, 'LP6', 'LOWER', 'SLEEPER', 40, 110, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:47', '2025-09-12 13:19:48'),
+(367, 18, 'LP7', 'LOWER', 'SLEEPER', 40, 200, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:52', '2025-09-12 13:19:53'),
+(368, 18, 'LP8', 'LOWER', 'SLEEPER', 100, 200, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:56', '2025-09-12 13:19:56'),
+(369, 18, 'LP9', 'LOWER', 'SLEEPER', 190, 200, 40, 80, 'VERTICAL_UP', 0.00, 'ANY', 1, 'AVAILABLE', '2025-09-12 13:19:59', '2025-09-12 13:20:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff`
+--
+
+CREATE TABLE `staff` (
+  `staff_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `mobile` varchar(20) NOT NULL,
+  `designation` varchar(100) NOT NULL,
+  `driving_licence_no` varchar(100) DEFAULT NULL,
+  `aadhar_no` varchar(20) DEFAULT NULL,
+  `profile_image_path` varchar(255) DEFAULT NULL,
+  `remark` text DEFAULT NULL,
+  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `staff`
+--
+
+INSERT INTO `staff` (`staff_id`, `name`, `mobile`, `designation`, `driving_licence_no`, `aadhar_no`, `profile_image_path`, `remark`, `status`, `created_at`) VALUES
+(20, 'Rohit Choudhary', '8905288939', 'Driver', '98765432112', '21323213123212', 'staff_1757658253_014737ed.jpg', 'Heee', 'Active', '2025-09-12 06:24:13'),
+(26, 'Sanjay Sheoran', '9876543212', 'Conductor', NULL, '2132321312321232', 'staff_1757658340_93e7dc15.jpg', 'fdfsd', 'Active', '2025-09-12 06:25:40'),
+(35, 'Dev sheoran', '9728833427', 'Telecaller', NULL, '213232131232112', 'staff_1757658857_3113cc3f.jpg', 'ewew', 'Active', '2025-09-12 06:34:17'),
+(36, 'Naveen Sheoran', '1234567890', 'Helper', NULL, '2132321312321211', 'staff_1757671879_05222bb1.jpg', 'ds', 'Active', '2025-09-12 10:11:19'),
+(37, 'Akash Sheoran', '9876543211', 'Helper', NULL, '2132321312321233', 'staff_1757671913_798c6e71.jpg', 'sd', 'Active', '2025-09-12 10:11:53'),
+(38, 'Dinesh Sharma', '8905288111', 'Helper', NULL, '213232131231212', '', 'dcc', 'Active', '2025-09-12 10:12:47');
 
 -- --------------------------------------------------------
 
@@ -757,7 +1038,14 @@ INSERT INTO `ticket_access_tokens` (`token_id`, `booking_id`, `token`, `created_
 (18, 57, 'e563de8461bc99d22f269d1ee3e1ae2a', '2025-09-10 10:51:39'),
 (19, 59, 'e7bc14535a60e91b8d6d062bcc5ff468', '2025-09-10 11:41:09'),
 (20, 58, 'e0149f078d7f6f01e0c630b707492281', '2025-09-10 11:43:07'),
-(21, 84, '3389ce49c9102dad2353d382ccea11d3', '2025-09-11 06:10:19');
+(21, 84, '3389ce49c9102dad2353d382ccea11d3', '2025-09-11 06:10:19'),
+(22, 88, 'fce6716ef009191fd596fd46751a2909', '2025-09-11 06:53:55'),
+(23, 87, 'fb7474f5feab3e556e2ec08b797a129b', '2025-09-11 07:25:20'),
+(24, 91, 'ab1de28953546f030a8443573bd23cd1', '2025-09-11 09:55:28'),
+(25, 75, 'b76eb104c038273a6827fb123afee873', '2025-09-11 10:10:49'),
+(26, 106, '81b4e6932918335b6437e3305e96b7ce', '2025-09-11 10:36:18'),
+(27, 128, '74ea84ff303c1a878591a13c868ccfba', '2025-09-11 12:14:29'),
+(28, 140, '22438f2977376417d5848a5fcc85f80e', '2025-09-12 04:52:41');
 
 -- --------------------------------------------------------
 
@@ -789,7 +1077,28 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`transaction_id`, `booking_id`, `user_id`, `employee_id`, `payment_gateway`, `gateway_payment_id`, `gateway_order_id`, `gateway_signature`, `amount`, `currency`, `payment_status`, `method`, `error_code`, `error_description`, `created_at`, `updated_at`) VALUES
-(4, 84, NULL, NULL, 'Razorpay', 'pay_RGBrzvHIOy3EVw', 'order_RGBrsiu2DsMv2c', '44d86c7599ef0f8a1aeed4a04c917355e8ae2012f9ced66e9288421828b5db8c', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 06:09:59', '2025-09-11 06:09:59');
+(4, 84, NULL, NULL, 'Razorpay', 'pay_RGBrzvHIOy3EVw', 'order_RGBrsiu2DsMv2c', '44d86c7599ef0f8a1aeed4a04c917355e8ae2012f9ced66e9288421828b5db8c', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 06:09:59', '2025-09-11 06:09:59'),
+(5, 85, NULL, NULL, 'Razorpay', 'pay_RGC9iyitbObRB8', 'order_RGC9XbZits2ymD', 'fd20c40137344c8e7497b7be4b0ffb0256de5a1f21fa0879853d02406471aaa4', 40.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 06:26:45', '2025-09-11 06:26:45'),
+(6, 86, NULL, NULL, 'Razorpay', 'pay_RGCN7rwgAx8vX9', 'order_RGCMMxCqIhW1k3', '034d94cddb09e07edd3e5bed2082c299c1deee276803fb9d6853bab30bade336', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 06:39:26', '2025-09-11 06:39:26'),
+(7, 88, NULL, NULL, 'Razorpay', 'pay_RGCcHhFYH2JJKn', 'order_RGCbjmzR4s2EbX', '1dfad323815b2a963e0854c8d77494bbc7ee891d2c1485c1a0e155645a7a29e4', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 06:53:47', '2025-09-11 06:53:47'),
+(8, 89, NULL, NULL, 'Razorpay', 'pay_RGDCh2TWMVATlS', 'order_RGDCXIF5BRNiTB', '55b0df393fb994589cd3c77e59e5c55b5298c0a4768137cb5759c303f80abfe5', 60.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 07:28:15', '2025-09-11 07:28:15'),
+(9, 107, NULL, NULL, 'Razorpay', 'pay_RGGK7K4Y0Bqr1h', 'order_RGGK1aMgqQcevB', '1b611ffd8a79a83fc0eef9a642d05071a6fc75b1ee3bb3de8fec788a8ffebdcd', 20.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 10:31:22', '2025-09-11 10:31:22'),
+(10, 110, NULL, NULL, 'Razorpay', 'pay_RGGh8FUGpgrSj1', 'order_RGGgtjVnsjiTGf', '1e3d2045583af3d81b898b0f6ac160dd735ecc3883dfa9adbe1f2fb226c4d6cb', 30.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 10:53:09', '2025-09-11 10:53:09'),
+(11, 116, NULL, NULL, 'Razorpay', 'pay_RGHAIV1dW8Od4c', 'order_RGHAByorhngrki', '7db75f76e55e51782f6dff6e4b2a047907200b316e684b94091ed9b55ca51387', 140.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 11:20:47', '2025-09-11 11:20:47'),
+(12, 117, NULL, NULL, 'Razorpay', 'pay_RGHChvo8gVjxPk', 'order_RGHCcFhZTPCbFV', 'efe2fa73a00147d95781510bcf55de172fcd82d603587a3d7cb7cdf48365a734', 40.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 11:23:03', '2025-09-11 11:23:03'),
+(13, 118, NULL, NULL, 'Razorpay', 'pay_RGHIODCtoO0iOe', 'order_RGHIHseNgjg6ep', 'd74ec345d0c1754b193930aa686202235a2a640bb6d5daa65f0f7bd46ef3419f', 140.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 11:28:25', '2025-09-11 11:28:25'),
+(14, 122, NULL, NULL, 'Razorpay', 'pay_RGHeWbocp8at3A', 'order_RGHeRRUZzG0ccK', '84a1347155794ce8114cfecb2f5cb24f92a1ef2b456fb18d124ee3df22b40286', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 11:49:23', '2025-09-11 11:49:23'),
+(15, 129, NULL, NULL, 'Razorpay', 'pay_RGI8Ef0jPYeJqh', 'order_RGI886fiq5S8JX', 'd24602c624b9657d31f159ea57a6eca889eb751e4c2145aaab871e99973a9c38', 40.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 12:17:24', '2025-09-11 12:17:24'),
+(16, 130, NULL, NULL, 'Razorpay', 'pay_RGI9UivzHZaBF2', 'order_RGI9NhcRwqOhMd', '824154b80d8b93cff856b2167a475c0f6cb9630e1550f297f9c603be9769fe61', 40.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 12:18:57', '2025-09-11 12:18:57'),
+(17, 131, NULL, NULL, 'Razorpay', 'pay_RGIAtqWPELXANf', 'order_RGIAlQcc7natOz', 'd3de874ff5d7fb24405ab27af28e516ef81063efb67fde43ce55a35b4940264d', 20.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-11 12:20:08', '2025-09-11 12:20:08'),
+(18, 132, NULL, NULL, 'Razorpay', 'pay_RGYXmII69Lc0ob', 'order_RGYXYeet7OdYPA', '289d7c3a7301d8110cfba36e01311e0ee52f3a98b14f4ac43be4ed5bf73df36e', 30.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:20:46', '2025-09-12 04:20:46'),
+(19, 135, NULL, NULL, 'Razorpay', 'pay_RGYs3AHGcTeocQ', 'order_RGYrxkJ6qxz9nD', '35e95261fccd381753f698f885d3a36e7b47a72c0f612c450c57293eb54ced69', 30.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:39:58', '2025-09-12 04:39:58'),
+(20, 138, NULL, NULL, 'Razorpay', 'pay_RGYxbFUZ8buki0', 'order_RGYxVdw1DBFJTn', 'c67bced5d9883b9837a212a884c78d810c1c40ea895bdd6728f573f1acbb6fe5', 30.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:45:13', '2025-09-12 04:45:13'),
+(21, 139, NULL, NULL, 'Razorpay', 'pay_RGYyzrXFzaVufe', 'order_RGYysiwGnMmZF4', 'df5f963fcc6830ceaaaf1df650b0a26dd7252da4f8fd6c9e7c9108d54a7a37a2', 80.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:46:33', '2025-09-12 04:46:33'),
+(22, 140, NULL, NULL, 'Razorpay', 'pay_RGZ4wKNVncFGbH', 'order_RGZ4fLBlEpDLWA', '937ae27d5bcaa47c72e93b76c7bc9c1eff58118bbbacb854fa17e6f8816e4d5c', 20.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:52:10', '2025-09-12 04:52:10'),
+(23, 141, NULL, NULL, 'Razorpay', 'pay_RGZ8fKiHr18ITv', 'order_RGZ8Xy7C1i4xRk', 'd37075808aa7ecfcb8b4447fa7ce5b56e848da3a50ad4916f516e5a37783748c', 60.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 04:55:41', '2025-09-12 04:55:41'),
+(24, 147, NULL, NULL, 'Razorpay', 'pay_RGZb6UoDYrL085', 'order_RGZaxahM01eKB3', '070650e89761789bef0044fead5deb4ba2bccf83cfb35cf921065adee7895671', 400.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 05:22:37', '2025-09-12 05:22:37'),
+(25, 148, NULL, NULL, 'Razorpay', 'pay_RGbavP02XCFQhI', 'order_RGbansZznt3snY', '0385bed7dc9a688399446432bd6a37553e3308cbab68807cbfe61fa7066ad862', 50.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-12 07:19:50', '2025-09-12 07:19:50');
 
 -- --------------------------------------------------------
 
@@ -983,6 +1292,14 @@ ALTER TABLE `bus_images`
   ADD KEY `bus_id` (`bus_id`);
 
 --
+-- Indexes for table `cancellations`
+--
+ALTER TABLE `cancellations`
+  ADD PRIMARY KEY (`cancellation_id`),
+  ADD KEY `booking_id` (`booking_id`),
+  ADD KEY `passenger_id` (`passenger_id`);
+
+--
 -- Indexes for table `cash_collections_log`
 --
 ALTER TABLE `cash_collections_log`
@@ -1043,6 +1360,15 @@ ALTER TABLE `seats`
   ADD KEY `idx_seats_is_bookable` (`is_bookable`);
 
 --
+-- Indexes for table `staff`
+--
+ALTER TABLE `staff`
+  ADD PRIMARY KEY (`staff_id`),
+  ADD UNIQUE KEY `mobile` (`mobile`),
+  ADD UNIQUE KEY `driving_licence_no` (`driving_licence_no`),
+  ADD UNIQUE KEY `aadhar_no` (`aadhar_no`);
+
+--
 -- Indexes for table `ticket_access_tokens`
 --
 ALTER TABLE `ticket_access_tokens`
@@ -1092,25 +1418,25 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `admin_activity_log`
 --
 ALTER TABLE `admin_activity_log`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `booked_seats`
 --
 ALTER TABLE `booked_seats`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
 
 --
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
 
 --
 -- AUTO_INCREMENT for table `buses`
 --
 ALTER TABLE `buses`
-  MODIFY `bus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `bus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `bus_categories`
@@ -1122,19 +1448,25 @@ ALTER TABLE `bus_categories`
 -- AUTO_INCREMENT for table `bus_category_map`
 --
 ALTER TABLE `bus_category_map`
-  MODIFY `map_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `map_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `bus_images`
 --
 ALTER TABLE `bus_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+
+--
+-- AUTO_INCREMENT for table `cancellations`
+--
+ALTER TABLE `cancellations`
+  MODIFY `cancellation_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `cash_collections_log`
 --
 ALTER TABLE `cash_collections_log`
-  MODIFY `collection_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `collection_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT for table `operators`
@@ -1146,7 +1478,7 @@ ALTER TABLE `operators`
 -- AUTO_INCREMENT for table `passengers`
 --
 ALTER TABLE `passengers`
-  MODIFY `passenger_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `passenger_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
 
 --
 -- AUTO_INCREMENT for table `reviews`
@@ -1158,37 +1490,43 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT for table `routes`
 --
 ALTER TABLE `routes`
-  MODIFY `route_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `route_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `route_schedules`
 --
 ALTER TABLE `route_schedules`
-  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `route_stops`
 --
 ALTER TABLE `route_stops`
-  MODIFY `stop_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `stop_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `seats`
 --
 ALTER TABLE `seats`
-  MODIFY `seat_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=350;
+  MODIFY `seat_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=370;
+
+--
+-- AUTO_INCREMENT for table `staff`
+--
+ALTER TABLE `staff`
+  MODIFY `staff_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `ticket_access_tokens`
 --
 ALTER TABLE `ticket_access_tokens`
-  MODIFY `token_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `token_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `users`
