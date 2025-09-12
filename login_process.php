@@ -1,16 +1,13 @@
 <?php
-// Assuming your header.php or another file already starts the session.
-// If not, uncomment the next line:
-// session_start(); 
 
-require "./admin/function/_db.php"; // Using your provided path
+require "./admin/function/_db.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $login_identifier = $_POST['login_identifier'];
     $password = $_POST['password'];
 
     // FIX 1: Use two DIFFERENT named placeholders in the query
-    $stmt = $_conn_db->prepare("SELECT id, username, email, password, status FROM users WHERE mobile_no = :mobile OR email = :email");
+    $stmt = $_conn_db->prepare("SELECT id, username, email,  password, status FROM users WHERE mobile_no = :mobile OR email = :email");
 
     // FIX 2: Provide a value for BOTH placeholders in the execute() array
     $stmt->execute([
@@ -32,6 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['mobile_no'] = $user['mobile_no'];
 
             $token = bin2hex(random_bytes(32));
             $ip_address = $_SERVER['REMOTE_ADDR'];
@@ -44,16 +42,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ':ip' => $ip_address
             ]);
 
-            header("Location: index.php");
+            header("Location: index");
             exit();
         } else {
             $_SESSION['error_message'] = "Invalid credentials. Please try again.";
-            header("Location: login.php");
+            header("Location: login");
             exit();
         }
     } else {
         $_SESSION['error_message'] = "Invalid credentials. Please try again.";
-        header("Location: login.php");
+        header("Location: login");
         exit();
     }
 }

@@ -121,7 +121,7 @@ $abc = user_login($type = 'header');
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="sidebar-menu-item">
+                    <a href="cancel_ticket" class="sidebar-menu-item">
                         <div class="icon-text-group"><i class="bi bi-scissors"></i><span>Cancel Ticket</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>

@@ -422,7 +422,7 @@ main {
   }
 
   .search-form-card {
-    margin-top: -60px;
+    /* margin-top: -60px; */
     padding: 1.5rem;
   }
 
@@ -461,7 +461,7 @@ main {
   transition: background-color 0.2s;
 }
 .sidebar-menu-item:hover {
-  background-color: var(--secondary-color);
+  background-color: #e97676;
 }
 .icon-text-group {
     display: flex;
@@ -475,11 +475,12 @@ main {
 }
 /* --- NEW: Style for the active sidebar link --- */
 .sidebar-menu-item.active {
-  background-color: var(--secondary-color);
+  background-color: #e97676;
   color: white;
+  margin: 10px;
 }
 .sidebar-menu-item.active:hover {
-  background-color: var(--secondary-hover-color);
+  background-color: #e97676;
   color: white;
 }
 .sidebar-menu-item.active .icon-text-group i,
@@ -1159,7 +1160,7 @@ footer .text-primary {
   }
   .deck {
     width: 100%;
-    max-width: 350px;
+    max-width: 300px;
   }
 }
 

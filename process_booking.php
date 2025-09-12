@@ -1,7 +1,5 @@
 <?php
-header('Content-Type: application/json');
-
-// Use __DIR__ to create absolute paths, which is more reliable.
+header('Content-Type: application/json'); 
 require   './admin/vendor/autoload.php';
 require  'config.php';
 require  "./admin/function/_db.php";

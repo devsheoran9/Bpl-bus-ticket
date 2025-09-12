@@ -518,73 +518,114 @@ function get_transform_style($orientation)
                         <div class="panel-card">
                             <h5>Know your seat types</h5>
                             <div class="seat-legend">
-                                <div class="legend-row fw-bold text-muted">
-                                    <div class="small">SEAT TYPES</div>
-                                    <div class="small text-center">SEATER</div>
-                                    <div class="small text-center">SLEEPER</div>
+                                <!-- Header Row -->
+                                <div style="display: flex; align-items: center; text-align: center; font-weight: bold; color: #6c757d; font-size: 0.8em; padding: 8px 0; border-bottom: 2px solid #dee2e6;">
+                                    <div style="flex: 1; text-align: left;">SEAT TYPES</div>
+                                    <div style="width: 90px;">SEATER</div>
+                                    <div style="width: 90px;">SLEEPER</div>
                                 </div>
-                                <hr class="my-2">
-                                <div class="legend-row">
-                                    <div class="small">Available</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available"></div>
+
+                                <!-- Available -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border:  1px solid #34C759; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #010f05ff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Available for Male</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available male-only"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available male-only"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border:  1px solid #34C759; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #010f05ff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Available for Female</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available female-only"></div>
+
+                                <!-- Available for Male -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available only for male passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border: 1px solid #007bff; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.2em;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available female-only"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked by Male</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold sold-male"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold sold-male"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border: 1px solid #007bff; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.5em;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked by Female</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold sold-female"></div>
+
+                                <!-- Available for Female -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available only for female passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border: 1px solid #e91e63; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.2em;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold sold-female"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border: 1px solid #e91e63; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.5em;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Selected by you</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat selected-any"></div>
+
+                                <!-- Booked -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Already booked</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px;   background-color: #f0f0f0;   border: 1px solid #e0e0e0;   border-radius: 6px;   font-size: 12px;   display: flex;   justify-content: center;   align-items: center;">
+                                            Sold
+                                        </div>
+
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat selected-any"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; font-size:12px; display: flex; justify-content: center;  align-items:center;">Sold</div>
+                                    </div>
+                                </div>
+
+                                <!-- Booked by Male -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by male passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.2em; opacity: 0.5;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.5em; opacity: 0.5;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Booked by Female -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by female passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.2em; opacity: 0.5;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.5em; opacity: 0.5;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selected by you -->
+                                <div style="display: flex; align-items: center; padding: 10px 0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Selected by you</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #147dfc; border: 1px solid #147dfc; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #fff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #147dfc; border: 1px solid #147dfc; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #fff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -635,7 +676,120 @@ function get_transform_style($orientation)
                                         <h5>Rest Stop Information</h5>
                                         <p class="small text-muted">This service includes designated rest stops. The crew will announce the duration of each stop.</p>
                                     </div>
+                                    <hr>
+                                    <div class="info-section" style="margin-top: 25px; ">
+                                        <h5 style="font-size: 1.4em; color: #333; font-weight: 600; margin-bottom: 20px;">6 amenities</h5>
+
+                                        <!-- Amenity Item: Blankets -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-bed"></i> <!-- Using 'bed' as a proxy for blankets/bedding -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Blankets</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Charging Point -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-charging-station"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Charging Point</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Reading Light -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="far fa-lightbulb"></i> <!-- Using the 'regular' version for an outline style -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Reading Light</span>
+                                        </div>
+
+                                        <!-- Amenity Item: CCTV -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-video"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">CCTV</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Bed Sheet -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-bed"></i> <!-- Using 'bed' as a proxy for blankets/bedding -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Bed Sheet</span>
+                                        </div>
+
+
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-shield-alt"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Safety</span>
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <div class="info-section" style="margin-top: 25px;">
+                                        <h5 style="font-size: 1.4em; color: #333; font-weight: 600; margin-bottom: 20px;">Other Policies</h5>
+
+                                        <!-- Child Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-child"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Child passenger policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Children above the age of 3 will need a ticket</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Luggage Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-suitcase-rolling"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Luggage policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">2 pieces of luggage will be accepted free of charge per passenger. Excess items will be chargeable<br>Excess baggage over 20 kgs per passenger will be chargeable</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pets Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-paw"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Pets Policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Pets are not allowed</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Liquor Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-wine-bottle"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Liquor Policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Carrying or consuming liquor inside the bus is prohibited. Bus operator reserves the right to deboard drunk passengers.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pick up time policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-bus-alt"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Pick up time policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Bus operator is not obligated to wait beyond the scheduled departure time of the bus. No refund request will be entertained for late arriving passengers.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <div class="tab-pane fade" id="route-pane" role="tabpanel">
                                     <div class="info-section">
                                         <h5>Bus Route</h5>
@@ -670,8 +824,9 @@ function get_transform_style($orientation)
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="panel-card mb-4">
-                                <h5>Contact Details</h5>
-                                <p class="small text-muted">Your ticket will be sent to this email so write correct email.</p>
+                                <h5>Contact Details:
+                                    <span class="small text-danger fs-6"> (Your ticket will be sent to this email so write correct email.)</span>
+                                </h5>
                                 <?php if (isset($_SESSION['user_id'])) :
                                     $user_id = $_SESSION['user_id'];
                                     $stmt_user = $pdo->prepare("SELECT username, mobile_no, email FROM users WHERE id = ?");
@@ -684,15 +839,15 @@ function get_transform_style($orientation)
                                 ?>
                                         <div class="row g-1">
                                             <div class="col-md-4">
-                                                <label class="form-label">Name</label>
+                                                <label class="form-label">Name<span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label">Phone</label>
+                                                <label class="form-label">Phone<span class="text-danger">*</span></label>
                                                 <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
                                             </div>
                                             <div class="col-md-5">
-                                                <label class="form-label">Email</label>
+                                                <label class="form-label">Email<span class="text-danger">*</span></label>
                                                 <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
                                             </div>
                                         </div>
@@ -700,22 +855,22 @@ function get_transform_style($orientation)
                                 else : ?>
                                     <div class="row g-1">
                                         <div class="col-md-4">
-                                            <label class="form-label">Name</label>
+                                            <label class="form-label">Name<span class="text-danger">*</span></label>
                                             <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Phone</label>
+                                            <label class="form-label">Phone<span class="text-danger">*</span></label>
                                             <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Email</label>
+                                            <label class="form-label">Email<span class="text-danger">*</span></label>
                                             <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                                <div id="passenger-details-forms"></div>
-                            </div>
 
+                            </div>
+                            <div id="passenger-details-forms"></div>
                         </div>
 
                         <div class="col-lg-6">
@@ -737,8 +892,8 @@ function get_transform_style($orientation)
                                     </div>
                                     <hr>
                                     <div class="summary-item">
-                                        <div><strong>Selected Seats</strong></div>
-                                        <div id="summary-seat-numbers" class="border p-2 ms-2 " style="border-radius:5px;"></div>
+                                        <div><strong>Selected Seats: </strong></div>
+                                        <div id="summary-seat-numbers" class="border p-1 ms-2 " style="border-radius:5px; background: #ffefda;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -985,12 +1140,12 @@ function get_transform_style($orientation)
                     }
                     const formHtml = `
                 <div class="panel-card mb-3 mt-2 passenger-form" id="passenger-form-${uniqueId}">
-                    <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatCode}</span></h6>
+                    <h6>Passenger ${passengerCount} <span class="badge bg-secondary" style="background-color: rgb(29 203 48) !important;">${seatCode}</span></h6>
                     <div class="row">
-                        <div class="col-md-5 mb-3"><label class="form-label">Name</label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
+                        <div class="col-md-5 mb-3"><label class="form-label"></label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
+                        <div class="col-md-3 mb-3"><label class="form-label"></label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
                         </div>
-                        <div class="col-md-4 mb-3"><label class="form-label">Gender</label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
+                        <div class="col-md-4 mb-3"><label class="form-label"></label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
                     </div>
                 </div>`;
                     container.insertAdjacentHTML('beforeend', formHtml);

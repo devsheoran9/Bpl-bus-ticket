@@ -1,11 +1,8 @@
-<?php include 'includes/header.php'; ?>
 <?php
-include 'db_connect.php';
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// We assume header.php includes your db.php file, which creates the $pdo object
+include 'includes/header.php';
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS (Unchanged) ---
 function render_stars($rating)
 {
     $stars_html = '';
@@ -16,21 +13,23 @@ function render_stars($rating)
     return $stars_html;
 }
 
-// --- NEW ---: Function to securely mask an email address
 function mask_email($email)
 {
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return ''; // Return empty if email is missing or invalid
+        return '';
     }
     list($first, $last) = explode('@', $email);
     $first = substr($first, 0, 2) . str_repeat('*', max(1, strlen($first) - 2));
     return $first . '@' . $last;
 }
 
-// --- PAGINATION LOGIC ---
+// --- PAGINATION LOGIC (Converted to PDO) ---
 $reviews_per_page = 9;
-$total_reviews_result = $conn->query("SELECT COUNT(*) FROM reviews WHERE status = 1");
-$total_reviews = $total_reviews_result->fetch_row()[0];
+
+// FIX: Use PDO to get the total count of reviews
+$count_stmt = $pdo->query("SELECT COUNT(*) FROM reviews WHERE status = 1");
+$total_reviews = $count_stmt->fetchColumn();
+
 $total_pages = ceil($total_reviews / $reviews_per_page);
 $current_page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($current_page > $total_pages && $total_pages > 0) {
@@ -41,11 +40,12 @@ if ($current_page < 1) {
 }
 $offset = ($current_page - 1) * $reviews_per_page;
 
-// --- UPDATED SQL QUERY ---: Now fetches the 'email' column
-$stmt = $conn->prepare("SELECT user_name, email, rating, review_text, created_at FROM reviews WHERE status = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?");
-$stmt->bind_param("ii", $reviews_per_page, $offset);
+// --- SQL QUERY (Converted to PDO) ---
+// FIX: Use PDO prepare, bindValue, and execute
+$stmt = $pdo->prepare("SELECT user_name, email, rating, review_text, created_at FROM reviews WHERE status = 1 ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $reviews_per_page, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
-$reviews_result = $stmt->get_result();
 
 ?>
 
@@ -76,9 +76,8 @@ $reviews_result = $stmt->get_result();
     .testimonial-icon {
         position: absolute;
         top: 1.5rem;
-        left: 2.5rem;
-        font-size: 3rem;
-        color: #e9ecef;
+        left: 2.5rem; 
+        color: #cc2020ff;
         z-index: 1;
     }
 
@@ -89,13 +88,10 @@ $reviews_result = $stmt->get_result();
         z-index: 2;
     }
 
-    /* --- NEW ---: Flex container for stars and email */
     .rating-line {
         display: flex;
         justify-content: space-between;
-        /* Pushes items to opposite ends */
         align-items: center;
-        /* Vertically aligns them */
         margin-bottom: 1rem;
     }
 
@@ -174,25 +170,22 @@ $reviews_result = $stmt->get_result();
         color: #a02424;
     }
 </style>
-</head>
+
 
 <body>
-
-
-    <main class="container py-5">
+    <main class="container py-5 mt-5">
         <div class="text-center mb-5">
             <h1 class="h2">What Our Customers Say</h1>
-            <p class="lead text-muted col-lg-8 mx-auto">At Fouji Travels, we are committed to providing an exceptional travel experience. Our passengers' feedback is the cornerstone of our service, helping us improve and innovate. Here are real stories from our valued passengers.</p>
+            <p class="lead text-muted col-lg-8 mx-auto">At BPL Travels, we are committed to providing an exceptional travel experience. Our passengers' feedback is the cornerstone of our service, helping us improve and innovate. Here are real stories from our valued passengers.</p>
         </div>
 
-        <?php if ($reviews_result && $reviews_result->num_rows > 0) : ?>
+        <?php if ($stmt->rowCount() > 0) : ?>
             <div class="row">
-                <?php while ($review = $reviews_result->fetch_assoc()) : ?>
-                    <div class="col-lg-4 col-md-6 mb-4 d-flex align-items-stretch">
+                <?php while ($review = $stmt->fetch()) : ?>
+                    <div class="col-lg-4 col-md-6 mb-4   align-items-stretch">
                         <div class="testimonial-card">
                             <div class="testimonial-icon"><i class="bi bi-quote"></i></div>
 
-                            <!-- --- UPDATED HTML STRUCTURE FOR RATING LINE --- -->
                             <div class="rating-line">
                                 <div class="rating-stars"><?php echo render_stars($review['rating']); ?></div>
                                 <div class="masked-email"><?php echo mask_email($review['email']); ?></div>
@@ -223,7 +216,7 @@ $reviews_result = $stmt->get_result();
                 <?php endwhile; ?>
             </div>
 
-            <?php if ($total_pages > 1): ?>
+            <?php if ($total_pages > 1) : ?>
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center mt-4">
                         <li class="page-item <?php if ($current_page <= 1) {
@@ -231,7 +224,7 @@ $reviews_result = $stmt->get_result();
                                                 } ?>">
                             <a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a>
                         </li>
-                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                        <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
                             <li class="page-item <?php if ($current_page == $i) {
                                                         echo 'active';
                                                     } ?>">
@@ -266,12 +259,11 @@ $reviews_result = $stmt->get_result();
         <a href="add_review.php" class="btn btn-outline-danger mt-3">Get Started</a>
     </div>
 
-    <!-- <div class="text-center py-5 mt-4 bg-white rounded-3 border">
-            <h2 class="h3">Join Thousands of Happy Travelers</h2>
-            <p class="lead text-muted">Experience our top-rated service for yourself on your next journey.</p>
-            <a href="index.php" class="btn btn-danger btn-lg mt-3">Book Your Bus Ticket Now</a>
-        </div>   -->
-    <?php $conn->close(); ?>
+
+    <?php
+    // In PDO, the connection is typically closed when the script ends, but setting it to null is good practice.
+    $pdo = null;
+    ?>
     <?php include "includes/footer.php" ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>

@@ -1,6 +1,5 @@
 <?php
 include 'includes/header.php';
- 
 
 $all_locations = [];
 $popular_routes = [];
@@ -28,13 +27,11 @@ try {
 }
 ?>
 
- 
-
 <body>
- <main>
+    <main>
         <section class="hero-section">
             <div class="container">
-                <h1 class="fw-bold">India's No. 1 online bus ticket booking site</h1>
+                <h1 class="fw-bold">BPL Bus: India’s Leading Online Bus Booking Platform</h1>
                 <p class="lead">Find the safest and most comfortable bus journeys across India.</p>
             </div>
         </section>
@@ -42,7 +39,7 @@ try {
         <div class="container">
             <div class="search-form-card">
                 <form action="bus_list.php" method="GET" id="bus-search-form">
-                    <div class="row g-3 align-items-center">
+                    <div class="row g-1 align-items-center">
                         <div class="col-lg-4 col-md-12">
                             <label for="from-city" class="form-label fw-semibold">From</label>
                             <div class="input-group">
@@ -78,31 +75,21 @@ try {
 
         <section class="section">
             <div class="container">
-                <h2 class="section-title">Why Book With Us?</h2>
-                <p class="section-subtitle">We provide a seamless and trustworthy booking experience from start to finish.</p>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="feature-box">
-                            <div class="icon"><i class="bi bi-shield-check"></i></div>
-                            <h5>Verified Buses</h5>
-                            <p>We partner with trusted and verified bus operators to ensure your safety and comfort on every trip.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="feature-box">
-                            <div class="icon"><i class="bi bi-headset"></i></div>
-                            <h5>24/7 Customer Support</h5>
-                            <p>Our dedicated support team is available around the clock to assist you with any queries or issues.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="feature-box">
-                            <div class="icon"><i class="bi bi-tags-fill"></i></div>
-                            <h5>Best Prices & Offers</h5>
-                            <p>Find the best prices for your journey and enjoy exclusive offers and discounts on your bookings.</p>
-                        </div>
-                    </div>
+                <div class="mb-2">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.8em;">Why Choose BPL Bus for Bus Booking?</h2>
+                    <p   style="text-align: left;">Below are some of the reasons why you should choose BPL Bus for booking bus tickets.</p>
                 </div>
+
+                <ul style="list-style-type: disc; padding-left: 20px; font-size: 1em; color: #555;">
+                    <li style="margin-bottom: 1.2rem;"><strong>Free Cancellation</strong> - Cancel bus tickets without paying cancellation charges.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Flexi Ticket</strong> - Select a Flexi ticket to modify your travel date at least 8 hours before departure.</li>
+                    <!-- <li style="margin-bottom: 1.2rem;"><strong>Earn Rewards</strong> - Refer your friend and get rewards in your BPL Bus wallet after they complete their first trip.</li> -->
+                    <li style="margin-bottom: 1.2rem;"><strong>Booking for Women</strong> - Access exclusive deals for women travellers and find buses preferred by women.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Primo Services</strong> - Select top-rated bus operators that offer timely and customer-friendly Primo services.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>24/7 Customer Support</strong> - Receive 24/7 customer service for any assistance related to bookings.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Instant Refund</strong> - Get an instant refund for cancellation or booking-related issues.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Live Bus Tracking</strong> - Track your bus in real-time and plan your journey more efficiently.</li>
+                </ul>
             </div>
         </section>
 
@@ -111,8 +98,8 @@ try {
                 <h2 class="section-title">Popular Bus Routes</h2>
                 <p class="section-subtitle">Explore some of the most traveled bus routes by our satisfied customers.</p>
                 <div class="row g-4">
-                    <?php if (!empty($popular_routes)): ?>
-                        <?php foreach ($popular_routes as $route): ?>
+                    <?php if (!empty($popular_routes)) : ?>
+                        <?php foreach ($popular_routes as $route) : ?>
                             <div class="col-lg-4 col-md-6">
                                 <a href="#" class="text-decoration-none popular-route-link" data-from="<?php echo htmlspecialchars($route['starting_point']); ?>" data-to="<?php echo htmlspecialchars($route['ending_point']); ?>">
                                     <div class="route-card">
@@ -121,13 +108,14 @@ try {
                                 </a>
                             </div>
                         <?php endforeach; ?>
-                    <?php else: ?>
+                    <?php else : ?>
                         <p class="text-center text-muted">Popular routes will be displayed here soon.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </section>
 
+        <!-- === REVIEWS SECTION RESTORED === -->
         <section class="section">
             <div class="container">
                 <h2 class="section-title">What Our Customers Say</h2>
@@ -157,6 +145,24 @@ try {
                 </div>
             </div>
         </section>
+
+        <section class="section bg-light-gray">
+            <div class="container">
+                <div class="mb-2">
+                    <h2 class="section-title" style="text-align: left; font-size: 1.8em;">How to Book Bus Tickets Online on BPL Bus?</h2>
+                    <p  style="text-align: left;">Below are some simple steps that you can follow when booking bus tickets online on BPL Bus.</p>
+                </div>
+                <ul style="list-style-type: disc; padding-left: 20px; font-size: 1em; color: #555;">
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 1:</strong> Visit the BPL Bus website.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 2:</strong> Select your travel date and journey details (From and To).</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 3:</strong> Search for your preferred bus available on your chosen travel date and route.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 4:</strong> Select your preferred boarding or dropping points and enter your contact details.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 5:</strong> Choose from multiple payment options to proceed with the payment process.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 6:</strong> After the successful payment, you will receive a confirmation of your bus booking on your registered email ID. </li>
+                </ul>
+            </div>
+        </section>
+
     </main>
     <?php include "includes/footer.php" ?>
     <script>
@@ -171,7 +177,6 @@ try {
             const toSuggestions = document.getElementById('to-suggestions');
             const searchForm = document.getElementById('bus-search-form');
 
-            // --- Recent Search Logic ---
             const loadRecentSearch = () => {
                 const lastFrom = localStorage.getItem('lastSearchFrom');
                 const lastTo = localStorage.getItem('lastSearchTo');
@@ -185,27 +190,18 @@ try {
                     localStorage.setItem('lastSearchTo', to);
                 }
             };
-
-            // Load recent search on page load
             loadRecentSearch();
 
-            // --- Core Autocomplete Logic ---
             const setupAutocomplete = (input, suggestionsContainer) => {
                 const showSuggestions = (filter = '') => {
                     suggestionsContainer.innerHTML = '';
                     const filterLower = filter.toLowerCase().trim();
-
-                    // FIX: Show all locations if filter is empty, otherwise filter
-                    const locationsToShow = filterLower === '' ?
-                        allLocations :
-                        allLocations.filter(loc => loc.toLowerCase().includes(filterLower));
+                    const locationsToShow = allLocations.filter(loc => loc.toLowerCase().includes(filterLower));
 
                     if (locationsToShow.length > 0) {
-                        // Add a title only when showing all locations on empty input
                         if (filterLower === '') {
                             suggestionsContainer.innerHTML += `<div class="suggestions-title">All Destinations</div>`;
                         }
-                        // Limit to showing 10 suggestions for better performance and UX
                         locationsToShow.slice(0, 10).forEach(loc => createSuggestionItem(loc, filterLower, input, suggestionsContainer));
                         suggestionsContainer.classList.add('show');
                     } else {
@@ -221,7 +217,6 @@ try {
                 const item = document.createElement('div');
                 item.className = 'suggestion-item';
                 let highlightedLoc = loc;
-                // Only highlight if there's a filter
                 if (filter) {
                     const regex = new RegExp(filter, 'gi');
                     highlightedLoc = loc.replace(regex, `<strong>$&</strong>`);
@@ -234,7 +229,6 @@ try {
                 container.appendChild(item);
             };
 
-            // --- Event Handlers ---
             setupAutocomplete(fromInput, fromSuggestions);
             setupAutocomplete(toInput, toSuggestions);
 
@@ -259,14 +253,12 @@ try {
                 saveSearch(fromValue, toValue);
             });
 
-            // --- Popular Route Link Logic ---
             const popularRouteLinks = document.querySelectorAll('.popular-route-link');
             popularRouteLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     fromInput.value = this.dataset.from;
                     toInput.value = this.dataset.to;
-
                     const searchCard = document.querySelector('.search-form-card');
                     if (searchCard) {
                         searchCard.scrollIntoView({

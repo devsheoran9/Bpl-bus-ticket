@@ -1,17 +1,12 @@
 <?php include 'includes/header.php';
 ?>
 <?php
-include 'db_connect.php';
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Check if the user is logged in using the specified condition
 $loggedIn = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true);
 $userName = '';
 $userEmail = '';
 $userPhone = '';
-
+echo user_login('page');
 // If logged in, fetch user details from the session to pre-fill the form
 if ($loggedIn) {
     // These session variable names MUST match what you set during your login process
@@ -20,17 +15,7 @@ if ($loggedIn) {
     $userPhone = $_SESSION['mobile_no'] ?? '';
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Write a Review - Fouji Travels</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+ 
     <style>
         body {
             background-color: #f8f9fa;
@@ -68,7 +53,7 @@ if ($loggedIn) {
             color: #ffc107;
         }
     </style>
-</head>
+ 
 
 <body>
 

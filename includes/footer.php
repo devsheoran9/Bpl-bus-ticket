@@ -18,7 +18,7 @@
 
                 <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
                     <h5 class="text-uppercase mb-4 font-weight-bold">Useful links</h5>
-                    <p><a href="#" class="text-white" style="text-decoration: none;">Offers</a></p>
+                    <p><a href="about_us" class="text-white" style="text-decoration: none;">Know About Us</a></p>
                     <p><a href="#" class="text-white" style="text-decoration: none;">My Bookings</a></p>
                     <p><a href="#" class="text-white" style="text-decoration: none;">Help</a></p>
                 </div>
@@ -66,9 +66,3 @@
  
 </body>
 </html>
-
-
-
-
-
- 
