@@ -23,7 +23,7 @@ function user_login($type = 'page')
     // If either the user ID or the token is missing from the session, the user is not properly logged in.
     if (!$user_id || !$session_token) {
         if ($type == 'page') {
-            return "<script>window.location.href = 'logout.php';</script>"; // It's safer to use logout.php
+            return "<script>window.location.href = 'logout';</script>"; // It's safer to use logout.php
         } else if ($type == 'header') {
             return 'logout_user';
         }
@@ -49,7 +49,7 @@ function user_login($type = 'page')
             if ($result['status'] != 1) {
                 // Token exists but is disabled/logged out. Force a logout.
                 if ($type == 'page') {
-                    $data_get = "<script>window.location.href = 'logout.php';</script>";
+                    $data_get = "<script>window.location.href = 'logout';</script>";
                 } else if ($type == 'header') {
                     $data_get = 'logout_user';
                 }
@@ -59,7 +59,7 @@ function user_login($type = 'page')
         } else {
             // No matching token was found in the database. This session is invalid. Force a logout.
             if ($type == 'page') {
-                $data_get = "<script>window.location.href = 'logout.php';</script>";
+                $data_get = "<script>window.location.href = 'logout';</script>";
             } else if ($type == 'header') {
                 $data_get = 'logout_user';
             }
@@ -68,7 +68,7 @@ function user_login($type = 'page')
         // In case of a database error, it's safest to log out the user.
         error_log("Token validation failed: " . $e->getMessage());
         if ($type == 'page') {
-            $data_get = "<script>window.location.href = 'logout.php';</script>";
+            $data_get = "<script>window.location.href = 'logout';</script>";
         } else if ($type == 'header') {
             $data_get = 'logout_user';
         }

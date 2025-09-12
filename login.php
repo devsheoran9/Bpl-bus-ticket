@@ -38,9 +38,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    <br><br><br>
-    <?php include 'includes/footer.php'; ?>
+    </div> 
 </body>
 
 </html>

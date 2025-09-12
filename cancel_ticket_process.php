@@ -91,7 +91,7 @@ if (empty($passengers_to_cancel)) {
         // NOTE: Actual refund API call would go here.
 
         $pdo->commit();
-        $_SESSION['success_message'] = "Selected ticket(s) have been successfully cancelled. A refund of ₹" . number_format($total_refund_amount, 2) . " has been processed.";
+        $_SESSION['success_message'] = "Selected ticket(s) have been successfully cancelled. A refund of ₹" . number_format($total_refund_amount, 2) . " has been processed and refund in 24-48 hours in your account.";
 
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {

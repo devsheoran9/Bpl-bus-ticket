@@ -1,7 +1,5 @@
 <?php
-// It's best practice to connect to the DB first and start the session.
 include_once __DIR__ . "/../admin/function/_db.php";
-// The auth_check.php file will now have access to the DB connection.
 require_once 'auth_check.php';
 
 // --- NEW: Get the current page filename to use for the active sidebar link ---
@@ -25,17 +23,14 @@ $abc = user_login($type = 'header');
 </head>
 
 <body>
-
     <!-- === MODIFIED NAVBAR STRUCTURE FOR RESPONSIVE DESIGN === -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="index.php">
-                <!-- You can place your logo image here -->
                 <i class="bi bi-bus-front"></i> BPL Tickets
             </a>
-
             <!-- The main menu items now sit between the logo and the account button -->
-           
+
             <!-- The account link is now separate and will always be on the far right -->
             <ul class="navbar-nav">
                 <li class="nav-item">
@@ -60,13 +55,13 @@ $abc = user_login($type = 'header');
                     <h5>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h5>
                 </div>
             <?php else: ?>
-                <h2 class="sidebar-login-prompt">Log in to manage your bookings</h2>
+                <h4 class="sidebar-login-prompt">Log in to manage your bookings</h4>
                 <div class="d-grid gap-2 my-4">
                     <a href="login.php" class="btn btn-primary btn-lg">Log in</a>
                 </div>
                 <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
             <?php endif; ?>
-
+            <hr>
             <h4 class="sidebar-heading">My details</h4>
             <ul class="sidebar-menu">
                 <!-- === MODIFIED SIDEBAR LINKS WITH ACTIVE CLASS LOGIC === -->
@@ -93,7 +88,7 @@ $abc = user_login($type = 'header');
                     </a>
                 </li>
             </ul>
-
+            <hr>
             <h3 class="sidebar-heading">FAQS</h3>
             <ul class="sidebar-menu">
                 <li>
@@ -102,7 +97,7 @@ $abc = user_login($type = 'header');
                     </a>
                 </li>
             </ul>
-
+            <hr>
             <h3 class="sidebar-heading">More</h3>
             <ul class="sidebar-menu">
                 <li>

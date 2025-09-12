@@ -76,7 +76,7 @@ try {
         <section class="section">
             <div class="container">
                 <div class="mb-2">
-                    <h2 class="section-title" style="text-align: left; font-size: 1.8em;">Why Choose BPL Bus for Bus Booking?</h2>
+                    <h2 class="section-title" style="text-align: left; ">Why Choose BPL Bus for Bus Booking?</h2>
                     <p   style="text-align: left;">Below are some of the reasons why you should choose BPL Bus for booking bus tickets.</p>
                 </div>
 
@@ -97,7 +97,7 @@ try {
             <div class="container">
                 <h2 class="section-title">Popular Bus Routes</h2>
                 <p class="section-subtitle">Explore some of the most traveled bus routes by our satisfied customers.</p>
-                <div class="row g-4">
+                <div class="row g-2">
                     <?php if (!empty($popular_routes)) : ?>
                         <?php foreach ($popular_routes as $route) : ?>
                             <div class="col-lg-4 col-md-6">
@@ -149,7 +149,7 @@ try {
         <section class="section bg-light-gray">
             <div class="container">
                 <div class="mb-2">
-                    <h2 class="section-title" style="text-align: left; font-size: 1.8em;">How to Book Bus Tickets Online on BPL Bus?</h2>
+                    <h2 class="section-title" style="text-align: left;  ">How to Book Bus Tickets Online on BPL Bus?</h2>
                     <p  style="text-align: left;">Below are some simple steps that you can follow when booking bus tickets online on BPL Bus.</p>
                 </div>
                 <ul style="list-style-type: disc; padding-left: 20px; font-size: 1em; color: #555;">

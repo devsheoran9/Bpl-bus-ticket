@@ -1,6 +1,6 @@
 <?php 
 include 'includes/header.php';
-
+echo user_login("page");
 // Initialize variables
 $booking_details = null;
 $passengers = [];
