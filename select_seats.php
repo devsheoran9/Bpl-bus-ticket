@@ -195,7 +195,7 @@ function get_transform_style($orientation)
     .panel-card {
         background: #fff;
         border-radius: 16px;
-        padding: 24px;
+        
         box-shadow: 0 4px 25px rgba(44, 62, 80, 0.08);
         margin-bottom: 24px;
         border: 1px solid #eaeaea;
@@ -203,7 +203,7 @@ function get_transform_style($orientation)
 
     .deck-layout-wrapper {
         display: flex;
-        gap: 20px;
+        gap: 10px;
         justify-content: center;
         flex-wrap: wrap;
     }
@@ -399,8 +399,8 @@ function get_transform_style($orientation)
                     <div class="col-md-6">
                         <div class="panel-card">
                             <?php if (!$is_bus_available) : ?><div class="alert alert-warning text-center" role="alert"><strong><?php echo htmlspecialchars($availability_message); ?></strong></div><?php endif; ?>
-                            <h5>Boarding points</h5>
-                            <p class="text-muted">Select Boarding Point</p>
+                            <h5>Boarding points <span class="text-muted" style="font-size:14px">(Select Boarding Point)</span></h5>
+                            
                             <?php foreach ($all_points as $index => $point) : if ($index === count($all_points) - 1) continue; ?>
                                 <div class="point-option <?php if (!$is_bus_available) echo 'disabled'; ?>" data-order="<?php echo $point['order']; ?>">
                                     <input type="radio" name="boarding_point" id="bp<?php echo $index; ?>" value="<?php echo htmlspecialchars($point['name']); ?>" <?php if ($point['name'] === $from_location) echo 'checked'; ?> <?php if (!$is_bus_available) echo 'disabled'; ?>>
@@ -415,8 +415,8 @@ function get_transform_style($orientation)
                     <div class="col-md-6">
                         <div class="panel-card">
                             <?php if (!$is_bus_available) : ?><div class="alert alert-warning text-center" role="alert"><strong><?php echo htmlspecialchars($availability_message); ?></strong></div><?php endif; ?>
-                            <h5>Dropping points</h5>
-                            <p class="text-muted">Select Dropping Point</p>
+                            <h5>Dropping points <span class="text-muted" style="font-size:14px">(Select Dropping Point)</span></h5>
+                            <!-- <p class="text-muted">Select Dropping Point </p> -->
                             <?php foreach ($all_points as $index => $point) : if ($index === 0) continue; ?>
                                 <div class="point-option <?php if (!$is_bus_available) echo 'disabled'; ?>" data-order="<?php echo $point['order']; ?>">
                                     <input type="radio" name="dropping_point" id="dp<?php echo $index; ?>" value="<?php echo htmlspecialchars($point['name']); ?>" <?php if ($point['name'] === $to_location) echo 'checked'; ?> <?php if (!$is_bus_available) echo 'disabled'; ?>>
@@ -1139,13 +1139,13 @@ function get_transform_style($orientation)
                         genderSelectHtml = `<select name="passenger_gender_${uniqueId}" class="form-select" required><option value="" selected disabled>Select Gender</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>`;
                     }
                     const formHtml = `
-                <div class="panel-card mb-3 mt-2 passenger-form" id="passenger-form-${uniqueId}">
+                <div class="panel-card mb-1 mt-2 passenger-form" id="passenger-form-${uniqueId}">
                     <h6>Passenger ${passengerCount} <span class="badge bg-secondary" style="background-color: rgb(29 203 48) !important;">${seatCode}</span></h6>
-                    <div class="row">
-                        <div class="col-md-5 mb-3"><label class="form-label"></label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label"></label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
+                    <div class="row p-2">
+                        <div class="col-12 col-md-5 mb-1 g-1"><label class="form-label"></label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
+                        <div class="col-4 col-md-3 mb-1 g-1"><label class="form-label"></label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
                         </div>
-                        <div class="col-md-4 mb-3"><label class="form-label"></label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
+                        <div class="col-8 col-md-4 mb-1 g-1"><label class="form-label"></label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
                     </div>
                 </div>`;
                     container.insertAdjacentHTML('beforeend', formHtml);

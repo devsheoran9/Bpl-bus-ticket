@@ -17,14 +17,11 @@ if ($loggedIn) {
 ?>
  
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-
+       
         .form-card {
             background: #fff;
             border-radius: 16px;
-            padding: 32px;
+            padding: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             margin-top: 40px;
         }
@@ -57,7 +54,7 @@ if ($loggedIn) {
 
 <body>
 
-    <main class="container">
+    <main class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="form-card">
@@ -80,17 +77,16 @@ if ($loggedIn) {
 
                             <!-- User Details - Pre-filled but NOT locked -->
                             <div class="row mb-3">
-                                <div class="col-md-12">
+                                <div class="col-md-12 pb-3">
                                     <label for="username" class="form-label">Name</label>
                                     <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($userName); ?>" required>
                                 </div>
-                            </div>
-                            <div class="row mb-4">
-                                <div class="col-md-6">
+                         
+                                <div class="col-md-6 pb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($userEmail); ?>" required>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 pb-3">
                                     <label for="mobile_no" class="form-label">Mobile Number</label>
                                     <input type="tel" id="mobile_no" name="mobile_no" class="form-control" value="<?php echo htmlspecialchars($userPhone); ?>" required>
                                 </div>

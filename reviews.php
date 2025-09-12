@@ -252,7 +252,7 @@ $stmt->execute();
 
 
     </main>
-    <div class="info-section text-center mt-5 container-fluid">
+    <div class="info-section text-center   container ">
         <div class="icon"><i class="bi bi-card-checklist"></i></div>
         <h2 class="h3">How to Share Your Story</h2>
         <p class="col-lg-8 mx-auto text-muted">Have you recently traveled with us? We'd love to hear about your experience! Your feedback helps other travelers make informed decisions and allows us to continually enhance our services. Simply log in to your account and click the 'Write a Review' button.</p>
@@ -260,8 +260,7 @@ $stmt->execute();
     </div>
 
 
-    <?php
-    // In PDO, the connection is typically closed when the script ends, but setting it to null is good practice.
+    <?php  
     $pdo = null;
     ?>
     <?php include "includes/footer.php" ?>

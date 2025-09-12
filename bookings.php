@@ -57,7 +57,7 @@ try {
         background-color: #f8f9fa;
         padding: 1.5rem;
         border-radius: 8px;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
 </style>
 
@@ -69,7 +69,7 @@ try {
 
             <!-- Filter Form -->
             <div class="filter-card">
-                <form action="bookings.php" method="GET" class="row g-3 align-items-center">
+                <form action="bookings.php" method="GET" class="row g-2 align-items-center">
                     <div class="col-md-5">
                         <label for="month-filter" class="form-label fw-bold">Select Month to View:</label>
                     </div>
@@ -133,7 +133,7 @@ try {
                 </div>
             <?php endif; ?>
 
-            <hr class="my-5">
+            <hr >
 
             <div class="booking-info-text">
                 <h2 class="text-center mb-4">Your Trusted Bus Ticket Booking Partner</h2>

@@ -146,10 +146,10 @@ try {
 
 <body class="mt-5 pt-5">
     <!-- SEARCH BAR SECTION -->
-    <div class="container my-5 pt-5">
+    <div class="container my-3 pt-5">
         <div class="search-form-card">
             <form action="bus_list.php" method="GET" id="bus-search-form">
-                <div class="row g-3 align-items-center">
+                <div class="row g-1 align-items-center">
 
                     <!-- From -->
                     <div class="col-lg-4 col-md-12">
@@ -208,7 +208,7 @@ try {
     <!-- MAIN CONTENT SECTION -->
     <div class="bus-list-container container">
         <div class="row">
-            <aside class="col-lg-3">
+            <aside class="col-lg-3 d-none d-md-block">
                 <div id="filter-card" class="filter-card">
                     <h5>FILTER BY</h5>
                     <div id="bus-type-filters">
@@ -228,7 +228,7 @@ try {
 
                 <div id="bus-listings-container">
                     <?php if ($is_search_performed && !empty($direct_matches)): ?>
-                        <h3 class="mb-4">Buses from <strong><?php echo htmlspecialchars($from_location); ?></strong> to <strong><?php echo htmlspecialchars($to_location); ?></strong></h3>
+                        <h3 class="mb-2 bus-from text-center">Buses from <strong><?php echo htmlspecialchars($from_location); ?></strong> to <strong><?php echo htmlspecialchars($to_location); ?></strong></h3>
                         <?php foreach ($direct_matches as $bus): ?>
                             <?php $available_seats = max(0, (int)$bus['available_seats']); ?>
                             <div class="bus-item-card" data-categories="<?php echo htmlspecialchars($bus['categories']); ?>" data-departure-time="<?php echo $bus['departure']; ?>">
@@ -258,14 +258,14 @@ try {
 
                 <?php if (empty($direct_matches)): ?>
                     <?php if ($is_search_performed): ?>
-                        <div class="filter-card text-center py-5">
+                        <div class="filter-card text-center  ">
                             <p class="lead text-muted my-4">Sorry, no buses were found for your search on <?php echo date('d M, Y', strtotime($journey_date)); ?>.</p>
                             <a href="index.php" class="btn btn-outline-danger">Try a Different Search</a>
                         </div>
                     <?php endif; ?>
 
                     <?php if (!empty($processed_routes)): ?>
-                        <hr class="my-5">
+                        <hr class="my-2">
                         <h3 class="mb-4"><?php echo $is_search_performed ? 'Other Available Routes' : 'All Our Available Routes'; ?></h3>
                         <?php foreach ($processed_routes as $route): ?>
                             <?php

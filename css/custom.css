@@ -42,7 +42,7 @@ body {
    2. Reusable Components (Buttons, Sections)
    =================================================================== */
 .section {
-  padding: 70px 0;
+  padding: 20px 0;
 }
 
 .section-title {
@@ -55,7 +55,7 @@ body {
 
 .section-subtitle {
   color: var(--text-light);
-  margin-bottom: 50px;
+  margin-bottom: 20px;
   text-align: center;
   max-width: 600px;
   margin-left: auto;
@@ -89,9 +89,9 @@ body {
   box-shadow: var(--card-shadow);
   padding: 0.8rem 1rem;
 }
-.navbar-toggler {
+/* .navbar-toggler {
     display: none;
-}
+} */
 .navbar-brand {
   font-weight: 700;
   color: var(--text-dark) !important;
@@ -110,7 +110,8 @@ body {
 .nav-link:hover {
   color: var(--primary-color) !important;
 }
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   color: var(--primary-color) !important;
 }
 
@@ -406,7 +407,7 @@ main {
 /* --- Responsive Adjustments --- */
 @media (max-width: 767px) {
   main {
-    padding-top: 60px;
+    padding-top: 20px;
   }
 
   .section {
@@ -420,10 +421,10 @@ main {
   .hero-section h1 {
     font-size: 2rem;
   }
-.hero-section .lead {
-  color: var(--text-light);
-  font-size: 14px; 
-}
+  .hero-section .lead {
+    color: var(--text-light);
+    font-size: 14px;
+  }
   .search-form-card {
     /* margin-top: -60px; */
     padding: 1.5rem;
@@ -434,7 +435,12 @@ main {
   }
 
   .section-title {
-    font-size: 20px;
+    font-size: 18px;
+    padding-top: 15px;
+  }
+  .about-bottom{
+    
+    font-size: 18px; 
   }
 }
 /* ===================================================================
@@ -444,11 +450,11 @@ main {
   border-bottom: 1px solid #e9ecef;
 }
 .sidebar-heading {
-    font-size: 1rem;
-    color: var(--text-light);
-    font-weight: 600;
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-light);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 .sidebar-menu {
   list-style: none;
@@ -467,14 +473,14 @@ main {
   background-color: #e97676;
 }
 .icon-text-group {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .icon-text-group i {
-    font-size: 1.2rem;
-    width: 20px;
-    text-align: center;
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
 }
 /* --- NEW: Style for the active sidebar link --- */
 .sidebar-menu-item.active {
@@ -488,7 +494,7 @@ main {
 }
 .sidebar-menu-item.active .icon-text-group i,
 .sidebar-menu-item.active .bi-chevron-right {
-    color: white;
+  color: white;
 }
 /* ===================================================================
    6. Bus List & Filter Page Styles
@@ -718,9 +724,9 @@ main {
   cursor: not-allowed;
   transform: none;
 }
- 
+
 .deck-layout-wrapper {
-  overflow-x: auto;  
+  overflow-x: auto;
   padding: 10px 0;
 }
 .deck {
@@ -732,7 +738,7 @@ main {
 }
 .seat {
   position: absolute;
-  box-sizing: border-box;  
+  box-sizing: border-box;
 }
 
 /* Seat Legend (to match the colors and styles) */
@@ -1145,7 +1151,11 @@ footer .text-primary {
     margin-top: -66px;
   }
   .hero-section h1 {
-    font-size:22px;
+    font-size: 20px;  
+    padding-top: 40px;
+  }
+  .hero-section .lead {
+    font-size: 1rem; /* Make the subtitle smaller too */
   }
   .search-form-container {
     padding: 1.5rem;
@@ -1173,7 +1183,7 @@ footer .text-primary {
 
 /* --- FAQ Hero Section --- */
 .faq-hero-section {
-  padding: 60px 0;
+  padding: 20px 0;
   background-color: #e3e3e3; /* A light, complementary pink from your theme */
   background-image: linear-gradient(
     to top,
@@ -1186,7 +1196,7 @@ footer .text-primary {
   color: var(--text-dark);
 }
 .faq-hero-section .lead {
-  color: var(--text-light);
+  color: #000000;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -1308,11 +1318,27 @@ footer .text-primary {
 /* Responsive adjustments for the FAQ page */
 @media (max-width: 768px) {
   .faq-section {
-    padding: 1.5rem;
+    padding: 10px;
+  }
+  .faq-title {
+    font-size: 18px;
+    margin-bottom: 0;
   }
   .faq-tabs .nav-link {
     padding: 0.75rem;
     font-size: 0.9rem;
+  }
+  .faq-tabs .nav-tabs {
+    margin-bottom: 0;
+  }
+  .still-need-help-section{
+    padding: 0;
+  }
+  .booking-info-text{
+    padding: 5px;
+  }
+  .lead{
+    font-size:12px;
   }
 }
 
@@ -1345,9 +1371,7 @@ footer .text-primary {
   background-color: #cfcfcf;
   padding: 50px 0;
 }
-.stat-box {
-  padding: 20px;
-}
+ 
 .stat-number {
   font-size: 2.5rem;
   font-weight: 700;
@@ -1363,8 +1387,9 @@ footer .text-primary {
 /* --- Core Values Section --- */
 .value-card {
   background-color: #fff;
-  padding: 2.5rem;
+  padding: 1rem;
   border-radius: 1rem;
+  
   text-align: center;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
@@ -1382,8 +1407,8 @@ footer .text-primary {
   display: inline-block;
 }
 .value-card h3 {
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-weight: 600; 
+  font-size: 24px;
 }
 .value-card p {
   color: var(--text-light);
@@ -1421,9 +1446,7 @@ footer .text-primary {
   background-image: linear-gradient(45deg, #8d6363, #616161);
   color: #fff;
 }
-.cta-section h2 {
-  font-weight: 700;
-}
+ 
 .btn-light-outline {
   border: 2px solid #fff;
   color: #fff;
@@ -1641,20 +1664,20 @@ footer .text-primary {
 /* --- Responsive Adjustments for Bus List --- */
 @media (max-width: 991px) {
   .navbar .navbar-nav.me-auto {
-        display: none;
-    }
+    display: none;
+  }
   .filter-card {
     position: static;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
-  /* .bus-item-main {
+  .bus-item-main {
     grid-template-columns: 1fr;
     gap: 1rem;
-    text-align: center;
-  } */
+    text-align: left;
+  }
   .bus-timing,
   .price-section {
-    text-align: center;
+    text-align: left;
   }
   /* .price-section {
     border-top: 1px solid var(--border-color);
@@ -1666,6 +1689,19 @@ footer .text-primary {
   .search-summary-card {
     text-align: center;
     justify-content: center;
+  }
+  .bus-from {
+    font-size: 16px;
+  }
+  .step {
+    padding: 0;
+    font-size: 14px;
+  }
+  .panel {
+    padding: 10px;
+  }
+  .panel-card {
+    padding: 10px;
   }
 }
 /* booking ticket */
@@ -1713,7 +1749,7 @@ footer .text-primary {
 
 .booking-info-text {
   background-color: #ffffff;
-  padding: 2.5rem;
+  padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   line-height: 1.7;

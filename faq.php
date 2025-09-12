@@ -1,13 +1,13 @@
 <?php include 'includes/header.php'; ?>
 
 <!-- ======= FAQ Hero Section ======= -->
-<section class="faq-hero-section text-center mb-5">
-    <div class="container">
+<section class="faq-hero-section text-center mt-5 ">
+    <div class="container mt-4">
         <h1 class="display-5">Help & Support</h1>
         <p class="lead mt-3">Your questions, answered. Find everything you need to know about booking and managing your bus journey with us.</p>
     </div>
 </section>
-<main class="container  mt-5">
+<main class="container">
     <div class="faq-section">
         <h2 class="faq-title">FAQs related to Bus Tickets Booking</h2>
 
@@ -142,7 +142,7 @@
 
         <!-- Still Need Help Section -->
         <div class="still-need-help-section text-center">
-            <hr class="my-5">
+            <hr class="my-3">
             <h3 class="faq-title">Still can't find your answer?</h3>
             <p class="mb-4">Our support team is here for you 24/7. Get in touch with us.</p>
             <div class="row justify-content-center">
