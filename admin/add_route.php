@@ -1,37 +1,67 @@
 <?php
 global $_conn_db;
 include_once('function/_db.php');
-// check_user_login();
 session_security_check(); 
 
 $route_to_edit = null;
 $stops_to_edit = [];
 $schedules_to_edit = [];
+$assigned_staff = ['Driver' => null, 'Co-Driver' => null, 'Conductor' => null, 'Co-Conductor' => null, 'Helper' => []]; // --- NEW: Initialize assigned staff array
 
 // --- ACTION HANDLER (ONLY for pre-filling the EDIT form) ---
 if (isset($_GET['action']) && $_GET['action'] == 'edit') {
     $route_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     if ($route_id) {
+        // Fetch route
         $stmt_route = $_conn_db->prepare("SELECT * FROM routes WHERE route_id = ?");
         $stmt_route->execute([$route_id]);
         $route_to_edit = $stmt_route->fetch(PDO::FETCH_ASSOC);
 
+        // Fetch stops
         $stmt_stops = $_conn_db->prepare("SELECT * FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
         $stmt_stops->execute([$route_id]);
         $stops_to_edit = $stmt_stops->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fetch schedules
         $stmt_schedules = $_conn_db->prepare("SELECT * FROM route_schedules WHERE route_id = ?");
         $stmt_schedules->execute([$route_id]);
         foreach($stmt_schedules->fetchAll(PDO::FETCH_ASSOC) as $schedule) {
             $schedules_to_edit[$schedule['operating_day']] = $schedule['departure_time'];
         }
+
+        // --- NEW: Fetch assigned staff for this route ---
+        $stmt_staff = $_conn_db->prepare("SELECT staff_id, role FROM route_staff_assignments WHERE route_id = ?");
+        $stmt_staff->execute([$route_id]);
+        foreach ($stmt_staff->fetchAll(PDO::FETCH_ASSOC) as $staff_assignment) {
+            if ($staff_assignment['role'] == 'Helper') {
+                // Helpers can be multiple, so we add to an array
+                $assigned_staff['Helper'][] = $staff_assignment['staff_id'];
+            } else {
+                // Other roles are single assignments
+                $assigned_staff[$staff_assignment['role']] = $staff_assignment['staff_id'];
+            }
+        }
     }
 }
 
-// Data fetching for form dropdowns
+// --- NEW: Data fetching for staff dropdowns ---
+$staff_by_designation = [
+    'Driver' => [], 'Conductor' => [], 'Helper' => [], 'Cleaner' => []
+];
 try {
     $buses = $_conn_db->query("SELECT bus_id, bus_name FROM buses WHERE status = 'Active'")->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) { $buses = []; }
+    
+    // Fetch all active staff and categorize them
+    $all_staff = $_conn_db->query("SELECT staff_id, name, designation FROM staff WHERE status = 'Active' ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($all_staff as $staff_member) {
+        if (array_key_exists($staff_member['designation'], $staff_by_designation)) {
+            $staff_by_designation[$staff_member['designation']][] = $staff_member;
+        }
+    }
+} catch (PDOException $e) { 
+    $buses = []; 
+    $all_staff = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,7 +151,67 @@ try {
                                 </div>
                              <?php endforeach; endif; ?>
                         </div>
-
+                        <h5>4. Assign Staff to Route</h5>
+                        <div class="row bg-light p-3 rounded mb-4">
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label">Driver</label>
+                                <select class="form-select" name="staff_driver">
+                                    <option value="">-- Unassigned --</option>
+                                    <?php foreach ($staff_by_designation['Driver'] as $driver): ?>
+                                        <option value="<?php echo $driver['staff_id']; ?>" <?php echo ($assigned_staff['Driver'] == $driver['staff_id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($driver['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label">Co-Driver</label>
+                                <select class="form-select" name="staff_co_driver">
+                                    <option value="">-- Unassigned --</option>
+                                    <?php foreach ($staff_by_designation['Driver'] as $driver): ?>
+                                         <option value="<?php echo $driver['staff_id']; ?>" <?php echo ($assigned_staff['Co-Driver'] == $driver['staff_id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($driver['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label">Conductor</label>
+                                <select class="form-select" name="staff_conductor">
+                                    <option value="">-- Unassigned --</option>
+                                    <?php foreach ($staff_by_designation['Conductor'] as $conductor): ?>
+                                        <option value="<?php echo $conductor['staff_id']; ?>" <?php echo ($assigned_staff['Conductor'] == $conductor['staff_id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($conductor['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                             <div class="col-md-6 col-lg-3 mb-3">
+                                <label class="form-label">Co-Conductor</label>
+                                <select class="form-select" name="staff_co_conductor">
+                                    <option value="">-- Unassigned --</option>
+                                    <?php foreach ($staff_by_designation['Conductor'] as $conductor): ?>
+                                        <option value="<?php echo $conductor['staff_id']; ?>" <?php echo ($assigned_staff['Co-Conductor'] == $conductor['staff_id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($conductor['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Helpers</label>
+                                <small class="text-muted d-block mb-1">You can select multiple helpers by holding Ctrl (or Cmd on Mac) and clicking.</small>
+                                <select class="form-select" name="staff_helpers[]" multiple size="5">
+                                    <?php foreach ($staff_by_designation['Helper'] as $helper): ?>
+                                        <option value="<?php echo $helper['staff_id']; ?>" <?php echo (in_array($helper['staff_id'], $assigned_staff['Helper'])) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($helper['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">For a better user experience, consider upgrading this field with a JavaScript library like Select2 or TomSelect.</small>
+                            </div>
+                        </div>
+                        
+                         
                         <button type="button" id="add-stop-btn" class="btn btn-secondary mt-2"><i class="fas fa-plus"></i> Add Stop</button>
                         
                         <div class="mt-4"><button type="submit" class="btn btn-primary btn-lg submit-btn"><?php echo $route_to_edit ? 'Update Route' : 'Save New Route'; ?></button></div>

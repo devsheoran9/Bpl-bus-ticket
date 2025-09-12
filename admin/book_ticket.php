@@ -562,8 +562,8 @@ try {
                                     "description": `Payment for Ticket #${response.ticket_no}`,
                                     "order_id": response.razorpay_order_id,
                                     "handler": function(paymentResponse) {
-                                        // **FIX**: Pass all three arguments correctly
-                                        verifyPayment(paymentResponse, response.booking_id, response.razorpay_order_id);
+                                       
+                                        verifyPayment(paymentResponse, response.booking_id, response.razorpay_order_id, bookingData.contact_email);
                                     },
                                     "prefill": {
                                         "name": "Conductor Booking",
@@ -589,31 +589,32 @@ try {
             }
 
             // **FIX**: Updated function signature to accept razorpayOrderId
-            function verifyPayment(paymentData, bookingId, razorpayOrderId) {
+            function verifyPayment(paymentData, bookingId, razorpayOrderId, contactEmail) {
                 $.post('payment_verify.php', {
                         razorpay_payment_id: paymentData.razorpay_payment_id,
                         razorpay_order_id: razorpayOrderId, // **FIX**: Use the reliable orderId passed in
                         razorpay_signature: paymentData.razorpay_signature,
-                        booking_id: bookingId
+                        booking_id: bookingId,
+                        contact_email: contactEmail
                     }, null, 'json')
                     .done(response => {
                         if (response.status === 'success') {
                             let successMessage = 'Payment Successful! Booking has been confirmed.';
                 
                 // Prepare a follow-up alert for the email status
-                let emailAlertOptions = {
-                    title: 'Email Status',
-                    icon: 'info',
-                    text: 'No email was sent as no address was provided.'
-                };
+                // let emailAlertOptions = {
+                //     title: 'Email Status',
+                //     icon: 'info',
+                //     text: 'No email was sent as no address was provided.'
+                // };
 
-                if (response.email_status === 'success') {
-                    emailAlertOptions.icon = 'success';
-                    emailAlertOptions.text = 'The ticket has been sent to your email address.';
-                } else if (response.email_status === 'error') {
-                    emailAlertOptions.icon = 'warning';
-                    emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
-                }
+                // if (response.email_status === 'success') {
+                //     emailAlertOptions.icon = 'success';
+                //     emailAlertOptions.text = 'The ticket has been sent to your email address.';
+                // } else if (response.email_status === 'error') {
+                //     emailAlertOptions.icon = 'warning';
+                //     emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
+                // }
 
                 // Show the main success alert, and when it closes, show the email status alert
                 Swal.fire('Payment Successful!', successMessage, 'success').then(() => {
@@ -632,20 +633,20 @@ try {
                     let successMessage = `Booking Confirmed! Ticket No: ${response.ticket_no}`;
 
             // Prepare a follow-up alert for the email status
-            let emailAlertOptions = {
-                title: 'Email Status',
-                icon: 'info',
-                text: 'No email was sent as no address was provided.'
-            };
+            // let emailAlertOptions = {
+            //     title: 'Email Status',
+            //     icon: 'info',
+            //     text: 'No email was sent as no address was provided.'
+            // };
             
-            // Check if email status exists in the response
-            if (response.email_status === 'success') {
-                emailAlertOptions.icon = 'success';
-                emailAlertOptions.text = 'The ticket has been sent to your email address.';
-            } else if (response.email_status === 'error') {
-                emailAlertOptions.icon = 'warning';
-                emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
-            }
+            // // Check if email status exists in the response
+            // if (response.email_status === 'success') {
+            //     emailAlertOptions.icon = 'success';
+            //     emailAlertOptions.text = 'The ticket has been sent to your email address.';
+            // } else if (response.email_status === 'error') {
+            //     emailAlertOptions.icon = 'warning';
+            //     emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
+            // }
             
             // Show the main success alert, then the email status alert, then redirect
             Swal.fire('Booking Confirmed!', successMessage, 'success').then(() => {

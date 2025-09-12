@@ -9,10 +9,10 @@ include_once('function/_mailer.php');   // Include your mailer function file
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
 
-// Access the global variables for Razorpay keys if they are defined in _db.php or another included file
+// Access the global variables for Razorpay keys defined in another file (e.g., _db.php)
 global $rozerapi, $rozersecretapi;
 
-// Use keys from the global scope. If they aren't set, provide a default or handle the error.
+// Use keys from the global scope. Provide a fallback if they aren't set.
 $keyId = $rozerapi ?? 'YOUR_DEFAULT_RAZORPAY_KEY_ID';
 $keySecret = $rozersecretapi ?? 'YOUR_DEFAULT_RAZORPAY_SECRET';
 
@@ -40,11 +40,15 @@ if (!empty($_POST['razorpay_payment_id']) && !empty($_POST['razorpay_order_id'])
 }
 
 if ($success === true) {
-    // Sanitize all inputs from the POST request
+    // --- KEY FIX: GET THE EMAIL DIRECTLY FROM THE POST DATA ---
+    // This comes from the JavaScript fix we made earlier.
+    $recipient_email = filter_input(INPUT_POST, 'contact_email', FILTER_VALIDATE_EMAIL);
+    
+    // Sanitize other inputs from the POST request
     $booking_id = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
-    $payment_id = filter_input(INPUT_POST, 'razorpay_payment_id');
-    $order_id = filter_input(INPUT_POST, 'razorpay_order_id');
-    $signature = filter_input(INPUT_POST, 'razorpay_signature');
+    $payment_id = isset($_POST['razorpay_payment_id']) ? htmlspecialchars($_POST['razorpay_payment_id'], ENT_QUOTES, 'UTF-8') : null;
+    $order_id = isset($_POST['razorpay_order_id']) ? htmlspecialchars($_POST['razorpay_order_id'], ENT_QUOTES, 'UTF-8') : null;
+    $signature = isset($_POST['razorpay_signature']) ? htmlspecialchars($_POST['razorpay_signature'], ENT_QUOTES, 'UTF-8') : null;
 
     if (!$booking_id || !$payment_id || !$order_id || !$signature) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid payment data received.']);
@@ -58,7 +62,6 @@ if ($success === true) {
         $stmt_booking->execute([$booking_id]);
 
         // 2. Insert the transaction record
-        // This query smartly fetches the total_fare from the booking itself
         $stmt_trans = $_conn_db->prepare("
             INSERT INTO transactions (booking_id, gateway_payment_id, gateway_order_id, gateway_signature, amount, payment_status, method) 
             SELECT ?, ?, ?, ?, total_fare, 'CAPTURED', 'online' 
@@ -69,24 +72,31 @@ if ($success === true) {
         // 3. Commit the database changes
         $_conn_db->commit();
 
-        // --- EMAIL SENDING LOGIC ---
-        // After successfully saving, fetch the contact email and send the ticket
-        try {
-            $stmt_email = $_conn_db->prepare("SELECT contact_email FROM bookings WHERE booking_id = ?");
-            $stmt_email->execute([$booking_id]);
-            $recipient_email = $stmt_email->fetchColumn();
-
-            if ($recipient_email && filter_var($recipient_email, FILTER_VALIDATE_EMAIL)) {
-                sendBookingEmail($booking_id, $recipient_email, $_conn_db);
+        // --- CORRECTED EMAIL SENDING LOGIC ---
+        $email_status = 'not_sent';
+        $email_message = 'No email address was provided.';
+        
+        // Use the $recipient_email variable we received directly from the frontend
+        if ($recipient_email) {
+            try {
+                $emailResult = sendBookingEmail($booking_id, $recipient_email, $_conn_db);
+                $email_status = $emailResult['status'];
+                $email_message = $emailResult['message'];
+            } catch (Exception $e) {
+                error_log("Email failed to send for booking_id {$booking_id}: " . $e->getMessage());
+                $email_status = 'error';
+                $email_message = 'Failed to send ticket email due to a server error.';
             }
-        } catch (Exception $e) {
-            // Log the email error but don't fail the entire transaction, as payment is already complete.
-            error_log("Email failed to send for booking_id {$booking_id}: " . $e->getMessage());
         }
         // --- END OF EMAIL LOGIC ---
 
-        // 4. Send the final success response to the frontend
-        echo json_encode(['status' => 'success', 'message' => 'Payment successfully verified and booking confirmed!']);
+        // 4. Send the final success response to the frontend, including email status
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Payment successfully verified and booking confirmed!',
+            'email_status' => $email_status,
+            'email_message' => $email_message
+        ]);
 
     } catch (PDOException $e) {
         $_conn_db->rollBack();
