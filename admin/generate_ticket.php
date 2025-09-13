@@ -58,7 +58,7 @@ try {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $host = $_SERVER['HTTP_HOST'];
     $script_path = dirname($_SERVER['PHP_SELF']);
-    $projectBaseUrl = $protocol . $host . $script_path;
+    $projectBaseUrl = 'http://localhost/bpl-bus-ticket';
     $publicTicketUrl = $projectBaseUrl . '/ticket_public_view?token=' . $token;
 
     // --- Step 5: Calculate real departure/arrival timings ---
