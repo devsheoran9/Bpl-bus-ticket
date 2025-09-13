@@ -1,5 +1,4 @@
 <?php
-// We assume header.php includes your db.php file, which creates the $pdo object
 include 'includes/header.php';
 
 // --- HELPER FUNCTIONS (Unchanged) ---
@@ -50,9 +49,6 @@ $stmt->execute();
 ?>
 
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
 
     .testimonial-card {
         background-color: #fff;
@@ -245,7 +241,7 @@ $stmt->execute();
                 <div class="testimonial-card text-center py-5">
                     <p class="lead mb-0">No approved reviews have been submitted yet.</p>
                     <p class="text-muted">Why not be the first to share your experience?</p>
-                    <a href="add_review.php" class="btn btn-danger mt-3"><i class="bi bi-pencil-square"></i> Write a Review</a>
+                    <a href="add_review" class="btn btn-danger mt-3"><i class="bi bi-pencil-square"></i> Write a Review</a>
                 </div>
             </div>
         <?php endif; ?>
@@ -256,7 +252,7 @@ $stmt->execute();
         <div class="icon"><i class="bi bi-card-checklist"></i></div>
         <h2 class="h3">How to Share Your Story</h2>
         <p class="col-lg-8 mx-auto text-muted">Have you recently traveled with us? We'd love to hear about your experience! Your feedback helps other travelers make informed decisions and allows us to continually enhance our services. Simply log in to your account and click the 'Write a Review' button.</p>
-        <a href="add_review.php" class="btn btn-outline-danger mt-3">Get Started</a>
+        <a href="add_review" class="btn btn-outline-danger mt-3">Get Started</a>
     </div>
 
 

@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['otp'])) {
             $user_can_reset = true;
         } else {
             $_SESSION['error_message'] = "Invalid or expired OTP.";
-            header("Location: verify_otp.php");
+            header("Location: verify_otp");
             exit();
         }
     }
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['otp'])) {
 }
 
 if (!$user_can_reset) {
-    header("Location: login.php");
+    header("Location: login");
     exit();
 }
 
@@ -40,7 +40,7 @@ include 'includes/header.php';
             <div class="card">
                 <div class="card-body p-4">
                     <h3 class="card-title text-center mb-4">Reset Your Password</h3>
-                    <form action="update_password.php" method="POST">
+                    <form action="update_password" method="POST">
                         <div class="mb-3">
                             <label for="new_password" class="form-label">New Password</label>
                             <input type="password" class="form-control" id="new_password" name="new_password" required>

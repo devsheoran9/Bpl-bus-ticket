@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $user['password'])) {
             if ($user['status'] != 1) {
                 $_SESSION['error_message'] = "Your account is not active. Please contact support.";
-                header("Location: login.php");
+                header("Location: login");
                 exit();
             }
 

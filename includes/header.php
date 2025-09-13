@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . "/../admin/function/_db.php";
+include "admin/function/_db.php";
 require_once 'auth_check.php';
 
 // --- NEW: Get the current page filename to use for the active sidebar link ---
@@ -26,12 +26,9 @@ $abc = user_login($type = 'header');
     <!-- === MODIFIED NAVBAR STRUCTURE FOR RESPONSIVE DESIGN === -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="index.php">
+            <a class="navbar-brand" href="index">
                 <i class="bi bi-bus-front"></i> BPL Tickets
-            </a>
-            <!-- The main menu items now sit between the logo and the account button -->
-
-            <!-- The account link is now separate and will always be on the far right -->
+            </a> 
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar">
@@ -57,33 +54,33 @@ $abc = user_login($type = 'header');
             <?php else: ?>
                 <h4 class="sidebar-login-prompt">Log in to manage your bookings</h4>
                 <div class="d-grid gap-2 my-4">
-                    <a href="login.php" class="btn btn-primary btn-lg">Log in</a>
+                    <a href="login" class="btn btn-primary btn-lg">Log in</a>
                 </div>
-                <p class="text-center">Don't have an account? <a href="register.php">Sign up</a></p>
+                <p class="text-center">Don't have an account? <a href="register">Sign up</a></p>
             <?php endif; ?>
             <hr>
             <h4 class="sidebar-heading">My details</h4>
             <ul class="sidebar-menu">
                 <!-- === MODIFIED SIDEBAR LINKS WITH ACTIVE CLASS LOGIC === -->
                 <li>
-                    <a href="bookings.php" class="sidebar-menu-item <?php if ($current_page == 'bookings.php') echo 'active'; ?>">
+                    <a href="bookings" class="sidebar-menu-item <?php if ($current_page == 'bookings.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-list-ul"></i><span>Bookings</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
                 <?php if ($abc !== 'logout_user') { ?>
                     <li>
-                        <a href="profile.php" class="sidebar-menu-item <?php if ($current_page == 'profile.php') echo 'active'; ?>">
+                        <a href="profile" class="sidebar-menu-item <?php if ($current_page == 'profile.php') echo 'active'; ?>">
                             <div class="icon-text-group"><i class="bi bi-person"></i><span>Personal information</span></div><i class="bi bi-chevron-right"></i>
                         </a>
                     </li>
                     <li>
-                        <a href="add_review.php" class="sidebar-menu-item <?php if ($current_page == 'add_review.php') echo 'active'; ?>">
+                        <a href="add_review" class="sidebar-menu-item <?php if ($current_page == 'add_review.php') echo 'active'; ?>">
                             <div class="icon-text-group"><i class="bi bi-pencil-square"></i><span>Add your review</span></div><i class="bi bi-chevron-right"></i>
                         </a>
                     </li>
                 <?php } ?>
                 <li>
-                    <a href="reviews.php" class="sidebar-menu-item <?php if ($current_page == 'reviews.php') echo 'active'; ?>">
+                    <a href="reviews" class="sidebar-menu-item <?php if ($current_page == 'reviews.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-chat-left-text"></i><span>View Reviews</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -92,7 +89,7 @@ $abc = user_login($type = 'header');
             <h3 class="sidebar-heading">FAQS</h3>
             <ul class="sidebar-menu">
                 <li>
-                    <a href="faq.php" class="sidebar-menu-item <?php if ($current_page == 'faq.php') echo 'active'; ?>">
+                    <a href="faq" class="sidebar-menu-item <?php if ($current_page == 'faq.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-question-circle"></i><span>Any doubt</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -106,12 +103,12 @@ $abc = user_login($type = 'header');
                     </a>
                 </li>
                 <li>
-                    <a href="about_us.php" class="sidebar-menu-item <?php if ($current_page == 'about_us.php') echo 'active'; ?>">
+                    <a href="about_us" class="sidebar-menu-item <?php if ($current_page == 'about_us.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Know about us</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
                 <li>
-                    <a href="help.php" class="sidebar-menu-item <?php if ($current_page == 'help.php') echo 'active'; ?>">
+                    <a href="#" class="sidebar-menu-item <?php if ($current_page == 'help.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-question-circle"></i><span>Help</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -124,7 +121,7 @@ $abc = user_login($type = 'header');
 
             <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
                 <div class="d-grid gap-2 mt-4">
-                    <a href="logout.php" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to logout?');">Logout</a>
+                    <a href="logout" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to logout?');">Logout</a>
                 </div>
             <?php endif; ?>
         </div>

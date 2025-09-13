@@ -1,8 +1,7 @@
 <?php
-// We assume your header or a central file handles session_start()
 require "./admin/function/_db.php";
-require 'config.php'; // Your SMTP and mail settings
-require 'vendor/autoload.php'; // Composer's autoloader for PHPMailer
+require 'config.php';
+require 'vendor/autoload.php'; 
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -12,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (!$email) {
         $_SESSION['error_message'] = "Invalid email format provided.";
-        header("Location: forgot_password.php");
+        header("Location: forgot_password");
         exit();
     }
 
@@ -33,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($update_stmt->rowCount() > 0) {
             $mail = new PHPMailer(true);
             try {
-                // Server settings from config.php
                 $mail->isSMTP();
                 $mail->Host       = SMTP_HOST;
                 $mail->SMTPAuth   = true;
@@ -86,9 +84,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p class="instruction">For convenience, you can select the code above to copy it.</p>
             <p>This code is valid for <strong>5 minutes</strong>. If you did not request a password reset, please ignore this email or contact our support team immediately.</p>
         </div>
-        <!-- <div class="footer">
-            <p>&copy; ' . date("Y") . ' ' . MAIL_FROM_NAME . '. All rights reserved.</p>
-        </div> -->
     </div>
 </body>
 </html>
@@ -101,22 +96,22 @@ HTML;
 
                 $_SESSION['otp_email'] = $email;
                 $_SESSION['message'] = "An OTP has been sent to your email address.";
-                header("Location: verify_otp.php");
+                header("Location: verify_otp");
                 exit();
             } catch (Exception $e) {
                 $_SESSION['error_message'] = "OTP could not be sent due to a mail server error. Please contact support.";
                 error_log("PHPMailer Error: " . $mail->ErrorInfo);
-                header("Location: forgot_password.php");
+                header("Location: forgot_password");
                 exit();
             }
         } else {
             $_SESSION['error_message'] = "Failed to generate OTP for your account. Please try again later.";
-            header("Location: forgot_password.php");
+            header("Location: forgot_password");
             exit();
         }
     } else {
         $_SESSION['error_message'] = "No active account found with that email address.";
-        header("Location: forgot_password.php");
+        header("Location: forgot_password");
         exit();
     }
 }

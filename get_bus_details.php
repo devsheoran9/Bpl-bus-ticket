@@ -1,5 +1,4 @@
-<?php
-// get_bus_details.php
+<?php 
 header('Content-Type: application/json');
 include 'db_connect.php';
 

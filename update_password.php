@@ -3,7 +3,7 @@ require "./admin/function/_db.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!isset($_SESSION['password_reset_user_id'])) {
-        header("Location: login.php");
+        header("Location: login");
         exit();
     }
 
@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         unset($_SESSION['otp_email']);
 
         $_SESSION['success_message'] = "Your password has been updated successfully. Please login.";
-        header("Location: login.php");
+        header("Location: login");
         exit();
     } else {
         die("Error updating password. Please try again.");

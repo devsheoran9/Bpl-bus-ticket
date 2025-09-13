@@ -1,15 +1,10 @@
-<?php include 'includes/header.php';
-?>
-<?php
-// Check if the user is logged in using the specified condition
+<?php include 'includes/header.php'; 
 $loggedIn = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true);
 $userName = '';
 $userEmail = '';
 $userPhone = '';
-echo user_login('page');
-// If logged in, fetch user details from the session to pre-fill the form
-if ($loggedIn) {
-    // These session variable names MUST match what you set during your login process
+echo user_login('page'); 
+if ($loggedIn) { 
     $userName = $_SESSION['username'] ?? '';
     $userEmail = $_SESSION['email'] ?? '';
     $userPhone = $_SESSION['mobile_no'] ?? '';
@@ -64,7 +59,7 @@ if ($loggedIn) {
 
                         <?php if (isset($_GET['review_success'])): ?>
                             <div class="alert alert-success" role="alert">
-                                Thank you! Your review has been successfully submitted. You can <a href="reviews.php" class="alert-link">view it here</a>.
+                                Thank you! Your review has been successfully submitted. You can <a href="reviews" class="alert-link">view it here</a>.
                             </div>
                         <?php endif; ?>
 
@@ -72,8 +67,8 @@ if ($loggedIn) {
                             <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($_GET['error']); ?></div>
                         <?php endif; ?>
 
-                        <!-- The form submits to 'submit_review.php' -->
-                        <form action="submit_review.php" method="POST">
+                        <!-- The form submits to 'submit_review' -->
+                        <form action="submit_review" method="POST">
 
                             <!-- User Details - Pre-filled but NOT locked -->
                             <div class="row mb-3">
@@ -121,8 +116,8 @@ if ($loggedIn) {
                         <div class="text-center">
                             <h2 class="mb-3">Login Required</h2>
                             <p class="lead text-muted">You must be logged in to your account to write a review.</p>
-                            <a href="login.php" class="btn btn-primary mt-3">Log In</a>
-                            <a href="register.php" class="btn btn-secondary mt-3">Create an Account</a>
+                            <a href="login" class="btn btn-primary mt-3">Log In</a>
+                            <a href="register" class="btn btn-secondary mt-3">Create an Account</a>
                         </div>
                     <?php endif; ?>
 

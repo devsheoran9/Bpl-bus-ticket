@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                         <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
                     <?php endif; ?>
 
-                    <form action="cancel_ticket.php" method="GET" class="mb-5">
+                    <form action="cancel_ticket" method="GET" class="mb-5">
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label for="ticket_no" class="form-label">Ticket No. (PNR)</label>
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                         </div>
 
                         <!-- The action now points to our new processing file -->
-                        <form action="cancel_ticket_process.php" method="POST" id="cancellation-form">
+                        <form action="cancel_ticket_process" method="POST" id="cancellation-form">
                             <input type="hidden" name="booking_id" value="<?php echo $booking_details['booking_id']; ?>">
                             <input type="hidden" name="ticket_no" value="<?php echo htmlspecialchars($booking_details['ticket_no']); ?>">
                             <input type="hidden" name="email" value="<?php echo htmlspecialchars($_GET['email'] ?? ''); ?>">

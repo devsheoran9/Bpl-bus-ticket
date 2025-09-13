@@ -1,6 +1,6 @@
 <?php
 include 'includes/header.php';
-include 'db_connect.php'; // Assuming this provides the $_conn_db variable
+include 'db_connect.php'; 
 
 // --- HELPER FUNCTION ---
 function find_next_available_date($operating_days_str, $start_date_str)
@@ -148,7 +148,7 @@ try {
     <!-- SEARCH BAR SECTION -->
     <div class="container my-3 pt-5">
         <div class="search-form-card">
-            <form action="bus_list.php" method="GET" id="bus-search-form">
+            <form action="bus_list" method="GET" id="bus-search-form">
                 <div class="row g-1 align-items-center">
 
                     <!-- From -->
@@ -245,7 +245,7 @@ try {
                                     </div>
                                     <div class="price-section">
                                         <div class="price">From ₹<?php echo htmlspecialchars($bus['price']); ?></div>
-                                        <a href="select_seats.php?<?php echo $bus['link_params']; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Seats' : 'Sold Out'; ?></a>
+                                        <a href="select_seats?<?php echo $bus['link_params']; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Seats' : 'Sold Out'; ?></a>
                                     </div>
                                 </div>
                             </div>
@@ -260,7 +260,7 @@ try {
                     <?php if ($is_search_performed): ?>
                         <div class="filter-card text-center  ">
                             <p class="lead text-muted my-4">Sorry, no buses were found for your search on <?php echo date('d M, Y', strtotime($journey_date)); ?>.</p>
-                            <a href="index.php" class="btn btn-outline-danger">Try a Different Search</a>
+                            <a href="index" class="btn btn-outline-danger">Try a Different Search</a>
                         </div>
                     <?php endif; ?>
 
@@ -308,7 +308,7 @@ try {
                                     </div>
                                     <div class="price-section">
                                         <div class="price">From ₹<?php echo number_format($route['route_min_price'] ?? 0, 2); ?></div>
-                                        <a href="select_seats.php?<?php echo $link_params; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Next Trip' : 'Sold Out'; ?></a>
+                                        <a href="select_seats?<?php echo $link_params; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Next Trip' : 'Sold Out'; ?></a>
                                     </div>
                                 </div>
                             </div>

@@ -117,7 +117,7 @@ try {
                 $path_parts = pathinfo($_SERVER['PHP_SELF']);
                 $directory = $path_parts['dirname'] == '/' ? '' : $path_parts['dirname'];
                 $base_url = rtrim($protocol . $host . $directory, '/');
-                $view_ticket_url = $base_url . '/view_ticket.php?id=' . urlencode($booking['booking_id']) . '&pnr=' . urlencode($booking['ticket_no']);
+                $view_ticket_url = $base_url . '/view_ticket?id=' . urlencode($booking['booking_id']) . '&pnr=' . urlencode($booking['ticket_no']);
 
                 // *** UPDATED: Added new placeholders and values ***
                 $placeholders = [

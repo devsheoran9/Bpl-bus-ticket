@@ -1,23 +1,23 @@
 <?php
-session_start();
-require 'db_connect.php';
-
-// Check if a user is actually logged in before trying to log them out
+ include "admin/function/_db.php";
+ 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 
-    // Set status to 2 (logged out) for all active tokens of this user
-    // This ensures all sessions for this user are invalidated
-    $stmt = $conn->prepare("UPDATE users_login_token SET status = 2 WHERE user_id = ? AND status = 1");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $stmt->close();
+    try { 
+        $stmt = $pdo->prepare("UPDATE users_login_token SET status = 2 WHERE user_id = ? AND status = 1");
+
+        // Execute the statement by passing the parameters as an array.
+        $stmt->execute([$user_id]);
+    } catch (PDOException $e) { 
+        error_log("Logout Error: " . $e->getMessage()); 
+    }
 }
 
-// Unset all of the session variables
+// Unset all of the session variables.
 $_SESSION = array();
 
-// Destroy the session cookie
+// Destroy the session cookie.
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(
@@ -30,10 +30,8 @@ if (ini_get("session.use_cookies")) {
         $params["httponly"]
     );
 }
-
-// Finally, destroy the session.
+ 
 session_destroy();
-
-// Redirect to login page
+ 
 header("Location: login.php");
 exit();

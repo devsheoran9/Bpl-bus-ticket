@@ -1,5 +1,4 @@
 <?php
-// It is assumed db_connect.php starts the session and creates the $pdo object.
 include 'includes/header.php';
 
 $initial_schedule_id = $_GET['schedule_id'] ?? null;
@@ -391,7 +390,7 @@ function get_transform_style($orientation)
         <?php if ($error_message) : ?>
             <div class="alert alert-danger text-center">
                 <h4>An Error Occurred</h4>
-                <p><?php echo htmlspecialchars($error_message); ?></p><a href="index.php" class="btn btn-secondary">Go Back</a>
+                <p><?php echo htmlspecialchars($error_message); ?></p><a href="index" class="btn btn-secondary">Go Back</a>
             </div>
         <?php else : ?>
             <div id="step-1" class="step-container active">
@@ -1225,7 +1224,7 @@ function get_transform_style($orientation)
                 };
 
                 $.ajax({
-                    url: 'process_booking.php',
+                    url: 'process_booking',
                     type: 'POST',
                     data: bookingData,
                     dataType: 'json',
@@ -1291,7 +1290,7 @@ function get_transform_style($orientation)
                 const actionBtn = document.getElementById('action-btn');
 
                 $.ajax({
-                    url: 'payment_verify.php',
+                    url: 'payment_verify',
                     type: 'POST',
                     data: verificationData,
                     dataType: 'json',
@@ -1301,7 +1300,7 @@ function get_transform_style($orientation)
                     },
                     success: function(data) {
                         if (data.success) {
-                            let redirectUrl = `booking_confirmation.php?id=${bookingId}`;
+                            let redirectUrl = `booking_confirmation?id=${bookingId}`;
                             if (isNewUser) {
                                 redirectUrl += '&new_user=true';
                             }

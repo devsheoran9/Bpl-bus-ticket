@@ -39,18 +39,15 @@ try {
         throw new Exception("The OTP you entered is incorrect.");
     }
 
-    // --- OTP is valid, proceed to ACTIVATE user ---
-    // Set status to 1 (Active) and clear the OTP fields for security
     $update_stmt = $pdo->prepare(
         "UPDATE users SET status = 1, otp = NULL, otp_expires_at = NULL WHERE id = ?"
     );
     $update_stmt->execute([$user['id']]);
 
-    // Optional: Log the user in immediately after verification
-    // $_SESSION['user_id'] = $user['id'];
-    // $_SESSION['username'] = ... (you might want to fetch username here too)
+    //   $_SESSION['user_id'] = $user['id'];
+    //  $_SESSION['username'] = $user['username']  ;       
 
-    echo json_encode(['success' => true, 'redirectUrl' => 'login.php']);
+    echo json_encode(['success' => true, 'redirectUrl' => 'login']);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

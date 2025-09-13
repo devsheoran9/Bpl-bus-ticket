@@ -1,5 +1,4 @@
 <?php
-// It is assumed db_connect.php starts the session and creates the $pdo object.
 include 'includes/header.php';
 
 $initial_schedule_id = $_GET['schedule_id'] ?? null;
@@ -390,7 +389,7 @@ function get_transform_style($orientation)
         <?php if ($error_message) : ?>
             <div class="alert alert-danger text-center">
                 <h4>An Error Occurred</h4>
-                <p><?php echo htmlspecialchars($error_message); ?></p><a href="index.php" class="btn btn-secondary">Go Back</a>
+                <p><?php echo htmlspecialchars($error_message); ?></p><a href="index" class="btn btn-secondary">Go Back</a>
             </div>
         <?php else : ?>
             <div id="step-1" class="step-container active">
@@ -1060,7 +1059,7 @@ function get_transform_style($orientation)
                 actionBtn.disabled = true;
                 actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
 
-                fetch('process_booking.php', {
+                fetch('process_booking', {
                         method: 'POST',
                         body: formData
                     })
@@ -1076,7 +1075,7 @@ function get_transform_style($orientation)
                         // === MODIFIED REDIRECT LOGIC ===
                         if (data.success) {
                             // Start building the redirect URL
-                            let redirectUrl = `booking_confirmation.php?id=${data.booking_id}`;
+                            let redirectUrl = `booking_confirmation?id=${data.booking_id}`;
                             // If the server told us a new user was created, add the flag
                             if (data.new_user) {
                                 redirectUrl += '&new_user=true';

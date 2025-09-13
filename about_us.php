@@ -111,7 +111,7 @@
         <div class="container">
             <h2 class="about-bottom">Ready to Embark on Your Next Adventure?</h2>
             <p class="lead " >Join millions of satisfied travelers who trust BPL Bus for their journey. Your next destination is just a click away.</p>
-            <a href="index.php" class="btn btn-light-outline">Book Your Next Journey</a>
+            <a href="index" class="btn btn-light-outline">Book Your Next Journey</a>
         </div>
     </section>
 </main>

@@ -34,7 +34,7 @@ try {
     if ($update_stmt->rowCount() > 0) {
         $mail = new PHPMailer(true);
 
-        // Server settings from config.php
+        // Server settings from config
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;

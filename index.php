@@ -38,7 +38,7 @@ try {
 
         <div class="container">
             <div class="search-form-card">
-                <form action="bus_list.php" method="GET" id="bus-search-form">
+                <form action="bus_list" method="GET" id="bus-search-form">
                     <div class="row g-1 align-items-center">
                         <div class="col-lg-4 col-md-12">
                             <label for="from-city" class="form-label fw-semibold">From</label>

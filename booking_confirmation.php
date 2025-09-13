@@ -11,7 +11,7 @@ $is_new_user = isset($_GET['new_user']) && $_GET['new_user'] === 'true';
 
 if (!$is_new_user) {
     if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php");
+        header("Location: login");
         exit();
     }
     $logged_in_user_id = $_SESSION['user_id'];
@@ -181,7 +181,7 @@ try {
                                         <small class="text-muted">(Your mobile number is your default password.)</small>
                                     </dd>
                                 </dl>
-                                <a href="login.php" class="btn btn-primary mt-3">Login to Your Account</a>
+                                <a href="login" class="btn btn-primary mt-3">Login to Your Account</a>
                             </div>
                         </div>
                     </div>
@@ -265,8 +265,8 @@ try {
 
                 <div class="text-center mt-4 pt-3 border-top">
                     <p class="text-muted small">A copy of the ticket has also been sent to your registered email address.</p>
-                    <a href="view_ticket.php?id=<?php echo htmlspecialchars($booking_id); ?>&pnr=<?php echo htmlspecialchars($booking_details['ticket_no']); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
-                    <a href="index.php" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
+                    <a href="view_ticket?id=<?php echo htmlspecialchars($booking_id); ?>&pnr=<?php echo htmlspecialchars($booking_details['ticket_no']); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
+                    <a href="index" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
                 </div>
             </div>
         </div>

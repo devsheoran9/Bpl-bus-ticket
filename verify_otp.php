@@ -1,7 +1,7 @@
 <?php
 include 'includes/header.php';
 if (!isset($_SESSION['otp_email'])) {
-    header("Location: forgot_password.php");
+    header("Location: forgot_password");
     exit();
 }
 
@@ -9,16 +9,13 @@ if (!isset($_SESSION['otp_email'])) {
 $otp_expiry_js = 0;
 $otp_email = $_SESSION['otp_email'];
 try {
-    // db_connect.php is included in header.php
     $stmt = $_conn_db->prepare("SELECT otp_expires_at FROM users WHERE email = :email");
     $stmt->execute([':email' => $otp_email]);
     $result = $stmt->fetch();
     if ($result && $result['otp_expires_at']) {
-        // Convert the expiry time to a JavaScript-friendly timestamp (milliseconds)
         $otp_expiry_js = strtotime($result['otp_expires_at']) * 1000;
     }
 } catch (Exception $e) {
-    // Handle error if needed, but the page can still load
     error_log("Could not fetch OTP expiry: " . $e->getMessage());
 }
 ?>
@@ -42,13 +39,12 @@ try {
                         <?php endif; ?>
                     </div>
 
-                    <form action="reset_password.php" method="POST" id="otp-form">
+                    <form action="reset_password" method="POST" id="otp-form">
                         <div class="mb-3">
                             <label for="otp" class="form-label">OTP Code</label>
                             <input type="text" class="form-control form-control-lg text-center" id="otp" name="otp" required maxlength="6" pattern="\d{6}" style="letter-spacing: 0.5em;">
                         </div>
 
-                        <!-- NEW: Timer and Resend Button container -->
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span id="timer" class="text-muted"></span>
                             <button type="button" id="resend-btn" class="btn btn-link" style="display: none;">Resend OTP</button>
@@ -110,7 +106,7 @@ try {
             this.textContent = 'Sending...';
             messageContainer.innerHTML = ''; // Clear old messages
 
-            fetch('resend_otp.php', {
+            fetch('resend_otp', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

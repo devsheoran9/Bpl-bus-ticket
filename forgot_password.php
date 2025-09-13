@@ -18,14 +18,14 @@
                                                             unset($_SESSION['error_message']); ?></div>
                         <?php endif; ?>
 
-                        <form action="send_otp.php" method="POST">
+                        <form action="send_otp" method="POST">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" class="form-control" id="email" name="email" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Send OTP</button>
                             <p class="text-center mt-3">
-                                Remember your password? <a href="login.php">Login</a>
+                                Remember your password? <a href="login">Login</a>
                             </p>
                         </form>
                     </div>

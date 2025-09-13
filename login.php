@@ -17,7 +17,7 @@
                                                                 unset($_SESSION['success_message']); ?></div>
                         <?php endif; ?>
 
-                        <form action="login_process.php" method="POST">
+                        <form action="login_process" method="POST">
                             <div class="mb-3">
                                 <label for="login_identifier" class="form-label">Mobile Number or Email</label>
                                 <input type="text" class="form-control" id="login_identifier" name="login_identifier" required>
@@ -27,11 +27,11 @@
                                 <input type="password" class="form-control" id="password" name="password" required>
                             </div>
                             <div class="text-end mb-3">
-                                <a href="forgot_password.php">Forgot Password?</a>
+                                <a href="forgot_password">Forgot Password?</a>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Login</button>
                             <p class="text-center mt-3">
-                                Don't have an account? <a href="register.php">Sign Up</a>
+                                Don't have an account? <a href="register">Sign Up</a>
                             </p>
                         </form>
                     </div>

@@ -7,7 +7,7 @@ echo user_login('page');
 
 // Ensure user is logged in before proceeding.
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: login");
     exit();
 }
 
@@ -38,7 +38,7 @@ try {
 
 // If no user was found (or a DB error occurred), log out safely.
 if (!$user) {
-    header("location: logout.php");
+    header("location: logout");
     exit;
 }
 ?>
@@ -71,7 +71,7 @@ if (!$user) {
                             <h5 class="mb-0">Profile Details</h5>
                         </div>
                         <div class="card-body">
-                            <form action="update_profile.php" method="post">
+                            <form action="update_profile" method="post">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Full Name</label>
                                     <input type="text" name="username" id="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" required>
@@ -95,7 +95,7 @@ if (!$user) {
                             <h5 class="mb-0">Change Password</h5>
                         </div>
                         <div class="card-body">
-                            <form action="update_profile.php" method="post">
+                            <form action="update_profile" method="post">
                                 <div class="mb-3">
                                     <label for="current_password" class="form-label">Current Password</label>
                                     <input type="password" name="current_password" id="current_password" class="form-control" required>

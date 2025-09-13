@@ -4,7 +4,7 @@ require './admin/function/_db.php';
 // Security check: Only allow POST requests from logged-in users
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
     // If not, redirect to login or home.
-    header("Location: login.php");
+    header("Location: login");
     exit();
 }
 
@@ -102,5 +102,5 @@ if (empty($passengers_to_cancel)) {
 }
 
 // This redirect will now work correctly because no HTML has been sent.
-header("Location: cancel_ticket.php?ticket_no=" . urlencode($ticket_no_for_redirect) . "&email=" . urlencode($email_for_redirect));
+header("Location: cancel_ticket?ticket_no=" . urlencode($ticket_no_for_redirect) . "&email=" . urlencode($email_for_redirect));
 exit();

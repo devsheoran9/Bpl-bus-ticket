@@ -29,7 +29,7 @@
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>
                             <p class="text-center mt-3">
-                                Already have an account? <a href="login.php">Log In</a>
+                                Already have an account? <a href="login">Log In</a>
                             </p>
                         </form>
                     </div>
@@ -125,7 +125,7 @@
                 toggleButtonLoading(registerBtn, true);
 
                 $.ajax({
-                    url: 'register_process.php',
+                    url: 'register_process',
                     type: 'POST',
                     data: $(this).serialize(),
                     dataType: 'json',
@@ -159,7 +159,7 @@
                 toggleButtonLoading(verifyOtpBtn, true);
 
                 $.ajax({
-                    url: 'verify_otp_register.php',
+                    url: 'verify_otp_register',
                     type: 'POST',
                     data: {
                         otp: otp,
