@@ -6,7 +6,7 @@ if (!isset($_GET['from']) || empty($_GET['from'])) {
     exit();
 }
 
-include '../db_connect.php';
+include '../admin/function/_db.php';
 
 $from_location = $_GET['from'];
 $destinations = [];

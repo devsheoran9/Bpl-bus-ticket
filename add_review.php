@@ -1,51 +1,68 @@
-<?php include 'includes/header.php'; 
-$loggedIn = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true);
+<?php
+include 'includes/header.php'; 
+echo user_login('page');
+ 
 $userName = '';
 $userEmail = '';
 $userPhone = '';
-echo user_login('page'); 
-if ($loggedIn) { 
-    $userName = $_SESSION['username'] ?? '';
-    $userEmail = $_SESSION['email'] ?? '';
-    $userPhone = $_SESSION['mobile_no'] ?? '';
+$userDataAvailable = false;
+ 
+if (isset($_SESSION['user_id'])) {
+    try { 
+        $stmt = $pdo->prepare("SELECT username, email, mobile_no FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // If user data is found, populate the variables
+        if ($user_data) {
+            $userDataAvailable = true;
+            $userName = $user_data['username'] ?? '';
+            $userEmail = $user_data['email'] ?? '';
+            $userPhone = $user_data['mobile_no'] ?? '';
+        }
+    } catch (PDOException $e) {
+        // Log the error for debugging, but don't show it to the user.
+        error_log("Failed to fetch user data for review page: " . $e->getMessage());
+        // The form will simply appear empty, which is a safe fallback.
+    }
 }
 ?>
- 
-    <style>
-       
-        .form-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-top: 40px;
-        }
 
-        .star-rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: center;
-            gap: 5px;
-        }
+<style>
+    .form-card {
+        background: #e9e9e9;
+        border-radius: 16px;
+        padding: 2.5rem;
+        /* Increased padding */
+        box-shadow: 0 4px B-12px rgba(0, 0, 0, 0.05);
+        margin-top: 40px;
+    }
 
-        .star-rating input[type="radio"] {
-            display: none;
-        }
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 5px;
+    }
 
-        .star-rating label {
-            font-size: 2rem;
-            color: #ddd;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
+    .star-rating input[type="radio"] {
+        display: none;
+    }
 
-        .star-rating input[type="radio"]:checked~label,
-        .star-rating label:hover,
-        .star-rating label:hover~label {
-            color: #ffc107;
-        }
-    </style>
- 
+    .star-rating label {
+        font-size: 2.5rem;
+        /* Slightly larger stars */
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .star-rating input[type="radio"]:checked~label,
+    .star-rating label:hover,
+    .star-rating label:hover~label {
+        color: #ffc107;
+    }
+</style>
 
 <body>
 
@@ -53,13 +70,13 @@ if ($loggedIn) {
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="form-card">
-
-                    <?php if ($loggedIn) : ?>
+                    <!-- FIX: The check is now based on whether we successfully fetched user data -->
+                    <?php if ($userDataAvailable) : ?>
                         <h2 class="text-center mb-4">Share Your Experience</h2>
 
                         <?php if (isset($_GET['review_success'])): ?>
                             <div class="alert alert-success" role="alert">
-                                Thank you! Your review has been successfully submitted. You can <a href="reviews" class="alert-link">view it here</a>.
+                                Thank you! Your review has been successfully submitted. You can <a href="reviews.php" class="alert-link">view it here</a>.
                             </div>
                         <?php endif; ?>
 
@@ -67,16 +84,16 @@ if ($loggedIn) {
                             <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($_GET['error']); ?></div>
                         <?php endif; ?>
 
-                        <!-- The form submits to 'submit_review' -->
-                        <form action="submit_review" method="POST">
+                        <!-- The form submits to 'submit_review.php' -->
+                        <form action="submit_review.php" method="POST">
 
-                            <!-- User Details - Pre-filled but NOT locked -->
+                            <!-- User Details - Pre-filled from the database lookup -->
                             <div class="row mb-3">
                                 <div class="col-md-12 pb-3">
                                     <label for="username" class="form-label">Name</label>
                                     <input type="text" id="username" name="username" class="form-control" value="<?php echo htmlspecialchars($userName); ?>" required>
                                 </div>
-                         
+
                                 <div class="col-md-6 pb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($userEmail); ?>" required>
@@ -111,22 +128,21 @@ if ($loggedIn) {
                                 <button type="submit" class="btn btn-danger btn-lg">Submit Review</button>
                             </div>
                         </form>
-
                     <?php else: ?>
+                        <!-- This 'else' block now acts as a fallback in case the user isn't logged in
+                             OR if their user data couldn't be found in the database for some reason. -->
                         <div class="text-center">
                             <h2 class="mb-3">Login Required</h2>
                             <p class="lead text-muted">You must be logged in to your account to write a review.</p>
-                            <a href="login" class="btn btn-primary mt-3">Log In</a>
-                            <a href="register" class="btn btn-secondary mt-3">Create an Account</a>
+                            <a href="login.php" class="btn btn-primary mt-3">Log In</a>
+                            <a href="register.php" class="btn btn-secondary mt-3">Create an Account</a>
                         </div>
                     <?php endif; ?>
-
                 </div>
             </div>
         </div>
     </main>
 
-    <?php if (isset($conn)) $conn->close(); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

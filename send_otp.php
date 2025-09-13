@@ -110,7 +110,7 @@ HTML;
             exit();
         }
     } else {
-        $_SESSION['error_message'] = "No active account found with that email address.";
+        $_SESSION['error_message'] = "No active account found with that email address. Please enter correct email.";
         header("Location: forgot_password");
         exit();
     }

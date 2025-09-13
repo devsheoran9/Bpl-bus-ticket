@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // FIX 1: Use two DIFFERENT named placeholders in the query
-    $stmt = $_conn_db->prepare("SELECT id, username, email,  password, status FROM users WHERE mobile_no = :mobile OR email = :email");
+    $stmt = $_conn_db->prepare("SELECT id, username, email, mobile_no,  password, status FROM users WHERE mobile_no = :mobile OR email = :email");
 
     // FIX 2: Provide a value for BOTH placeholders in the execute() array
     $stmt->execute([
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['email'] = $user['email'];
-            $_SESSION['mobile_no'] = $user['mobile_no'];
+            $_SESSION['mobile'] = $user['mobile_no'];
 
             $token = bin2hex(random_bytes(32));
             $ip_address = $_SERVER['REMOTE_ADDR'];

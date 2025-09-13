@@ -1,5 +1,9 @@
-<?php 
+<?php
+// This should be the path to your main PDO connection file
 require 'admin/function/_db.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // --- 1. DETERMINE ACCESS METHOD & VALIDATE PERMISSIONS ---
 
@@ -7,26 +11,23 @@ $access_token = trim($_GET['token'] ?? '');
 $booking_id_from_url = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $logged_in_user_id = $_SESSION['user_id'] ?? null;
 
-$booking_id = null; // This will hold the confirmed, valid booking ID.
+$booking_id = null;
 $params = [];
 
-// Base SQL query to get all booking details. We will add the WHERE clause based on access method.
+// --- FIX: SQL Query updated to remove the 'operators' table join ---
 $sql_base = "SELECT 
                 b.*, 
                 bu.bus_name, bu.registration_number, bu.bus_type,
                 r.starting_point, r.ending_point,
-                op.operator_name,
                 rs.departure_time
             FROM bookings b
             JOIN buses bu ON b.bus_id = bu.bus_id
             JOIN routes r ON b.route_id = r.route_id
-            JOIN operators op ON bu.operator_id = op.operator_id
             LEFT JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a')";
 
 try {
     // SCENARIO 1: Access via secure token (QR Code Scan)
     if (!empty($access_token)) {
-        // Find the booking_id associated with the token.
         $stmt = $pdo->prepare("SELECT booking_id FROM ticket_access_tokens WHERE token = ?");
         $stmt->execute([$access_token]);
         $result = $stmt->fetch();
@@ -41,13 +42,11 @@ try {
         // SCENARIO 2: Access via ID by a logged-in user
     } elseif ($booking_id_from_url && $logged_in_user_id) {
         $booking_id = $booking_id_from_url;
-        // SECURITY CHECK: Ensure the logged-in user OWNS this booking.
         $sql = $sql_base . " WHERE b.booking_id = ? AND b.user_id = ?";
         $params = [$booking_id, $logged_in_user_id];
 
         // SCENARIO 3: Invalid access attempt
     } else {
-        // If not logged in and no token is provided, redirect to login.
         header("Location: login.php?error=Please log in to view your bookings.");
         exit();
     }
@@ -62,7 +61,6 @@ try {
         die("Booking not found or you do not have permission to view this ticket.");
     }
 
-    // Fetch passengers (this logic is the same for all valid scenarios)
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -74,16 +72,12 @@ try {
     $token = $tokenStmt->fetchColumn();
 
     if (!$token) {
-        // Generate a new, cryptographically secure token if one doesn't exist.
-        $token = bin2hex(random_bytes(20)); // 40 characters long
+        $token = bin2hex(random_bytes(20));
         $insertStmt = $pdo->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
         $insertStmt->execute([$booking_id, $token]);
     }
 
-    // IMPORTANT: Replace with your actual project's base URL
     $projectBaseUrl = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-    // This is the URL that will be embedded in the QR code
-    // $publicTicketUrl = rtrim($projectBaseUrl, '/') . '/view_ticket.php?token=' . $token;
     $publicTicketUrl = rtrim($projectBaseUrl, '/') . '/ticket_public_view.php?token=' . $token;
 
     // --- 4. CALCULATE REAL BOARDING/DROPPING TIMES ---
@@ -91,7 +85,6 @@ try {
     $route_departure_datetime_str = $booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00');
     $route_departure_datetime = new DateTime($route_departure_datetime_str);
 
-    // Calculate origin time
     $origin_minutes = 0;
     if ($booking_details['origin'] != $booking_details['starting_point']) {
         $stmt_origin = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
@@ -102,7 +95,6 @@ try {
         }
     }
 
-    // Calculate destination time
     $stmt_dest = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $stmt_dest->execute([$booking_details['route_id'], $booking_details['destination']]);
     $destination_minutes = (int)$stmt_dest->fetchColumn();
@@ -110,7 +102,6 @@ try {
     $actual_departure_datetime = (clone $route_departure_datetime)->modify("+$origin_minutes minutes");
     $actual_arrival_datetime = (clone $route_departure_datetime)->modify("+$destination_minutes minutes");
 } catch (PDOException $e) {
-    // Log the error for debugging. Never show detailed SQL errors to the public.
     error_log("View Ticket Error: " . $e->getMessage());
     die("An unexpected error occurred while retrieving ticket details. Please try again later.");
 }
@@ -122,18 +113,13 @@ try {
     <meta charset="UTF-8">
     <title>Bus Ticket - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Using a more robust, client-side QR code generator -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-
     <style>
-        /* This CSS is taken from your modern admin ticket view for a consistent look */
         :root {
             --brand-blue: #0052CC;
             --text-dark: #172B4D;
@@ -285,7 +271,6 @@ try {
             margin: 15px auto;
         }
 
-        /* Placeholder for JS-generated QR */
         .download-button {
             margin-top: 20px;
             padding: 12px 25px;
@@ -322,8 +307,9 @@ try {
                 <div class="main-panel">
                     <div class="header">
                         <div class="brand">
-                            <div class="operator"><?php echo htmlspecialchars($booking_details['operator_name']); ?></div>
-                            <div class="bus-info"><?php echo htmlspecialchars($booking_details['bus_name']); ?> • <?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
+                            <!-- FIX: Using bus_name instead of operator_name -->
+                            <div class="operator"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
+                            <div class="bus-info"><?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
                         </div>
                         <div class="ticket-no">
                             <div class="label" style="font-size:11px; color:var(--text-light);">Ticket No.</div>
@@ -357,7 +343,8 @@ try {
                     </div>
                 </div>
                 <div class="stub-panel">
-                    <div class="brand"><?php echo htmlspecialchars($booking_details['operator_name']); ?></div>
+                    <!-- FIX: Using bus_name instead of operator_name -->
+                    <div class="brand"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
                         <div class="label" style="font-size:11px;">Date</div>
@@ -367,7 +354,7 @@ try {
                         <div class="label" style="font-size:11px;">Total Fare</div>
                         <div class="value" style="font-size:18px; font-weight: 700;">₹<?php echo number_format($booking_details['total_fare'], 2); ?></div>
                     </div>
-                    <div style="font-size:9px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details.</div>
+                    <div style="font-size:9px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details. Have a safe journey!</div>
                 </div>
             </div>
         </div>
@@ -376,27 +363,23 @@ try {
     <button id="download-btn" class="download-button"><i class="fas fa-download"></i> Download Ticket PDF</button>
 
     <script>
-        // --- NEW: Generate QR Code on the client side ---
+        // The JavaScript part does not need any changes and will work correctly.
         (function() {
-            // The secure URL is passed from our PHP script
             const qrData = "<?php echo $publicTicketUrl; ?>";
-            const qr = qrcode(0, 'M'); // Error correction level 'M'
+            const qr = qrcode(0, 'M');
             qr.addData(qrData);
             qr.make();
-            // Create an SVG QR code for high quality
             const qrCodeContainer = document.getElementById('qrcode');
             qrCodeContainer.innerHTML = qr.createSvgTag({
                 cellSize: 4,
                 margin: 0
             });
-            // Style the generated SVG
             const svgElement = qrCodeContainer.querySelector('svg');
             if (svgElement) {
                 svgElement.setAttribute('style', 'width:120px; height:120px; border-radius:8px;');
             }
         })();
 
-        // --- PDF Download and Auto-Download on Mobile Logic ---
         (function() {
             window.jsPDF = window.jspdf.jsPDF;
             const downloadButton = document.getElementById('download-btn');
@@ -405,10 +388,8 @@ try {
 
             function downloadTicket() {
                 if (!ticketElement || downloadButton.disabled) return;
-
                 downloadButton.textContent = 'Generating...';
                 downloadButton.disabled = true;
-
                 html2canvas(ticketElement, {
                         scale: 3,
                         useCORS: true,
@@ -422,25 +403,19 @@ try {
                             unit: 'mm',
                             format: 'a4'
                         });
-
                         const pdfWidth = pdf.internal.pageSize.getWidth();
                         const pdfHeight = pdf.internal.pageSize.getHeight();
                         const canvasAspectRatio = canvas.width / canvas.height;
-
-                        let imgWidth = pdfWidth - 20; // 10mm margin on each side
+                        let imgWidth = pdfWidth - 20;
                         let imgHeight = imgWidth / canvasAspectRatio;
-
                         if (imgHeight > pdfHeight - 20) {
                             imgHeight = pdfHeight - 20;
                             imgWidth = imgHeight * canvasAspectRatio;
                         }
-
                         const x = (pdfWidth - imgWidth) / 2;
                         const y = (pdfHeight - imgHeight) / 2;
-
                         pdf.addImage(imgData, 'JPEG', x, y, imgWidth, imgHeight);
                         pdf.save(`Bus-Ticket-${ticketNo}.pdf`);
-
                         setTimeout(() => {
                             downloadButton.innerHTML = '<i class="fas fa-download"></i> Download Ticket PDF';
                             downloadButton.disabled = false;
@@ -452,13 +427,10 @@ try {
                         downloadButton.disabled = false;
                     });
             }
-
             downloadButton.addEventListener('click', downloadTicket);
-
-            // Auto-download for mobile devices on page load
             document.addEventListener('DOMContentLoaded', function() {
                 if (window.innerWidth <= 768) {
-                    setTimeout(downloadTicket, 500); // Small delay for rendering
+                    setTimeout(downloadTicket, 500);
                 }
             });
         })();
