@@ -4,19 +4,37 @@ include_once('function/_db.php');
 session_security_check();
 check_permission('can_book_tickets');
 
+// --- MODIFIED LOGIC TO FETCH ROUTES ---
+$routes = [];
 try {
-    $query = "
-        SELECT 
-            r.route_id, 
-            CONCAT(r.route_name, ' (', b.bus_name, ')') AS display_name
-        FROM routes r
-        JOIN buses b ON r.bus_id = b.bus_id
-        WHERE r.status = 'Active'
-        ORDER BY r.route_name, b.bus_name
-    ";
-    $routes = $_conn_db->query($query)->fetchAll(PDO::FETCH_ASSOC);
+    // 1. Get the list of route IDs this employee is allowed to see.
+    $allowed_route_ids = get_assigned_route_ids_for_employee($_SESSION['user']['id']);
+
+    // 2. Only proceed if the employee is assigned to at least one route.
+    if (!empty($allowed_route_ids)) {
+        // Create the correct number of question mark placeholders for the IN clause
+        $placeholders = implode(',', array_fill(0, count($allowed_route_ids), '?'));
+
+        // 3. Fetch the details for ONLY the allowed routes.
+        $query = "
+            SELECT 
+                r.route_id, 
+                CONCAT(r.route_name, ' (', b.bus_name, ')') AS display_name
+            FROM routes r
+            JOIN buses b ON r.bus_id = b.bus_id
+            WHERE r.status = 'Active' AND r.route_id IN ($placeholders)
+            ORDER BY r.route_name, b.bus_name
+        ";
+        
+        $stmt = $_conn_db->prepare($query);
+        $stmt->execute($allowed_route_ids);
+        $routes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // If $allowed_route_ids is empty, the $routes array will also remain empty.
+
 } catch (PDOException $e) {
-    $routes = [];
+    // The $routes array will be empty, and the page will show "No routes assigned."
+    error_log("Error on book_ticket.php: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -176,40 +194,50 @@ try {
             <?php include_once('header.php'); ?>
             <div class="container-fluid">
                 <h2 class="my-4">New Ticket Booking</h2>
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h4 class="mb-0">Step 1: Select Journey Details</h4>
+                <?php if (empty($routes)): ?>
+                    <div class="alert alert-warning text-center">
+                        <h4><i class="fas fa-exclamation-triangle"></i> No Routes Assigned</h4>
+                        <p class="mb-0">You are not currently assigned to any active routes. Please contact an administrator.</p>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                <label for="route-select" class="form-label fw-bold">Route</label>
-                                <select id="route-select" class="form-select">
-                                    <option value="">-- Choose a Route --</option>
-                                    <?php foreach ($routes as $route): ?>
-                                        <option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['display_name']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                <label for="from-stop-select" class="form-label fw-bold">From</label>
-                                <select id="from-stop-select" class="form-select" disabled>
-                                    <option>-- Select Route First --</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                <label for="to-stop-select" class="form-label fw-bold">To</label>
-                                <select id="to-stop-select" class="form-select" disabled>
-                                    <option>-- Select Boarding Point --</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-sm-6 col-lg-3">
-                                <label for="travel-date" class="form-label fw-bold">Travel Date</label>
-                                <input type="text" id="travel-date" class="form-control" placeholder="Select Date" value="<?php echo date('Y-m-d'); ?>">
+                <?php else: ?>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="mb-0">Step 1: Select Journey Details</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <label for="route-select" class="form-label fw-bold">Route</label>
+                                    <select id="route-select" class="form-select">
+                                        <option value="">-- Choose an Assigned Route --</option>
+                                        <?php foreach ($routes as $route): ?>
+                                            <option value="<?php echo $route['route_id']; ?>"><?php echo htmlspecialchars($route['display_name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <label for="from-stop-select" class="form-label fw-bold">From</label>
+                                    <select id="from-stop-select" class="form-select" disabled>
+                                        <option>-- Select Route First --</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <label for="to-stop-select" class="form-label fw-bold">To</label>
+                                    <select id="to-stop-select" class="form-select" disabled>
+                                        <option>-- Select Boarding Point --</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <label for="travel-date" class="form-label fw-bold">Travel Date</label>
+                                    <input type="text" id="travel-date" class="form-control" placeholder="Select Date">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- (The rest of the HTML for seat selection, summary, etc. remains exactly the same) -->
+                    <!-- ... -->
+                <?php endif; ?>
 
                 <div id="seat-selection-area" class="d-none">
                     <div class="row">
@@ -271,8 +299,8 @@ try {
     <script>
         $(document).ready(function() {
             let selectedRouteId, selectedDate, fromStopName, toStopName, busId;
-            let selectedSeats = [];
-            let allStops = [];
+        let selectedSeats = [];
+        let allStops = [];
             const datePicker = flatpickr("#travel-date", {
                 minDate: "today",
                 dateFormat: "Y-m-d",
@@ -491,20 +519,139 @@ try {
                 }
 
                 Swal.fire({
-                    title: 'Choose Payment Method',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="fas fa-money-bill-wave"></i> Pay with Cash',
-                    cancelButtonText: '<i class="fas fa-credit-card"></i> Pay Online',
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#0d6efd',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) processBooking('confirm_cash_booking', passengers);
-                    else if (result.dismiss === Swal.DismissReason.cancel) processBooking('create_pending_booking', passengers);
-                });
+                title: 'Choose Payment Method',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-money-bill-wave"></i> Pay with Cash',
+                cancelButtonText: '<i class="fas fa-credit-card"></i> Pay Online',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#0d6efd',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Cash booking logic is direct
+                    processCashBooking(passengers);
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    // Online booking is now a multi-step process
+                    initiateOnlinePayment(passengers);
+                }
             });
+        });
+        function processCashBooking(passengers) {
+    const btn = $('#confirm-booking-btn');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing Cash Booking...');
 
+    // Collect all necessary booking data from the page
+    const bookingData = {
+        action: 'confirm_cash_booking',
+        route_id: selectedRouteId,
+        bus_id: busId,
+        travel_date: selectedDate,
+        origin: fromStopName,
+        destination: toStopName,
+        total_fare: $('#total-fare').text(),
+        passengers: JSON.stringify(passengers),
+        contact_email: $('#contact-email').val().trim(),
+        contact_mobile: $('#contact-mobile').val().trim()
+    };
+
+    // Send the data to the backend
+    $.post('function/backend/booking_actions.php', bookingData, null, 'json')
+        .done(handleSuccessResponse) // On success, call the shared success handler
+        .fail(handleAjaxError)        // On failure, call the shared error handler
+        .always(() => {
+            // This runs whether the request succeeds or fails
+            btn.prop('disabled', false).html('Proceed to Payment');
+        });
+}
+
+function initiateOnlinePayment(passengers) {
+    const btn = $('#confirm-booking-btn');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Preparing Secure Payment...');
+
+    const paymentData = {
+        action: 'create_razorpay_order',
+        total_fare: $('#total-fare').text()
+    };
+    
+    // Step 1: Get the Razorpay Order ID from your server
+    $.post('function/backend/booking_actions.php', paymentData, null, 'json')
+        .done(response => {
+            if (response.status === 'success' && response.razorpay_order_id) {
+                // Step 2: If we get an order_id, open the Razorpay checkout modal
+                const options = {
+                    "key": "<?php echo $rozerapi; ?>", // Your Razorpay Key ID from PHP
+                    "amount": parseFloat(paymentData.total_fare) * 100, // Amount in paise
+                    "currency": "INR",
+                    "name": "BPL Bus Tickets",
+                    "description": `Payment for Bus Ticket`,
+                    "order_id": response.razorpay_order_id,
+                    "handler": function(paymentResponse) {
+                        // THIS IS THE MOST IMPORTANT PART:
+                        // This function is called ONLY after a successful payment.
+                        // Now we call the final function to verify and book.
+                        verifyAndBook(paymentResponse, passengers);
+                    },
+                    "prefill": {
+                        "name": "Conductor Booking",
+                        "email": $('#contact-email').val().trim(),
+                        "contact": $('#contact-mobile').val().trim()
+                    },
+                    "theme": { "color": "#0d6efd" }
+                };
+
+                const rzp1 = new Razorpay(options);
+                
+                rzp1.on('payment.failed', function(response) {
+                    Swal.fire('Payment Failed', response.error.description, 'error');
+                    btn.prop('disabled', false).html('Proceed to Payment');
+                });
+
+                rzp1.open();
+                // We don't re-enable the button here, because the Razorpay modal is now open.
+                // The button will be re-enabled if payment fails or succeeds.
+
+            } else {
+                Swal.fire('Error', response.message || 'Could not create payment order.', 'error');
+                btn.prop('disabled', false).html('Proceed to Payment');
+            }
+        })
+        .fail(() => {
+            handleAjaxError();
+            btn.prop('disabled', false).html('Proceed to Payment');
+        });
+}
+function verifyAndBook(paymentResponse, passengers) {
+    const btn = $('#confirm-booking-btn');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Verifying & Booking...');
+
+    // Collect ALL booking data again, plus the successful payment data
+    const finalBookingData = {
+        action: 'verify_and_book_online', // The new backend action
+        route_id: selectedRouteId,
+        bus_id: busId,
+        travel_date: selectedDate,
+        origin: fromStopName,
+        destination: toStopName,
+        total_fare: $('#total-fare').text(),
+        passengers: JSON.stringify(passengers),
+        contact_email: $('#contact-email').val().trim(),
+        contact_mobile: $('#contact-mobile').val().trim(),
+        
+        // Add the successful payment data received from Razorpay
+        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+        razorpay_order_id: paymentResponse.razorpay_order_id,
+        razorpay_signature: paymentResponse.razorpay_signature
+    };
+
+    // Send everything to the backend for the final step
+    $.post('function/backend/booking_actions.php', finalBookingData, null, 'json')
+        .done(handleSuccessResponse) // Use the same success handler as cash booking
+        .fail(handleAjaxError)
+        .always(() => {
+            btn.prop('disabled', false).html('Proceed to Payment');
+        });
+}
             function resetPage(level) {
                 if (level <= 1) {
                     $('#from-stop-select').html('<option>-- Select Route First --</option>').prop('disabled', true);
@@ -622,34 +769,31 @@ try {
             }
 
             function handleSuccessResponse(response) {
-                if (response.status === 'success') {
-                    let successMessage = `Booking Confirmed! Ticket No: ${response.ticket_no}`;
+    if (response.status === 'success') {
+        // Build a rich success message
+        let successMessage = `Your booking is confirmed! <br> Ticket No: <strong>${response.ticket_no}</strong>`;
+        
+        // Add email status to the message if it exists in the response
+        if (response.email_status === 'success') {
+            successMessage += '<br><br><span style="color:green;">A copy has been sent to your email.</span>';
+        } else if (response.email_status === 'error') {
+            successMessage += `<br><br><span style="color:orange;">Booking confirmed, but could not send email: ${response.email_message}</span>`;
+        }
 
-            // Prepare a follow-up alert for the email status
-            let emailAlertOptions = {
-                title: 'Email Status',
-                icon: 'info',
-                text: 'No email was sent as no address was provided.'
-            };
-            
-            // // Check if email status exists in the response
-            // if (response.email_status === 'success') {
-            //     emailAlertOptions.icon = 'success';
-            //     emailAlertOptions.text = 'The ticket has been sent to your email address.';
-            // } else if (response.email_status === 'error') {
-            //     emailAlertOptions.icon = 'warning';
-            //     emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
-            // }
-            
-            // Show the main success alert, then the email status alert, then redirect
-            Swal.fire('Booking Confirmed!', successMessage, 'success') .then(() => {
-                    window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
-                });
-             
-                } else {
-                    Swal.fire('Booking Failed', response.message, 'error');
-                }
-            }
+        Swal.fire({
+            title: 'Booking Confirmed!',
+            html: successMessage,
+            icon: 'success',
+            confirmButtonText: 'View Ticket'
+        }).then(() => {
+            // Redirect to the ticket management page
+            window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
+        });
+    } else {
+        // Handle errors returned from the server (e.g., booking failed even after payment)
+        Swal.fire('Booking Failed', response.message, 'error');
+    }
+}
 
             function handleAjaxError() {
                 Swal.fire('Error', 'Could not connect to the server.', 'error');

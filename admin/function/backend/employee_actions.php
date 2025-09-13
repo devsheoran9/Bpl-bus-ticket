@@ -36,7 +36,9 @@ try {
             $mobile = trim($_POST['mobile'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
-            
+            // --- NEW: Get the linked staff ID ---
+            $linked_staff_id = filter_input(INPUT_POST, 'linked_staff_id', FILTER_VALIDATE_INT) ?: null;
+
             if (empty($name) || empty($mobile) || empty($email) || empty($password)) {
                 throw new Exception('All fields are required.');
             }
@@ -68,62 +70,72 @@ try {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $password_salt = 'bcrypt';
 
-            $insert_stmt = $_conn_db->prepare("INSERT INTO admin (name, mobile, email, password, password_salt, type, permissions, status) VALUES (?, ?, ?, ?, ?, 'employee', ?, '1')");
-            $insert_stmt->execute([$name, $mobile, $email, $hashed_password, $password_salt, $permissions_to_store]);
+            // --- NEW: Updated INSERT query ---
+            $insert_stmt = $_conn_db->prepare(
+                "INSERT INTO admin (name, mobile, email, password, password_salt, type, permissions, status, linked_staff_id) 
+                 VALUES (?, ?, ?, ?, ?, 'employee', ?, '1', ?)"
+            );
+            $insert_stmt->execute([$name, $mobile, $email, $hashed_password, $password_salt, $permissions_to_store, $linked_staff_id]);
             
-            send_json_response('success', 'Employee account created successfully!');
+            send_json_response('true', 'success', 'Employee account created successfully!');
             break;
-
-        // --- ACTION: UPDATE AN EMPLOYEE ---
-        case 'update_employee':
-            $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
-            $name = trim($_POST['name'] ?? '');
-            $mobile = trim($_POST['mobile'] ?? '');
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? ''; // Optional
-
-            if (!$employee_id || empty($name) || empty($mobile) || empty($email)) {
-                throw new Exception('Required fields (Name, Mobile, Email) are missing.');
-            }
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                throw new Exception('Invalid email address format.');
-            }
-
-            $stmt = $_conn_db->prepare("SELECT id FROM admin WHERE (email = ? OR mobile = ?) AND id != ?");
-            $stmt->execute([$email, $mobile, $employee_id]);
-            if ($stmt->fetch()) {
-                throw new Exception('An account with this email or mobile number already exists.');
-            }
-
-            $permissions_posted = $_POST['permissions'] ?? [];
-            $permissions_json_arr = [];
-            if (is_array($permissions_posted)) {
-                foreach ($permissions_posted as $perm) {
-                    $safe_perm = htmlspecialchars(trim($perm));
-                    if (!empty($safe_perm)) {
-                        $permissions_json_arr[$safe_perm] = true;
+            
+            case 'update_employee':
+                $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
+                $name = trim($_POST['name'] ?? '');
+                $mobile = trim($_POST['mobile'] ?? '');
+                $email = trim($_POST['email'] ?? '');
+                $password = $_POST['password'] ?? '';
+                // --- NEW: Get the linked staff ID ---
+                $linked_staff_id = filter_input(INPUT_POST, 'linked_staff_id', FILTER_VALIDATE_INT) ?: null;
+                
+                if (!$employee_id || empty($name) || empty($mobile) || empty($email)) {
+                    throw new Exception('Required fields (Name, Mobile, Email) are missing.');
+                }
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('Invalid email address format.');
+                }
+    
+                $stmt = $_conn_db->prepare("SELECT id FROM admin WHERE (email = ? OR mobile = ?) AND id != ?");
+                $stmt->execute([$email, $mobile, $employee_id]);
+                if ($stmt->fetch()) {
+                    throw new Exception('An account with this email or mobile number already exists.');
+                }
+    
+                $permissions_posted = $_POST['permissions'] ?? [];
+                $permissions_json_arr = [];
+                if (is_array($permissions_posted)) {
+                    foreach ($permissions_posted as $perm) {
+                        $safe_perm = htmlspecialchars(trim($perm));
+                        if (!empty($safe_perm)) {
+                            $permissions_json_arr[$safe_perm] = true;
+                        }
                     }
                 }
-            }
-            $permissions_to_store = json_encode($permissions_json_arr);
-            
-            $sql = "UPDATE admin SET name = ?, mobile = ?, email = ?, permissions = ? WHERE id = ? AND type = 'employee'";
-            $stmt = $_conn_db->prepare($sql);
-            $stmt->execute([$name, $mobile, $email, $permissions_to_store, $employee_id]);
-
-            if (!empty($password)) {
-                if (strlen($password) < 6) {
-                    throw new Exception('New password must be at least 6 characters long.');
+                $permissions_to_store = json_encode($permissions_json_arr);
+                
+                // --- NEW: Updated UPDATE query ---
+                $sql = "UPDATE admin SET name = ?, mobile = ?, email = ?, permissions = ?, linked_staff_id = ? 
+                        WHERE id = ? AND type = 'employee'";
+                $stmt = $_conn_db->prepare($sql);
+                $stmt->execute([$name, $mobile, $email, $permissions_to_store, $linked_staff_id, $employee_id]);
+    
+                if (!empty($password)) {
+                    if (strlen($password) < 6) {
+                        throw new Exception('New password must be at least 6 characters long.');
+                    }
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    $pass_stmt = $_conn_db->prepare("UPDATE admin SET password = ? WHERE id = ?");
+                    $pass_stmt->execute([$hashed_password, $employee_id]);
                 }
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $pass_stmt = $_conn_db->prepare("UPDATE admin SET password = ? WHERE id = ?");
-                $pass_stmt->execute([$hashed_password, $employee_id]);
-            }
-            
-            send_json_response('success', 'Employee details updated successfully!');
-            break; // <-- THIS WAS THE MISSING PIECE!
+                
+                send_json_response('success', 'Employee details updated successfully!');
+                break;
+    
 
-        // --- ACTION: TOGGLE EMPLOYEE STATUS ---
+           
+
+      
         case 'toggle_status':
             $employee_id = filter_input(INPUT_POST, 'employee_id', FILTER_VALIDATE_INT);
             $new_status = filter_input(INPUT_POST, 'new_status', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2]]);

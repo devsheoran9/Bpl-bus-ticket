@@ -9,7 +9,29 @@
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 <!-- Boxicons CSS -->
 <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
+<!-- DataTables Buttons Extension CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+<style>
+    /* Custom styles for DataTables buttons to match your theme */
+    .dt-buttons .btn {
+        background-color: #6c757d !important; /* A neutral gray */
+        color: white !important;
+        border-radius: 5px !important;
+        margin: 0 5px 10px 0 !important; /* Add bottom margin */
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.9rem !important;
+        border: none !important;
+    }
+    .dt-buttons .btn:hover {
+        background-color: #5a6268 !important;
+    }
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 1rem; /* Space below the search box */
+    }
+</style>
 <style>
     h2 {
         text-align: center;

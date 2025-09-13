@@ -1,23 +1,20 @@
 <?php
-// sidebar.php (Fully Permission-Aware)
+// sidebar.php (Fully Permission-Aware - Corrected Version)
 
-// Ensure the permission function is available.
-// It's good practice to include the core function file here.
 include_once('function/_db.php'); 
 
-// Get the name of the current page file (e.g., 'dashboard', 'add_bus')
+// Get the name of the current page file
 $current_page = basename($_SERVER['PHP_SELF'], ".php");
 
 // --- Define which pages belong to which menu for active highlighting ---
-
 $bus_pages = ['add_bus', 'view_all_buses', 'edit_bus', 'manage_seats'];
 $is_bus_active = in_array($current_page, $bus_pages);
 
 $route_pages = ['add_route', 'view_routes', 'edit_route'];
 $is_route_active = in_array($current_page, $route_pages);
 
-// NEW: Define booking pages
-$booking_pages = ['book_ticket', 'view_bookings', 'ticket_view'];
+// FIX: Added 'my_collections' to this array for correct highlighting
+$booking_pages = ['book_ticket', 'view_bookings', 'ticket_view', 'my_collections'];
 $is_booking_active = in_array($current_page, $booking_pages);
 ?>
 <nav class="sidebar">
@@ -36,8 +33,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <!-- =============================================== -->
             <!--          TICKET BOOKING MENU START              -->
             <!-- =============================================== -->
-            <?php // Show this entire menu only if the user has AT LEAST ONE booking-related permission
-            if (user_has_permission('can_book_tickets') || user_has_permission('can_view_bookings')): ?>
+            <?php if (user_has_permission('can_book_tickets') || user_has_permission('can_view_bookings') || user_has_permission('can_view_own_collections')): ?>
             <li class="nav-item">
                 <a class="nav-link d-flex justify-content-between align-items-center <?php echo $is_booking_active ? 'active' : 'collapsed'; ?>"
                    data-bs-toggle="collapse" href="#bookingMenu" role="button" aria-expanded="<?php echo $is_booking_active ? 'true' : 'false'; ?>">
@@ -47,7 +43,6 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 <div class="collapse <?php echo $is_booking_active ? 'show' : ''; ?>" id="bookingMenu">
                     <ul class="nav flex-column ms-3">
                         
-                        <!-- Show "New Booking" only if user has 'can_book_tickets' permission -->
                         <?php if (user_has_permission('can_book_tickets')): ?>
                         <li class="nav-item">
                             <a class="nav-link <?php echo $current_page == 'book_ticket' ? 'active' : ''; ?>" href="book_ticket.php">
@@ -56,7 +51,6 @@ $is_booking_active = in_array($current_page, $booking_pages);
                         </li>
                         <?php endif; ?>
 
-                        <!-- Show "View Bookings" only if user has 'can_view_bookings' permission -->
                         <?php if (user_has_permission('can_view_bookings')): ?>
                         <li class="nav-item">
                             <a class="nav-link <?php echo $current_page == 'view_bookings' ? 'active' : ''; ?>" href="view_bookings.php">
@@ -65,6 +59,14 @@ $is_booking_active = in_array($current_page, $booking_pages);
                         </li>
                         <?php endif; ?>
                         
+                        <?php // FIX: Added the "My Cash Report" link here, inside the booking menu ?>
+                        <?php if (user_has_permission('can_view_own_collections')): ?>
+                        <li class="nav-item">
+                            <a class="nav-link <?php echo $current_page == 'my_collections' ? 'active' : ''; ?>" href="my_collections.php">
+                                <i class="fas fa-cash-register me-2"></i>My Cash Report
+                            </a>
+                        </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </li>
@@ -73,20 +75,20 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <!--          TICKET BOOKING MENU END                -->
             <!-- =============================================== -->
 
-            <!-- Link visible only if user has 'can_manage_operators' permission -->
-            <?php if (user_has_permission('')): ?>
+            <?php // FIX: Changed the empty permission to 'can_manage_staff' ?>
+            <?php if (user_has_permission('can_manage_staff')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'add_staff' ? 'active' : ''; ?>" href="add_staff">
-                    <i class="fas fa-user-tie nav-icon me-2"></i>Manage Staff
+                <a class="nav-link <?php echo $current_page == 'add_staff' ? 'active' : ''; ?>" href="add_staff.php">
+                    <i class="fas fa-users-cog nav-icon me-2"></i>Manage Staff
                 </a>
             </li>
             <?php endif; ?>
             
-
-            <?php if (user_has_permission('main_admin')): ?>
+            <?php // FIX: Changed 'main_admin' to a more flexible 'can_view_reports' permission ?>
+            <?php if (user_has_permission('can_view_reports')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings">
-                    <i class="fas fa-user-tie nav-icon me-2"></i>Bookings Report
+                <a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings.php">
+                    <i class="fas fa-chart-bar nav-icon me-2"></i>Bookings Report
                 </a>
             </li>
             <?php endif; ?>
@@ -117,7 +119,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <?php endif; ?>
             
             <!-- Menu visible only if user has route-related permissions -->
-            <?php if (user_has_permission('can_manage_routes') || user_has_permission('can_edit_routes') || user_has_permission('can_delete_routes')): ?>
+            <?php if (user_has_permission('can_manage_routes')): ?>
             <li class="nav-item">
                 <a class="nav-link d-flex justify-content-between align-items-center <?php echo $is_route_active ? 'active' : 'collapsed'; ?>"
                    data-bs-toggle="collapse" href="#routeMenu" role="button" aria-expanded="<?php echo $is_route_active ? 'true' : 'false'; ?>">
@@ -126,13 +128,11 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </a>
                 <div class="collapse <?php echo $is_route_active ? 'show' : ''; ?>" id="routeMenu">
                     <ul class="nav flex-column ms-3">
-                        <?php if (user_has_permission('can_manage_routes')): ?>
                         <li class="nav-item">
                             <a class="nav-link <?php echo $current_page == 'add_route' ? 'active' : ''; ?>" href="add_route.php">
                                 <i class="fas fa-plus-circle me-2"></i>Add Routes
                             </a>
                         </li>
-                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link <?php echo $current_page == 'view_routes' ? 'active' : ''; ?>" href="view_routes.php">
                                 <i class="fas fa-list-alt me-2"></i>View All Routes
@@ -147,21 +147,12 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <?php if (user_has_permission('can_manage_employees')): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page == 'add_employee' ? 'active' : ''; ?>" href="add_employee.php">
-                    <i class="fas fa-user-plus me-2"></i>Manage Employees
+                    <i class="fas fa-user-shield me-2"></i>Manage Employees
                 </a>
             </li>
             <?php endif; ?>
             
             <!-- General links visible to everyone logged in -->
-            <!-- Show "Change Password" only if user has 'can_change_password' permission -->
-            <?php if (user_has_permission('can_change_password')): ?>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'change_password' ? 'active' : ''; ?>" href="change_password.php">
-                    <i class="fas fa-key me-2"></i>Change Password
-                </a>
-            </li>
-            <?php endif; ?>
-            
             <li class="nav-item">
                 <a class="nav-link" href="logout.php">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout

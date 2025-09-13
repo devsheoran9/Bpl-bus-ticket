@@ -134,8 +134,8 @@ try {
                 <div class="main-panel">
                     <div class="header">
                         <div class="brand">
-                            <div class="operator"><?php echo htmlspecialchars($conductor_name); ?></div>
-                            <div class="bus-info"><?php echo htmlspecialchars($booking_details['bus_name']); ?> • <?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
+                            <div class="operator"><?php echo htmlspecialchars($booking_details['bus_name']); ?> </div>
+                            <div class="bus-info"> <?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
                         </div>
                         <div class="ticket-no">
                             <div class="label" style="font-size:11px; color:var(--text-light);">Ticket No.</div>

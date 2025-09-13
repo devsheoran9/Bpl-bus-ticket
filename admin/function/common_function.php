@@ -112,5 +112,51 @@ function session_security_check() {
     }
 }
 
+
+
+function get_assigned_route_ids_for_employee($employee_id) {
+    global $_conn_db;
+
+    // If the user is a main_admin, they can see all routes.
+    // We check the session directly for this.
+    if (isset($_SESSION['user']['type']) && $_SESSION['user']['type'] === 'main_admin') {
+        try {
+            // Return all active route IDs for the main admin
+            $stmt = $_conn_db->query("SELECT route_id FROM routes WHERE status = 'Active'");
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (PDOException $e) {
+            return []; // Return empty on error
+        }
+    }
+
+    // For regular employees, find their linked staff ID and then the routes.
+    try {
+        // Step 1: Find the linked_staff_id for the given employee_id.
+        $stmt_staff = $_conn_db->prepare("SELECT linked_staff_id FROM admin WHERE id = ?");
+        $stmt_staff->execute([$employee_id]);
+        $linked_staff_id = $stmt_staff->fetchColumn();
+
+        // If the employee is not linked to any staff, they cannot book any tickets.
+        if (!$linked_staff_id) {
+            return [];
+        }
+
+        // Step 2: Find all unique route_ids that this staff member is assigned to.
+        $stmt_routes = $_conn_db->prepare(
+            "SELECT DISTINCT route_id FROM route_staff_assignments WHERE staff_id = ?"
+        );
+        $stmt_routes->execute([$linked_staff_id]);
+        
+        // Return the array of route IDs.
+        return $stmt_routes->fetchAll(PDO::FETCH_COLUMN);
+
+    } catch (PDOException $e) {
+        error_log("Error fetching assigned routes for employee {$employee_id}: " . $e->getMessage());
+        return []; // Return an empty array on database error.
+    }
+}
+
+
 include_once ('other_functions.php');
+
 ?>

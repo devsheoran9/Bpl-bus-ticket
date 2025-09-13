@@ -103,17 +103,23 @@ if ($action == 'get_seat_layout') {
 }
 
 // Shared function to create a booking entry (Existing code - No changes)
-function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
+function createBookingEntry($data, $isCash = false)
 {
     global $_conn_db;
-    $booking_status = $isCash ? 'CONFIRMED' : 'PENDING';
+    
+    // All bookings created by this function are now instantly CONFIRMED
+    $booking_status = 'CONFIRMED';
+    // Cash bookings are PAID, online ones will be updated after payment verification
+    $payment_status = $isCash ? 'PAID' : 'PENDING'; 
 
     $_conn_db->beginTransaction();
     try {
         $ticket_no = 'BPL' . substr(str_shuffle(str_repeat('0123456789', 9)), 0, 9);
-        $sql_booking = "INSERT INTO bookings (ticket_no, route_id, bus_id, origin, destination, booked_by_employee_id, contact_email, contact_mobile, travel_date, total_fare, booking_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        // Added payment_status to the INSERT query
+        $sql_booking = "INSERT INTO bookings (ticket_no, route_id, bus_id, origin, destination, booked_by_employee_id, contact_email, contact_mobile, travel_date, total_fare, booking_status, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt_booking = $_conn_db->prepare($sql_booking);
-        $stmt_booking->execute([$ticket_no, $data['route_id'], $data['bus_id'], $data['origin'], $data['destination'], $data['employee_id'], $data['contact_email'], $data['contact_mobile'], $data['travel_date'], $data['total_fare'], $booking_status]);
+        $stmt_booking->execute([$ticket_no, $data['route_id'], $data['bus_id'], $data['origin'], $data['destination'], $data['employee_id'], $data['contact_email'], $data['contact_mobile'], $data['travel_date'], $data['total_fare'], $booking_status, $payment_status]);
         $booking_id = $_conn_db->lastInsertId();
 
         $sql_passenger = "INSERT INTO passengers (booking_id, seat_id, seat_code, passenger_name, passenger_mobile, passenger_age, passenger_gender, fare) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -138,18 +144,18 @@ function createBookingEntry($data, $isCash = false, $razorpayOrderId = null)
             'mail' => $data['contact_email']
         ];
         
-        // *** ADDED LOGIC ***
-        // If a Razorpay Order ID was provided, add it to the response.
-        if ($razorpayOrderId) {
-            $response['razorpay_order_id'] = $razorpayOrderId;
-        }
-       
-        return $response;
+        return [
+            'status' => 'success',
+            'booking_id' => $booking_id,
+            'ticket_no' => $ticket_no,
+            'wtsp_no' => $data['contact_mobile'],
+            'mail' => $data['contact_email']
+        ];
 
     } catch (PDOException $e) {
         $_conn_db->rollBack();
         error_log("Create Booking Error: " . $e->getMessage());
-        return ['status' => 'error', 'message' => 'Database Error: Could not create booking.'];
+        return ['status' => 'error', 'message' => 'Database Error: Could not create booking. A seat may have been booked by someone else.'];
     }
 }
 
@@ -225,13 +231,8 @@ if ($action == 'create_pending_booking') {
     send_json_response($result['status'], $result);
 }
 
+ 
 
-
-// ===================================================================
-// --- NEW ACTIONS FOR THE 'view_bookings.php' PAGE START HERE ---
-// ===================================================================
-
-// ACTION: Get all buses that run on a specific route
 if ($action == 'get_buses_for_route') {
     $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
     if (!$route_id) {
@@ -255,8 +256,13 @@ if ($action == 'get_buses_for_route') {
 }
 
 if ($action == 'get_route_dashboard_details') {
+    // --- Permission check for this specific action ---
+    if (!isset($_SESSION['user']['id']) || !user_has_permission('can_view_bookings')) {
+        send_json_response('error', 'Access Denied.');
+    }
+
     $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
-    $travel_date = $_GET['travel_date'] ?? date('Y-m-d'); // Default to today if not provided
+    $travel_date = $_GET['travel_date'] ?? date('Y-m-d');
 
     if (!$route_id) {
         send_json_response('error', 'Please select a route.');
@@ -265,38 +271,44 @@ if ($action == 'get_route_dashboard_details') {
     try {
         $response_data = [];
 
-        // 1. Get Route, Bus, and Operator Details
+        // 1. Get Route and Bus Details
         $details_stmt = $_conn_db->prepare("
-            SELECT 
-                r.route_name, r.starting_point, r.ending_point,
-                b.bus_name, b.registration_number, b.bus_type,
-                o.operator_name, o.contact_phone AS operator_phone
+            SELECT r.route_name, r.starting_point, r.ending_point,
+                   b.bus_name, b.registration_number, b.bus_type
             FROM routes r
             JOIN buses b ON r.bus_id = b.bus_id
-            JOIN operators o ON b.operator_id = o.operator_id
             WHERE r.route_id = ?
         ");
         $details_stmt->execute([$route_id]);
         $response_data['details'] = $details_stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 2. Get Full Route Timeline (All Stops)
+        // 2. Fetch ALL assigned staff for the route
+        $staff_stmt = $_conn_db->prepare("
+            SELECT s.name, rsa.role
+            FROM route_staff_assignments rsa
+            JOIN staff s ON rsa.staff_id = s.staff_id
+            WHERE rsa.route_id = ?
+            ORDER BY FIELD(rsa.role, 'Driver', 'Co-Driver', 'Conductor', 'Co-Conductor', 'Helper')
+        ");
+        $staff_stmt->execute([$route_id]);
+        $response_data['staff'] = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Get Full Route Timeline
         $stops_stmt = $_conn_db->prepare("SELECT stop_name FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
         $stops_stmt->execute([$route_id]);
         $intermediate_stops = $stops_stmt->fetchAll(PDO::FETCH_COLUMN);
         $response_data['timeline'] = array_merge([$response_data['details']['starting_point']], $intermediate_stops);
 
-        // 3. Get Bookings for the selected date
+        // 4. Get Bookings for the selected date
         $booking_sql = "
-            SELECT booking_id, ticket_no, total_fare, created_at
-            FROM bookings
-            WHERE route_id = ? AND travel_date = ?
-            ORDER BY created_at DESC
+            SELECT booking_id, ticket_no, total_fare, created_at, booking_status, payment_status, origin, destination
+            FROM bookings WHERE route_id = ? AND travel_date = ? ORDER BY created_at DESC
         ";
         $booking_stmt = $_conn_db->prepare($booking_sql);
         $booking_stmt->execute([$route_id, $travel_date]);
         $bookings = $booking_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // For each booking, fetch its passengers
+        // 5. For each booking, fetch its passengers
         $passenger_stmt = $_conn_db->prepare("SELECT passenger_name, seat_code FROM passengers WHERE booking_id = ?");
         foreach ($bookings as &$booking) {
             $passenger_stmt->execute([$booking['booking_id']]);
@@ -307,49 +319,38 @@ if ($action == 'get_route_dashboard_details') {
         $response_data['bookings'] = $bookings;
 
         send_json_response('success', $response_data);
+
     } catch (PDOException $e) {
-        send_json_response('error', 'Database error: ' . $e->getMessage());
+        error_log("Dashboard details error: " . $e->getMessage()); // Log error
+        send_json_response('error', 'Database error: ' . $e->getMessage()); // Send specific error for debugging
     }
 }
-if ($action == 'delete_booking') {
-    $booking_id = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
 
+if ($action == 'delete_booking') {
+    if (!isset($_SESSION['user']['id']) || !user_has_permission('can_delete_bookings')) {
+        send_json_response('error', 'Access Denied.');
+    }
+    $booking_id = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     if (!$booking_id) {
         send_json_response('error', 'Invalid Booking ID provided.');
     }
-
-    // Use a transaction to ensure all related data is deleted or none at all
     $_conn_db->beginTransaction();
     try {
-        // We delete from multiple tables, so order matters if there are foreign keys.
-        // It's safest to delete from child tables first.
-
-        // 1. Delete from passengers
-        $stmt1 = $_conn_db->prepare("DELETE FROM passengers WHERE booking_id = ?");
-        $stmt1->execute([$booking_id]);
-
-        // 2. Delete from booked_seats
-        $stmt2 = $_conn_db->prepare("DELETE FROM booked_seats WHERE booking_id = ?");
-        $stmt2->execute([$booking_id]);
-
-        // 3. Delete from transactions (if any)
-        $stmt3 = $_conn_db->prepare("DELETE FROM transactions WHERE booking_id = ?");
-        $stmt3->execute([$booking_id]);
-
-        // 4. Finally, delete the main booking record
-        $stmt4 = $_conn_db->prepare("DELETE FROM bookings WHERE booking_id = ?");
-        $stmt4->execute([$booking_id]);
-
-        // If all deletions were successful, commit the transaction
-        $_conn_db->commit();
-        send_json_response('success', 'Booking has been successfully deleted.');
-    } catch (PDOException $e) {
-        // If any error occurs, roll back the transaction
+        $stmt = $_conn_db->prepare("DELETE FROM bookings WHERE booking_id = ?");
+        $stmt->execute([$booking_id]);
+        if ($stmt->rowCount() > 0) {
+            $_conn_db->commit();
+            send_json_response('success', 'Booking has been successfully deleted.');
+        } else {
+            throw new Exception("Booking not found or already deleted.");
+        }
+    } catch (Exception $e) {
         $_conn_db->rollBack();
         error_log("Delete Booking Error: " . $e->getMessage());
-        send_json_response('error', 'Database error: Could not delete the booking.');
+        send_json_response('error', 'Could not delete the booking.');
     }
 }
+
 
 
 // --- ACTION: Mark a cash booking as collected by inserting into a log table ---
@@ -396,3 +397,114 @@ if ($action == 'mark_cash_collected') {
         send_json_response('error', 'A database error occurred.');
     }
 }
+
+if ($action == 'create_razorpay_order') {
+    if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error.');
+    
+    $total_fare = filter_input(INPUT_POST, 'total_fare', FILTER_VALIDATE_FLOAT);
+    if (!$total_fare || $total_fare <= 0) { 
+        send_json_response('error', 'Invalid total fare for payment.'); 
+    }
+
+    try {
+        global $rozerapi, $rozersecretapi;
+        $api = new Api($rozerapi, $rozersecretapi);
+
+        $orderData = [
+            'receipt'  => 'rcpt_' . bin2hex(random_bytes(6)),
+            'amount'   => $total_fare * 100, // Amount in paise
+            'currency' => 'INR'
+        ];
+        $razorpayOrder = $api->order->create($orderData);
+        
+        // Send a success response with ONLY the order ID
+        send_json_response('success', [
+            'razorpay_order_id' => $razorpayOrder['id']
+        ]);
+        
+    } catch (Exception $e) {
+        send_json_response('error', 'Razorpay API Error: ' . $e->getMessage());
+    }
+}
+
+if ($action == 'verify_and_book_online') {
+    if (!isset($_SESSION['user']['id'])) send_json_response('error', 'Authentication error.');
+
+    // 1. Verify Razorpay Signature (copied from payment_verify.php)
+    $success = false;
+    $error = "Payment Failed";
+    if (!empty($_POST['razorpay_payment_id']) && !empty($_POST['razorpay_order_id']) && !empty($_POST['razorpay_signature'])) {
+        try {
+            global $rozerapi, $rozersecretapi;
+            $api = new Api($rozerapi, $rozersecretapi);
+            $attributes = [
+                'razorpay_order_id'   => $_POST['razorpay_order_id'],
+                'razorpay_payment_id' => $_POST['razorpay_payment_id'],
+                'razorpay_signature'  => $_POST['razorpay_signature']
+            ];
+            $api->utility->verifyPaymentSignature($attributes);
+            $success = true; // Signature is valid
+        } catch (Exception $e) {
+            $error = 'Razorpay Signature Verification Error: ' . $e->getMessage();
+        }
+    } else {
+        $error = "Required payment data is missing.";
+    }
+
+    if ($success !== true) {
+        send_json_response('error', $error);
+    }
+
+    // 2. If signature is valid, now we create the booking and transaction record
+    $data = [
+        'route_id' => filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT),
+        'bus_id' => filter_input(INPUT_POST, 'bus_id', FILTER_VALIDATE_INT),
+        'travel_date' => $_POST['travel_date'],
+        'origin' => $_POST['origin'],
+        'destination' => $_POST['destination'],
+        'total_fare' => filter_input(INPUT_POST, 'total_fare', FILTER_VALIDATE_FLOAT),
+        'passengers' => json_decode($_POST['passengers'], true),
+        'employee_id' => $_SESSION['user']['id'],
+        'contact_email' => filter_var($_POST['contact_email'] ?? null, FILTER_SANITIZE_EMAIL),
+        'contact_mobile' => $_POST['contact_mobile'] ?? null
+    ];
+
+    // Create the booking entry. We pass `true` because it is now confirmed cash/paid.
+    $bookingResult = createBookingEntry($data, true);
+
+    if ($bookingResult['status'] === 'error') {
+        // This is a rare case where payment was successful but booking failed (e.g., seat taken in the last second).
+        // You should manually refund the payment in your Razorpay dashboard.
+        send_json_response('error', 'Payment was successful, but booking failed. Please contact support immediately for a refund. Reason: ' . $bookingResult['message']);
+    }
+
+    $booking_id = $bookingResult['booking_id'];
+
+    // 3. Log the successful transaction
+    try {
+        $stmt_trans = $_conn_db->prepare(
+            "INSERT INTO transactions (booking_id, gateway_payment_id, gateway_order_id, gateway_signature, amount, payment_status, method) 
+             VALUES (?, ?, ?, ?, ?, 'CAPTURED', 'online')"
+        );
+        $stmt_trans->execute([
+            $booking_id,
+            $_POST['razorpay_payment_id'],
+            $_POST['razorpay_order_id'],
+            $_POST['razorpay_signature'],
+            $data['total_fare']
+        ]);
+    } catch (PDOException $e) {
+        // Again, a rare error. Log it for manual review.
+        error_log("FATAL: Could not log successful transaction for booking_id {$booking_id}. PAYMENT MUST BE REFUNDED MANUALLY. Error: " . $e->getMessage());
+    }
+
+    // 4. Send email if an address was provided
+    if (!empty($data['contact_email'])) {
+        $emailResult = sendBookingEmail($booking_id, $data['contact_email'], $_conn_db);
+        $bookingResult['email_status'] = $emailResult['status'];
+        $bookingResult['email_message'] = $emailResult['message'];
+    }
+
+    send_json_response('success', $bookingResult);
+}
+

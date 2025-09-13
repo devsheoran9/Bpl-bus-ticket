@@ -1,5 +1,5 @@
 <?php
-// add_employee.php (Full Add & Edit Functionality)
+// add_employee.php (Full Add & Edit Functionality with Staff Linking)
 include_once('function/_db.php');
 session_security_check();  
 check_permission('can_manage_employees'); // Page-specific permission
@@ -27,15 +27,23 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
         }
     }
 }
-
  
+// --- DATA FETCHING for form and list ---
+$all_staff = [];
 try {
-    $stmt = $_conn_db->prepare("SELECT id, name, mobile, email, status, last_login_time, last_login_ip, session_token FROM admin WHERE type = 'employee' ORDER BY id DESC");
+    // Fetch staff list for the dropdown
+    $staff_stmt = $_conn_db->query("SELECT staff_id, name, mobile FROM staff WHERE status = 'Active' ORDER BY name ASC");
+    $all_staff = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch existing employees list
+    $stmt = $_conn_db->prepare("SELECT id, name, mobile, email, status, last_login_time, last_login_ip, session_token, linked_staff_id FROM admin WHERE type = 'employee' ORDER BY id DESC");
     $stmt->execute();
     $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     $employees = [];
-    error_log("Failed to fetch employees: " . $e->getMessage());
+    $all_staff = [];
+    error_log("Failed to fetch data for add_employee page: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -64,6 +72,7 @@ try {
         .online-indicator { color: #28a745; font-size: 0.8em; font-weight: bold; }
         .last-login-info { font-size: 0.8em; color: #6c757d; }
         #no-results-message { display: none; }
+        .permissions-section h6 { font-size: 1rem; color: #0d6efd; border-bottom: 1px solid #e9ecef; padding-bottom: 0.5rem; margin-top: 1rem; }
     </style>
 </head>
 <body>
@@ -74,7 +83,6 @@ try {
         <div class="container-fluid">
             <h2 class="my-4"><?php echo $edit_mode ? 'Edit Employee' : 'Add & Manage Employees'; ?></h2>
             <div class="row">
-                <!-- Add/Edit Employee Form Column -->
                 <div class="col-lg-4 mb-4">
                     <div class="card form-card">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -84,11 +92,27 @@ try {
                             <?php endif; ?>
                         </div>
                         <div class="card-body">
-                            <form id="employee-form"   data-parsley-validate>
+                            <form id="employee-form" action="function/backend/employee_actions.php" method="POST" class="data-formm" data-parsley-validate>
                                 <input type="hidden" name="action" value="<?php echo $edit_mode ? 'update_employee' : 'add_employee'; ?>">
                                 <?php if ($edit_mode): ?>
                                     <input type="hidden" name="employee_id" value="<?php echo $employee_to_edit['id']; ?>">
                                 <?php endif; ?>
+                                
+                                <div class="mb-3">
+                                    <label for="linked_staff_id" class="form-label">Link to Staff Member <small>(Optional)</small></label>
+                                    <select class="form-select" id="linked_staff_id" name="linked_staff_id">
+                                        <option value="">-- No Link / Create New --</option>
+                                        <?php foreach ($all_staff as $staff): ?>
+                                            <option value="<?php echo $staff['staff_id']; ?>" 
+                                                    data-name="<?php echo htmlspecialchars($staff['name']); ?>" 
+                                                    data-mobile="<?php echo htmlspecialchars($staff['mobile']); ?>"
+                                                    <?php if ($edit_mode && isset($employee_to_edit['linked_staff_id']) && $employee_to_edit['linked_staff_id'] == $staff['staff_id']) echo 'selected'; ?>>
+                                                <?php echo htmlspecialchars($staff['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div class="form-text">Select a staff member to auto-fill their details below.</div>
+                                </div>
                                 
                                 <div class="mb-3"><label for="name" class="form-label">Full Name</label><input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($employee_to_edit['name'] ?? ''); ?>" required></div>
                                 <div class="mb-3"><label for="mobile" class="form-label">Mobile Number</label><input type="tel" class="form-control" id="mobile" name="mobile" value="<?php echo htmlspecialchars($employee_to_edit['mobile'] ?? ''); ?>" required data-parsley-type="digits" data-parsley-length="[10, 10]"></div>
@@ -98,22 +122,35 @@ try {
                                     <input type="password" class="form-control" id="password" name="password" <?php echo !$edit_mode ? 'required' : ''; ?> data-parsley-minlength="6" placeholder="<?php echo $edit_mode ? 'Leave blank to keep unchanged' : ''; ?>">
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="mb-3 permissions-section">
                                     <label class="form-label fw-bold">Assign Permissions</label>
                                     <div class="row">
                                         <?php 
                                         $permissions_list = [
-                                            'Tickets' => ['can_book_tickets' => 'Can Book', 'can_view_bookings' => 'Can View', 'can_delete_bookings' => 'Can Delete'],
-                                            'Routes' => ['can_manage_routes' => 'Can Add', 'can_edit_routes' => 'Can Edit', 'can_delete_routes' => 'Can Delete'],
-                                            'Other' => ['can_manage_buses' => 'Buses', 'can_change_password' => 'Change Password', 'can_manage_employees' => 'Manage Employees']
+                                            'Booking' => [
+                                                'can_book_tickets' => 'Can Book Tickets', 
+                                                'can_view_bookings' => 'Can View Bookings', 
+                                                'can_delete_bookings' => 'Can Delete Bookings'
+                                            ],
+                                            'Management' => [
+                                                'can_manage_routes' => 'Manage Routes (Add/Edit)', 
+                                                'can_delete_routes' => 'Can Delete Routes',
+                                                'can_manage_buses' => 'Manage Buses', 
+                                                'can_manage_staff' => 'Manage Staff', 
+                                                'can_manage_employees' => 'Manage Employees'
+                                            ],
+                                            'Reporting' => [
+                                                'can_view_own_collections' => 'View Own Cash Report'
+                                            ]
                                         ];
+
                                         foreach ($permissions_list as $group => $perms):
                                         ?>
-                                        <div class="col-md-6 mb-2">
-                                            <h6><i class="fas fa-<?php echo strtolower($group) == 'tickets' ? 'ticket-alt' : (strtolower($group) == 'routes' ? 'route' : 'cogs'); ?> me-2"></i><?php echo $group; ?></h6>
+                                        <div class="col-12">
+                                            <h6><?php echo $group; ?></h6>
                                             <?php foreach ($perms as $key => $label): ?>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="permissions[]" value="<?php echo $key; ?>" id="perm_<?php echo $key; ?>" <?php echo isset($employee_permissions[$key]) ? 'checked' : ''; ?>>
+                                                    <input class="form-check-input" type="checkbox" name="permissions[]" value="<?php echo $key; ?>" id="perm_<?php echo $key; ?>" <?php echo isset($employee_permissions[$key]) && $employee_permissions[$key] === true ? 'checked' : ''; ?>>
                                                     <label class="form-check-label" for="perm_<?php echo $key; ?>"><?php echo $label; ?></label>
                                                 </div>
                                             <?php endforeach; ?>
@@ -127,7 +164,6 @@ try {
                     </div>
                 </div>
 
-                <!-- Existing Employees List Column -->
                 <div class="col-lg-8">
                      <div class="card">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -157,7 +193,7 @@ try {
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
-                                    <div id="no-results-message" class="alert alert-warning w-100">No employees match your search.</div>
+                                    <div id="no-results-message" class="alert alert-warning w-100" style="display:none;">No employees match your search.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -168,76 +204,104 @@ try {
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal fade" id="historyModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Login History</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="historyModalBody"></div></div></div></div>
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Login History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="historyModalBody">
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include "foot.php"; ?>
 <script>
 $(document).ready(function() {
-    $('form.data-form').parsley();
     const backendUrl = 'function/backend/employee_actions.php';
+    $('form.data-formm').on('submit', function(e) {
+            e.preventDefault();
+            if (typeof $(this).parsley === 'function' && !$(this).parsley().isValid()) return;
+            
+            const form = $(this);
+            const submitBtn = form.find('button[type="submit"]');
+            const originalBtnText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+            
+            $.ajax({
+                url: form.attr('action'), type: 'POST', data: form.serialize(), dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $.notify({ message: response.message }, { type: 'success' });
+                        setTimeout(() => window.location.href = 'add_employee.php', 1500);
+                    } else {
+                        $.notify({ message: response.message }, { type: 'danger' });
+                    }
+                },
+                error: () => $.notify({ message: 'A server error occurred.' }, { type: 'warning' }),
+                complete: () => submitBtn.prop('disabled', false).html(originalBtnText)
+            }).data('handler-attached', true);
+        });
+    
+    $('#linked_staff_id').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const staffName = selectedOption.data('name');
+        const staffMobile = selectedOption.data('mobile');
+        if ($(this).val()) {
+            $('#name').val(staffName);
+            $('#mobile').val(staffMobile);
+        } else {
+            $('#name').val('');
+            $('#mobile').val('');
+        }
+        if (typeof $('#employee-form').parsley === 'function') {
+            $('#employee-form').parsley().validate();
+        }
+    });
 
-    // Live Search Functionality
-    const searchInput = document.getElementById('employee-search-input');
-    const employeeCards = document.querySelectorAll('.employee-card');
-    const noResultsMessage = document.getElementById('no-results-message');
-    searchInput.addEventListener('keyup', function(event) {
-        const searchTerm = event.target.value.toLowerCase();
+    $('#employee-search-input').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
         let visibleCount = 0;
-        employeeCards.forEach(card => {
-            const cardText = card.textContent.toLowerCase();
+        $('.employee-card').each(function() {
+            const card = $(this);
+            const cardText = card.text().toLowerCase();
             if (cardText.includes(searchTerm)) {
-                card.style.display = 'flex';
+                card.show();
                 visibleCount++;
             } else {
-                card.style.display = 'none';
+                card.hide();
             }
         });
-        noResultsMessage.style.display = (visibleCount === 0 && employeeCards.length > 0) ? 'block' : 'none';
-    });
-
-    // --- FORM SUBMISSION (Handles both ADD and UPDATE) ---
-    $('#employee-form').on('submit', function(e) {
-        e.preventDefault();
-        if (!$(this).parsley().isValid()) return;
-        
-        const form = $(this);
-        const submitBtn = form.find('button[type="submit"]');
-        const originalBtnText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
-        
-        $.ajax({
-            url: backendUrl, type: 'POST', data: form.serialize(), dataType: 'json',
-            success: function(response) {
-                if (response.status === 'success') {
-                    $.notify({ message: response.message }, { type: 'success' });
-                    // Redirect to clear the form and show the updated list
-                    setTimeout(() => window.location.href = 'add_employee.php', 1500);
-                } else {
-                    $.notify({ message: response.message }, { type: 'danger' });
-                }
-            },
-            error: () => $.notify({ message: 'A server error occurred.' }, { type: 'warning' }),
-            complete: () => submitBtn.prop('disabled', false).html(originalBtnText)
-        });
+        $('#no-results-message').toggle(visibleCount === 0 && $('.employee-card').length > 0);
     });
     
-    // --- Toggle Status ---
     $(document).on('change', '.status-toggle', function() {
         const checkbox = $(this);
         $.ajax({
             url: backendUrl, type: 'POST',
-            data: { action: 'toggle_status', employee_id: checkbox.data('employee-id'), new_status: checkbox.is(':checked') ? 1 : 2 },
+            data: { 
+                action: 'toggle_status', 
+                employee_id: checkbox.data('employee-id'), 
+                new_status: checkbox.is(':checked') ? 1 : 2 
+            },
             dataType: 'json',
             success: function(response) {
-                if (response.status === 'success') { $.notify({ message: response.message }, { type: 'success' }); } 
-                else { $.notify({ message: response.message }, { type: 'danger' }); checkbox.prop('checked', !checkbox.prop('checked')); }
+                if (response.status === 'success') { 
+                    $.notify({ message: response.message }, { type: 'success' }); 
+                } else { 
+                    $.notify({ message: response.message }, { type: 'danger' }); 
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                }
             },
-            error: () => { $.notify({ message: 'A server error occurred.' }, { type: 'warning' }); checkbox.prop('checked', !checkbox.prop('checked')); }
+            error: () => { 
+                $.notify({ message: 'A server error occurred.' }, { type: 'warning' }); 
+                checkbox.prop('checked', !checkbox.prop('checked'));
+            }
         });
     });
 
-    // --- Delete Employee ---
     $(document).on('click', '.delete-employee-btn', function() {
         const employeeId = $(this).data('employee-id');
         Swal.fire({
@@ -251,7 +315,9 @@ $(document).ready(function() {
                         if (response.status === 'success') {
                             $('#employee-' + employeeId).fadeOut(500, function() { $(this).remove(); });
                             Swal.fire('Deleted!', response.message, 'success');
-                        } else { Swal.fire('Error!', response.message, 'error'); }
+                        } else { 
+                            Swal.fire('Error!', response.message, 'error'); 
+                        }
                     },
                     error: () => Swal.fire('Error!', 'Could not connect to server.', 'error')
                 });
@@ -259,7 +325,6 @@ $(document).ready(function() {
         });
     });
 
-    // --- Force Logout ---
     $(document).on('click', '.force-logout-btn', function() {
         const employeeId = $(this).data('employee-id');
         Swal.fire({
@@ -272,7 +337,9 @@ $(document).ready(function() {
                     success: function(response) {
                         if (response.status === 'success') {
                             Swal.fire('Success!', response.message, 'success').then(() => window.location.reload());
-                        } else { Swal.fire('Error!', response.message, 'error'); }
+                        } else { 
+                            Swal.fire('Error!', response.message, 'error'); 
+                        }
                     },
                     error: () => Swal.fire('Error!', 'Could not connect to server.', 'error')
                 });
@@ -288,17 +355,13 @@ $(document).ready(function() {
         historyModal.show();
         
         $.ajax({
-            url: backendUrl,
-            type: 'GET',
-            data: { action: 'get_login_history', employee_id: employeeId },
-            dataType: 'json',
+            url: backendUrl, type: 'GET', data: { action: 'get_login_history', employee_id: employeeId }, dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
                     let content = '<ul class="list-group list-group-flush">';
                     if (response.data.history && response.data.history.length > 0) {
                         response.data.history.forEach(log => {
                             let activityClass = log.activity_type === 'login' ? 'text-success' : 'text-danger';
-                            // Format the date nicely
                             let formattedDate = new Date(log.log_time).toLocaleString('en-GB', { 
                                 day: '2-digit', month: 'short', year: 'numeric', 
                                 hour: '2-digit', minute: '2-digit', second: '2-digit' 
@@ -326,7 +389,6 @@ $(document).ready(function() {
             }
         });
     });
- 
 });
 </script>
 </body>
