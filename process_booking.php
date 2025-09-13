@@ -93,7 +93,7 @@ try {
     $api = new Api(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET);
     $orderData = [
         'receipt'         => (string)$booking_id,
-        'amount'          => $total_fare * 100, // Amount in paise
+        'amount'          => $total_fare * 100,  
         'currency'        => 'INR',
         'notes'           => ['booking_id' => (string)$booking_id]
     ];

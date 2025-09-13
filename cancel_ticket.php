@@ -1,6 +1,7 @@
-<?php 
+<?php
 include 'includes/header.php';
 echo user_login("page");
+
 // Initialize variables
 $booking_details = null;
 $passengers = [];
@@ -18,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
 
     if (!empty($ticket_no) && !empty($email)) {
         try {
-            // Updated query to use route_id and travel_date to find the schedule
             $stmt = $pdo->prepare("
                 SELECT
                     b.booking_id, b.ticket_no, b.travel_date, b.origin, b.destination, b.booking_status,
@@ -38,12 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
 
                 $departure_datetime_str = $booking_details['travel_date'] . ' ' . $booking_details['departure_time'];
                 $departure_timestamp = strtotime($departure_datetime_str);
-                $cancellation_deadline = $departure_timestamp - (30 * 60);
 
+                //===  cencellation time ===
+                $cancellation_deadline = $departure_timestamp - (12 * 60 * 60);
+
+                // Check if the current time is before the new deadline
                 if (time() <= $cancellation_deadline) {
                     $cancellation_allowed = true;
-                } else {
-                    $error_message = "The cancellation period for this ticket has expired. Tickets can only be cancelled up to 30 minutes before departure.";
+                } else { 
+                    $error_message = "The cancellation period for this ticket has expired. Tickets can only be cancelled up to 12 hours before departure.";
                 }
             } else {
                 $error_message = "No booking found with the provided Ticket No. and Email Address.";
@@ -71,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                     <?php endif; ?>
 
                     <form action="cancel_ticket" method="GET" class="mb-5">
-                        <div class="row g-3">
+                        <div class="row g-1">
                             <div class="col-md-5">
                                 <label for="ticket_no" class="form-label">Ticket No. (PNR)</label>
                                 <input type="text" class="form-control" id="ticket_no" name="ticket_no" required value="<?php echo htmlspecialchars($_GET['ticket_no'] ?? ''); ?>">
@@ -260,4 +263,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
 </script>
 
 </body>
+
 </html>

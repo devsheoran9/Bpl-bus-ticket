@@ -12,6 +12,6 @@ define('MAIL_FROM_NAME', 'BPL Bus Booking');
 
 // --- NEW: RAZORPAY API KEYS ---
 // Replace with your actual Test or Live keys
-define('RAZORPAY_KEY_ID', 'rzp_test_xISbqnYlqqrWvs');       // Your Key ID from the user
-define('RAZORPAY_KEY_SECRET', 'RxquG8pfP9f5inluawqEAw92'); // Your Key Secret from the user
+define('RAZORPAY_KEY_ID', 'rzp_test_xISbqnYlqqrWvs');        
+define('RAZORPAY_KEY_SECRET', 'RxquG8pfP9f5inluawqEAw92'); 
 ?>

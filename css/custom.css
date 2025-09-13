@@ -48,11 +48,17 @@ body {
 .section-title {
   font-weight: 700;
   font-size: 2.25rem;
-  color: var(--text-dark);
+  color: #7b003a;
   margin-bottom: 12px;
   text-align: center;
 }
-
+.section-titlee {
+  font-weight: 700;
+  font-size: 20px;
+  color: #7b003a;
+  margin-bottom: 12px;
+  /* text-align: center; */
+}
 .section-subtitle {
   color: var(--text-light);
   margin-bottom: 20px;
@@ -183,12 +189,11 @@ main {
 /* --- Search Form Card --- */
 .search-form-card {
   background-color: var(--card-bg);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 1.25rem;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.07);
   margin-top: -80px;
   position: relative;
-  z-index: 10;
   border: 1px solid var(--border-color);
 }
 
@@ -299,7 +304,7 @@ main {
 
 .suggestion-item i {
   margin-right: 10px;
-  color: var(--text-light);
+  color: #dc3545;
 }
 
 .suggestions-title {
@@ -438,9 +443,12 @@ main {
     font-size: 18px;
     padding-top: 15px;
   }
-  .about-bottom{
-    
-    font-size: 18px; 
+  .section-titlee {
+    font-size: 16px;
+    padding-top: 15px;
+  }
+  .about-bottom {
+    font-size: 18px;
   }
 }
 /* ===================================================================
@@ -470,7 +478,7 @@ main {
   transition: background-color 0.2s;
 }
 .sidebar-menu-item:hover {
-  background-color: #e97676;
+  background-color: #d5d5d5;
 }
 .icon-text-group {
   display: flex;
@@ -484,17 +492,17 @@ main {
 }
 /* --- NEW: Style for the active sidebar link --- */
 .sidebar-menu-item.active {
-  background-color: #e97676;
-  color: white;
+  background-color: #d5d5d5;
+  color: rgb(223, 30, 30);
   margin: 10px;
 }
-.sidebar-menu-item.active:hover {
-  background-color: #e97676;
+/* .sidebar-menu-item.active:hover {
+  background-color: #d5d5d5;;
   color: white;
-}
+} */
 .sidebar-menu-item.active .icon-text-group i,
 .sidebar-menu-item.active .bi-chevron-right {
-  color: white;
+  color: rgb(231, 29, 29);
 }
 /* ===================================================================
    6. Bus List & Filter Page Styles
@@ -906,10 +914,32 @@ main {
   position: relative;
   transition: all 0.2s ease;
 }
+.bus-categories-footer {
+  border-top: 1px solid #f0f0f0;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 
+.category-tag {
+  background-color: #e9ecef;
+  color: #495057;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.accordion-button:not(.collapsed) {
+  color: #dc3545;
+  background-color: #fdf0f1;
+  box-shadow: none;
+}
 .price {
   color: #555;
   font-weight: 500;
+  font-size: 1.25rem;
 }
 
 /* Seat States */
@@ -1076,7 +1106,7 @@ main {
 
 .summary-item {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   align-items: center;
   margin-bottom: 12px;
 }
@@ -1151,7 +1181,7 @@ footer .text-primary {
     margin-top: -66px;
   }
   .hero-section h1 {
-    font-size: 20px;  
+    font-size: 20px;
     padding-top: 40px;
   }
   .hero-section .lead {
@@ -1331,14 +1361,14 @@ footer .text-primary {
   .faq-tabs .nav-tabs {
     margin-bottom: 0;
   }
-  .still-need-help-section{
+  .still-need-help-section {
     padding: 0;
   }
-  .booking-info-text{
+  .booking-info-text {
     padding: 5px;
   }
-  .lead{
-    font-size:12px;
+  .lead {
+    font-size: 12px;
   }
 }
 
@@ -1371,7 +1401,7 @@ footer .text-primary {
   background-color: #cfcfcf;
   padding: 50px 0;
 }
- 
+
 .stat-number {
   font-size: 2.5rem;
   font-weight: 700;
@@ -1389,7 +1419,7 @@ footer .text-primary {
   background-color: #fff;
   padding: 1rem;
   border-radius: 1rem;
-  
+
   text-align: center;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
@@ -1407,7 +1437,7 @@ footer .text-primary {
   display: inline-block;
 }
 .value-card h3 {
-  font-weight: 600; 
+  font-weight: 600;
   font-size: 24px;
 }
 .value-card p {
@@ -1446,7 +1476,7 @@ footer .text-primary {
   background-image: linear-gradient(45deg, #8d6363, #616161);
   color: #fff;
 }
- 
+
 .btn-light-outline {
   border: 2px solid #fff;
   color: #fff;
@@ -1526,8 +1556,8 @@ footer .text-primary {
   border-radius: 1rem;
   box-shadow: var(--card-shadow);
   padding: 1.5rem;
-  /* position: sticky; */
-  top: 90px; /* Adjust based on your navbar height */
+  z-index: -1;
+  top: 90px;  
 }
 .filter-card h5 {
   font-size: 1rem;
@@ -1559,7 +1589,19 @@ footer .text-primary {
   box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
   border-color: var(--primary-color);
 }
+.bus-list-item {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s, opacity 0.3s, transform 0.3s;
+}
 
+.bus-list-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 /* --- Main Bus Item Card --- */
 .bus-item-card {
   background-color: var(--card-bg);
@@ -1580,10 +1622,9 @@ footer .text-primary {
 }
 
 .bus-item-main {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
 }
 
 .bus-info h6 {
@@ -1629,6 +1670,7 @@ footer .text-primary {
 
 .price-section {
   text-align: right;
+  min-width: 120px;
 }
 .price-section .price {
   font-size: 14px;
@@ -1660,7 +1702,9 @@ footer .text-primary {
 #no-results-card p {
   color: var(--text-light);
 }
-
+.why-choose-container {
+  padding-left: 70px;
+}
 /* --- Responsive Adjustments for Bus List --- */
 @media (max-width: 991px) {
   .navbar .navbar-nav.me-auto {
@@ -1671,19 +1715,66 @@ footer .text-primary {
     margin-bottom: 1rem;
   }
   .bus-item-main {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    text-align: left;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "info price" "timing price";
+    gap: 0 1rem;
+    align-items: center;
   }
   .bus-timing,
   .price-section {
     text-align: left;
   }
-  /* .price-section {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-    margin-top: 1rem;
-  } */
+
+  .bus-info {
+    grid-area: info;
+  }
+
+  .bus-timing {
+    grid-area: timing;
+    margin-top: 0.5rem;
+  }
+
+  .price-section {
+    grid-area: price;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .bus-list-item {
+    padding: 0.75rem;
+  }
+
+  .bus-info h6 {
+    font-size: 0.9rem;
+  }
+
+  .bus-info p {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .bus-timing .time,
+  .bus-timing .duration,
+  .full-route,
+  .operating-days,
+  .bus-timing small {
+    font-size: 0.8rem;
+  }
+
+  .price {
+    font-size: 1rem;
+  }
+
+  .price-section .btn {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
 }
 @media (max-width: 767px) {
   .search-summary-card {
@@ -1702,6 +1793,9 @@ footer .text-primary {
   }
   .panel-card {
     padding: 10px;
+  }
+  .why-choose-container {
+    padding-left: 15px;
   }
 }
 /* booking ticket */

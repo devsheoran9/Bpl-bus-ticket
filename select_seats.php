@@ -103,7 +103,7 @@ if (!$initial_schedule_id) {
 
         $booked_seats_info = [];
         if ($is_bus_available) {
-            $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED'");
+            $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED' AND p.passenger_status = 'CONFIRMED'");
             $stmt_booked->execute([$route_id, $bus_id, $journey_date]);
             $booked_results = $stmt_booked->fetchAll();
             foreach ($booked_results as $row) {
@@ -194,7 +194,7 @@ function get_transform_style($orientation)
     .panel-card {
         background: #fff;
         border-radius: 16px;
-        
+
         box-shadow: 0 4px 25px rgba(44, 62, 80, 0.08);
         margin-bottom: 24px;
         border: 1px solid #eaeaea;
@@ -217,7 +217,6 @@ function get_transform_style($orientation)
     .deck {
         position: relative;
         background-color: #fcfcfc;
-        /* background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px); */
         background-size: var(--grid-size) var(--grid-size);
     }
 
@@ -399,7 +398,7 @@ function get_transform_style($orientation)
                         <div class="panel-card">
                             <?php if (!$is_bus_available) : ?><div class="alert alert-warning text-center" role="alert"><strong><?php echo htmlspecialchars($availability_message); ?></strong></div><?php endif; ?>
                             <h5>Boarding points <span class="text-muted" style="font-size:14px">(Select Boarding Point)</span></h5>
-                            
+
                             <?php foreach ($all_points as $index => $point) : if ($index === count($all_points) - 1) continue; ?>
                                 <div class="point-option <?php if (!$is_bus_available) echo 'disabled'; ?>" data-order="<?php echo $point['order']; ?>">
                                     <input type="radio" name="boarding_point" id="bp<?php echo $index; ?>" value="<?php echo htmlspecialchars($point['name']); ?>" <?php if ($point['name'] === $from_location) echo 'checked'; ?> <?php if (!$is_bus_available) echo 'disabled'; ?>>
@@ -783,7 +782,7 @@ function get_transform_style($orientation)
                                             </div>
                                             <div style="flex: 1; padding-left: 10px;">
                                                 <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Pick up time policy</strong>
-                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Bus operator is not obligated to wait beyond the scheduled departure time of the bus. No refund request will be entertained for late arriving passengers.</p>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6; ">Bus operator is not obligated to wait beyond the scheduled departure time of the bus. No refund request will be entertained for late arriving passengers.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -824,7 +823,7 @@ function get_transform_style($orientation)
                         <div class="col-lg-6">
                             <div class="panel-card mb-4">
                                 <h5>Contact Details:
-                                    <span class="small text-danger fs-6"> (Your ticket will be sent to this email so write correct email.)</span>
+                                    <span class="small text-danger" style="font-size:12px;"> (Your ticket will be sent to this email so write correct email.)</span>
                                 </h5>
                                 <?php if (isset($_SESSION['user_id'])) :
                                     $user_id = $_SESSION['user_id'];

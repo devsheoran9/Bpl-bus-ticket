@@ -19,7 +19,7 @@
 
                         <form action="login_process" method="POST">
                             <div class="mb-3">
-                                <label for="login_identifier" class="form-label">Mobile Number or Email</label>
+                                <label for="login_identifier" class="form-label">  Email / Mobile Number</label>
                                 <input type="text" class="form-control" id="login_identifier" name="login_identifier" required>
                             </div>
                             <div class="mb-3">
@@ -39,6 +39,9 @@
             </div>
         </div>
     </div> 
+
+    <br><br><br>
+    <?php include "includes/footer.php" ?>
 </body>
 
 </html>

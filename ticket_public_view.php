@@ -1,28 +1,25 @@
 <?php
-// Use your actual PDO connection file. This should create the $pdo object.
+// Use your actual PDO connection file.
 require 'admin/function/_db.php';
 
 // --- 1. VALIDATE TOKEN AND FETCH ALL DATA ---
 
-// This page ONLY works with a token. If no token is provided, access is denied.
 $access_token = trim($_GET['token'] ?? '');
 if (empty($access_token)) {
     die("Error: A valid ticket token is required.");
 }
 
 try {
-    // A single, efficient query to get all details by joining tables based on the token.
+    // === FIX: REMOVED JOIN on 'operators' table ===
     $sql = "SELECT 
                 b.*, 
                 bu.bus_name, bu.registration_number, bu.bus_type,
                 r.starting_point, r.ending_point,
-                op.operator_name,
                 rs.departure_time
             FROM ticket_access_tokens tat
             JOIN bookings b ON tat.booking_id = b.booking_id
             JOIN buses bu ON b.bus_id = bu.bus_id
             JOIN routes r ON b.route_id = r.route_id
-            JOIN operators op ON bu.operator_id = op.operator_id
             LEFT JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a')
             WHERE tat.token = ?";
 
@@ -30,30 +27,22 @@ try {
     $stmt->execute([$access_token]);
     $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // If the token is invalid or doesn't match any booking, deny access.
     if (!$booking_details) {
         die("Ticket not found or the link has expired.");
     }
 
-    // Now that we have the valid booking details, fetch the passengers.
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
     $passengersStmt->execute([$booking_details['booking_id']]);
     $passengers = $passengersStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- 2. CALCULATE REAL BOARDING/DROPPING TIMES (Logic is the same) ---
+    // --- 2. CALCULATE REAL BOARDING/DROPPING TIMES ---
 
     $route_departure_datetime_str = $booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00');
     $route_departure_datetime = new DateTime($route_departure_datetime_str);
 
-    $origin_minutes = 0;
-    if ($booking_details['origin'] != $booking_details['starting_point']) {
-        $stmt_origin = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
-        $stmt_origin->execute([$booking_details['route_id'], $booking_details['origin']]);
-        $origin_result = $stmt_origin->fetch();
-        if ($origin_result) {
-            $origin_minutes = (int)$origin_result['duration_from_start_minutes'];
-        }
-    }
+    $stmt_origin = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
+    $stmt_origin->execute([$booking_details['route_id'], $booking_details['origin']]);
+    $origin_minutes = (int)$stmt_origin->fetchColumn();
 
     $stmt_dest = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $stmt_dest->execute([$booking_details['route_id'], $booking_details['destination']]);
@@ -257,13 +246,13 @@ try {
 <body>
     <div id="ticket-wrapper">
         <div id="ticket-scroll-container">
-            <!-- The ticket HTML layout is identical -->
             <div class="bus-ticket">
                 <div class="main-panel">
                     <div class="header">
                         <div class="brand">
-                            <div class="operator"><?php echo htmlspecialchars($booking_details['operator_name']); ?></div>
-                            <div class="bus-info"><?php echo htmlspecialchars($booking_details['bus_name']); ?> • <?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
+                            <!-- === FIX: Use bus_name instead of operator_name === -->
+                            <div class="operator"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
+                            <div class="bus-info"><?php echo htmlspecialchars($booking_details['registration_number']); ?> • <?php echo htmlspecialchars($booking_details['bus_type']); ?></div>
                         </div>
                         <div class="ticket-no">
                             <div class="label" style="font-size:11px; color:var(--text-light);">Ticket No.</div>
@@ -297,7 +286,8 @@ try {
                     </div>
                 </div>
                 <div class="stub-panel">
-                    <div class="brand"><?php echo htmlspecialchars($booking_details['operator_name']); ?></div>
+                    <!-- === FIX: Use bus_name instead of operator_name === -->
+                    <div class="brand"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
                         <div class="label" style="font-size:11px;">Date</div>
@@ -312,7 +302,6 @@ try {
             </div>
         </div>
     </div>
-
     <button id="download-btn" class="download-button"><i class="fas fa-download"></i> Download Ticket PDF</button>
 
     <script>
