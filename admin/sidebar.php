@@ -81,13 +81,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </a>
             </li>
             <?php endif; ?>
-            <?php if (user_has_permission('can_manage_operators')): ?>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'add_operator' ? 'active' : ''; ?>" href="add_operator.php">
-                    <i class="fas fa-user-tie nav-icon me-2"></i>Operators
-                </a>
-            </li>
-            <?php endif; ?>
+            
 
             <?php if (user_has_permission('main_admin')): ?>
             <li class="nav-item">

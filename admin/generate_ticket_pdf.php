@@ -17,21 +17,19 @@ if (!$booking_id) {
 try {
     $stmt = $_conn_db->prepare("
         SELECT 
-            b.booking_id, b.ticket_no, b.travel_date, b.total_fare, b.origin, b.destination,
-            r.route_name, r.starting_point,
+            b.*,
+            r.route_name, r.route_id,
             sch.departure_time,
-            bu.bus_name, bu.registration_number,
-            op.operator_name,
-            p.passenger_name, p.passenger_mobile, p.passenger_gender, p.passenger_age, p.seat_code, p.fare
+            bu.bus_name, bu.registration_number
         FROM bookings b
         JOIN routes r ON b.route_id = r.route_id
         JOIN buses bu ON b.bus_id = bu.bus_id
-        JOIN operators op ON bu.operator_id = op.operator_id
         LEFT JOIN route_schedules sch ON r.route_id = sch.route_id AND sch.operating_day = DATE_FORMAT(b.travel_date, '%a')
-        JOIN passengers p ON b.booking_id = p.booking_id
         WHERE b.booking_id = ?
     ");
     $stmt->execute([$booking_id]);
+    $booking_details = $stmt->fetch(PDO::FETCH_ASSOC);
+    
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (empty($results)) {

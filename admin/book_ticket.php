@@ -601,27 +601,20 @@ try {
                         if (response.status === 'success') {
                             let successMessage = 'Payment Successful! Booking has been confirmed.';
                 
-                // Prepare a follow-up alert for the email status
-                // let emailAlertOptions = {
-                //     title: 'Email Status',
-                //     icon: 'info',
-                //     text: 'No email was sent as no address was provided.'
-                // };
+              
+                let emailAlertOptions = {
+                    title: 'Email Status',
+                    icon: 'info',
+                    text: 'No email was sent as no address was provided.'
+                };
 
-                // if (response.email_status === 'success') {
-                //     emailAlertOptions.icon = 'success';
-                //     emailAlertOptions.text = 'The ticket has been sent to your email address.';
-                // } else if (response.email_status === 'error') {
-                //     emailAlertOptions.icon = 'warning';
-                //     emailAlertOptions.text = 'Booking confirmed, but we could not send the ticket to your email. Please check the address or contact support.';
-                // }
+                
 
                 // Show the main success alert, and when it closes, show the email status alert
                 Swal.fire('Payment Successful!', successMessage, 'success').then(() => {
-                    Swal.fire(emailAlertOptions).then(() => {
                          window.location.href = `ticket_view.php?booking_id=${bookingId}`;
                     });
-                });
+                 
                         } else {
                             Swal.fire('Verification Failed!', response.message, 'error');
                         }
@@ -633,11 +626,11 @@ try {
                     let successMessage = `Booking Confirmed! Ticket No: ${response.ticket_no}`;
 
             // Prepare a follow-up alert for the email status
-            // let emailAlertOptions = {
-            //     title: 'Email Status',
-            //     icon: 'info',
-            //     text: 'No email was sent as no address was provided.'
-            // };
+            let emailAlertOptions = {
+                title: 'Email Status',
+                icon: 'info',
+                text: 'No email was sent as no address was provided.'
+            };
             
             // // Check if email status exists in the response
             // if (response.email_status === 'success') {
@@ -649,11 +642,10 @@ try {
             // }
             
             // Show the main success alert, then the email status alert, then redirect
-            Swal.fire('Booking Confirmed!', successMessage, 'success').then(() => {
-                Swal.fire(emailAlertOptions).then(() => {
+            Swal.fire('Booking Confirmed!', successMessage, 'success') .then(() => {
                     window.location.href = `ticket_view.php?booking_id=${response.booking_id}&wtsp_no=${encodeURIComponent(response.wtsp_no)}&mail=${encodeURIComponent(response.mail)}`;
                 });
-            });
+             
                 } else {
                     Swal.fire('Booking Failed', response.message, 'error');
                 }

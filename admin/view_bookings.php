@@ -5,7 +5,7 @@ session_security_check();
 check_permission('can_view_bookings'); // Check if user can even view this page
 
 try {
-    // PHP to fetch routes for the filter dropdown
+    // Fetch routes for the filter dropdown
     $routes_query = $_conn_db->query("
         SELECT r.route_id, r.route_name, b.bus_name 
         FROM routes r 
@@ -18,7 +18,7 @@ try {
     $routes = []; 
 }
 
-// --- NEW: Check for delete permission ONCE on the server side ---
+// Check for delete permission ONCE on the server side for efficiency
 $user_can_delete = user_has_permission('can_delete_bookings');
 
 ?>
@@ -26,11 +26,10 @@ $user_can_delete = user_has_permission('can_delete_bookings');
 <html lang="en">
 <head>
     <?php include "head.php"; ?>
-    <title>Route Dashboard</title>
+    <title>Route Dashboard & Bookings</title>
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     
     <style>
-        /* All CSS from the previous version remains exactly the same */
         .filter-card { background-color: #f8f9fa; }
         #details-panel { display: none; }
         .detail-item .label { font-weight: 600; color: #6c757d; }
@@ -58,7 +57,7 @@ $user_can_delete = user_has_permission('can_delete_bookings');
         <div class="container-fluid">
             <h2 class="my-4">Route Dashboard & Bookings</h2>
 
-            <!-- Filter Section and Details Panel (No HTML Changes) -->
+            <!-- Filter Section -->
             <div class="card filter-card mb-4">
                  <div class="card-body">
                     <div class="row g-3 align-items-end">
@@ -69,7 +68,9 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     </div>
                 </div>
             </div>
-            <div id="details-panel" class="card mb-4">
+            
+            <!-- Details Panel (populated by AJAX) -->
+            <div id="details-panel" class="card mb-4" style="display:none;">
                 <div class="card-header bg-primary text-white"><h5 class="mb-0">Route & Bus Details</h5></div>
                 <div class="card-body">
                     <div id="details-content" class="row"></div><hr>
@@ -77,6 +78,8 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     <ul id="timeline-content" class="timeline"></ul>
                 </div>
             </div>
+            
+            <!-- Bookings List Panel -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Booking List</h5>
@@ -95,32 +98,42 @@ $user_can_delete = user_has_permission('can_delete_bookings');
 <?php include "foot.php"; ?>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-// --- NEW: Pass the PHP permission check result to JavaScript ---
+// Pass the PHP permission check result to JavaScript
 const userCanDelete = <?php echo $user_can_delete ? 'true' : 'false'; ?>;
 
 $(document).ready(function() {
-    // --- All filter and event listener JS remains the same ---
     const datePicker = flatpickr("#date-filter", {
-        dateFormat: "Y-m-d", defaultDate: "today", onChange: function() { loadDashboardData(); }
+        dateFormat: "Y-m-d", defaultDate: "today",
+        onChange: function() { loadDashboardData(); }
     });
+
     $('#route-filter').on('change', function() { loadDashboardData(); });
+
     $('#clear-filter-btn').on('click', function() {
-        $('#route-filter').val(''); $('#search-filter').val(''); datePicker.setDate(new Date());
-        $('#details-panel').hide();
+        $('#route-filter').val('');
+        $('#search-filter').val('');
+        datePicker.setDate(new Date());
+        $('#details-panel').slideUp();
         $('#bookings-container').html('<div id="no-results-message" class="text-center text-muted p-4 w-100">Please select a route to see bookings.</div>');
         updateBookingCount(0);
     });
+
     $('#search-filter').on('keyup', function() {
-        const searchTerm = $(this).val().toLowerCase(); let visibleCount = 0;
+        const searchTerm = $(this).val().toLowerCase();
+        let visibleCount = 0;
         $('.booking-card').each(function() {
             const cardText = $(this).text().toLowerCase();
-            if (cardText.includes(searchTerm)) { $(this).show(); visibleCount++; } else { $(this).hide(); }
+            if (cardText.includes(searchTerm)) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
         });
         $('#no-results-message').toggle(visibleCount === 0 && $('.booking-card').length > 0);
         updateBookingCount(visibleCount);
     });
 
-    // --- Main Data Loading Function ---
     function loadDashboardData() {
         const routeId = $('#route-filter').val(); 
         const travelDate = $('#date-filter').val();
@@ -128,13 +141,13 @@ $(document).ready(function() {
         $('#search-filter').val('');
 
         if (!routeId) {
-            $('#details-panel').hide();
+            $('#details-panel').slideUp();
             bookingsContainer.html('<div id="no-results-message" class="text-center text-muted p-4 w-100">Please select a route.</div>');
             updateBookingCount(0);
             return;
         }
 
-        $('#details-panel').show();
+        $('#details-panel').slideDown();
         $('#details-content').html('<div class="d-flex justify-content-center p-3"><div class="spinner-border text-primary"></div></div>');
         $('#timeline-content').html('Loading timeline...');
         bookingsContainer.html('<div class="d-flex justify-content-center p-5 w-100"><div class="spinner-border text-primary"></div></div>');
@@ -143,7 +156,12 @@ $(document).ready(function() {
         .done(function(response) {
             if (response.status === 'success') {
                 const details = response.details;
-                $('#details-content').html(`<div class="col-md-6"><p class="mb-2"><span class="label">Bus:</span> ${details.bus_name} (${details.registration_number})</p><p class="mb-0"><span class="label">Type:</span> ${details.bus_type}</p></div><div class="col-md-6"><p class="mb-2"><span class="label">Operator:</span> ${details.operator_name}</p><p class="mb-0"><span class="label">Contact:</span> ${details.operator_phone}</p></div>`);
+                // Updated to show Conductor instead of Operator
+                $('#details-content').html(
+                    `<div class="col-md-6"><p class="mb-2"><span class="label">Bus:</span> ${details.bus_name} (${details.registration_number})</p><p class="mb-0"><span class="label">Type:</span> ${details.bus_type}</p></div>
+                     <div class="col-md-6"><p class="mb-2"><span class="label">Conductor:</span> ${details.conductor_name || 'Not Assigned'}</p><p class="mb-0"><span class="label">Contact:</span> ${details.conductor_phone || 'N/A'}</p></div>`
+                );
+
                 let timelineHtml = '';
                 response.timeline.forEach(stop => { timelineHtml += `<li class="timeline-item">${stop}</li>`; });
                 $('#timeline-content').html(timelineHtml);
@@ -153,7 +171,7 @@ $(document).ready(function() {
                     response.bookings.forEach(function(booking) {
                         const seatBadges = booking.seat_codes.split(', ').map(seat => `<span class="badge bg-dark me-1">${seat}</span>`).join('');
                         
-                        // --- FIX: Conditionally build the delete button ---
+                        // Conditionally build the delete button based on the userCanDelete flag
                         let deleteButtonHtml = '';
                         if (userCanDelete) {
                             deleteButtonHtml = `<button class="btn btn-sm btn-outline-danger delete-booking-btn" data-booking-id="${booking.booking_id}" data-ticket-no="${booking.ticket_no || 'N/A'}" title="Delete Booking"><i class="fas fa-trash-alt"></i> Delete</button>`;
@@ -175,21 +193,64 @@ $(document).ready(function() {
                             </div>
                         `;
                     });
-                    bookingsContainer.html(cards + '<div id="no-results-message" class="text-center text-muted p-4 w-100" style="display:none;"></div>');
+                    bookingsContainer.html(cards + '<div id="no-results-message" class="text-center text-muted p-4 w-100" style="display:none;">No bookings match search.</div>');
                     updateBookingCount(response.bookings.length);
                 } else {
                     bookingsContainer.html('<div id="no-results-message" class="text-center text-muted p-4 w-100">No bookings found for this date.</div>');
                     updateBookingCount(0);
                 }
-            } else { /* ... error handling ... */ }
+            } else {
+                $('#details-panel').slideUp();
+                bookingsContainer.html(`<div class="alert alert-danger w-100">${response.message}</div>`);
+            }
         })
-        .fail(function() { /* ... error handling ... */ });
+        .fail(function() {
+            $('#details-panel').slideUp();
+            bookingsContainer.html('<div class="alert alert-danger w-100">Failed to load data from the server.</div>');
+        });
     }
 
-    function updateBookingCount(count) { /* ... */ }
+    function updateBookingCount(count) {
+        $('#booking-count').text(count + (count === 1 ? ' Booking' : ' Bookings'));
+    }
 
-    // Delete Functionality (no changes needed, it will only trigger if the button exists)
-    $(document).on('click', '.delete-booking-btn', function() { /* ... */ });
+    // Event Delegation for dynamically created delete buttons
+    $(document).on('click', '.delete-booking-btn', function() {
+        const bookingId = $(this).data('booking-id');
+        const ticketNo = $(this).data('ticket-no');
+        
+        Swal.fire({
+            title: `Delete Booking #${ticketNo}?`,
+            text: "This action is permanent and will remove all passenger and payment records for this booking.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'function/backend/booking_actions.php',
+                    type: 'POST',
+                    data: { action: 'delete_booking', booking_id: bookingId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            Swal.fire('Deleted!', response.message, 'success');
+                            $(`#booking-card-${bookingId}`).fadeOut(500, function() {
+                                $(this).remove();
+                                updateBookingCount($('.booking-card:visible').length);
+                            });
+                        } else {
+                            Swal.fire('Error!', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error!', 'Could not connect to the server.', 'error');
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
 </body>

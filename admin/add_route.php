@@ -125,33 +125,8 @@ try {
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                        
                         <hr class="my-4">
-
-                        <h5>3. Route Path, Durations & Pricing</h5>
-                        <div class="mb-3"><h6>Starting Point</h6><input type="text" class="form-control" name="starting_point" value="<?php echo htmlspecialchars($route_to_edit['starting_point'] ?? ''); ?>" required></div>
-                        
-                        <div id="stops-container">
-                             <?php if (!empty($stops_to_edit)): foreach ($stops_to_edit as $stop): ?>
-                                <div class="stop-item">
-                                    <div class="stop-item-content">
-                                        <div class="stop-header"><h6>Intermediate Stop</h6><button type="button" class="btn btn-sm btn-outline-danger remove-stop-btn">&times; Remove</button></div>
-                                        <div class="row">
-                                            <div class="col-md-8 mb-3"><label class="form-label small">Stop Name</label><input type="text" class="form-control" name="stop_name[]" value="<?php echo htmlspecialchars($stop['stop_name']); ?>" required></div>
-                                            <div class="col-md-4 mb-3"><label class="form-label small">Duration from Start (mins)</label><input type="number" class="form-control" name="duration[]" value="<?php echo $stop['duration_from_start_minutes'] ?? '0'; ?>" min="0"></div>
-                                        </div>
-                                        <label class="form-label small">Price from Starting Point</label>
-                                        <div class="price-grid">
-                                            <input type="number" class="form-control" name="price_sl[]" placeholder="Seater Lower" value="<?php echo $stop['price_seater_lower'] ?? ''; ?>">
-                                            <input type="number" class="form-control" name="price_su[]" placeholder="Seater Upper" value="<?php echo $stop['price_seater_upper'] ?? ''; ?>">
-                                            <input type="number" class="form-control" name="price_ll[]" placeholder="Sleeper Lower" value="<?php echo $stop['price_sleeper_lower'] ?? ''; ?>">
-                                            <input type="number" class="form-control" name="price_lu[]" placeholder="Sleeper Upper" value="<?php echo $stop['price_sleeper_upper'] ?? ''; ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                             <?php endforeach; endif; ?>
-                        </div>
-                        <h5>4. Assign Staff to Route</h5>
+                        <h5>3. Assign Staff to Route</h5>
                         <div class="row bg-light p-3 rounded mb-4">
                             <div class="col-md-6 col-lg-3 mb-3">
                                 <label class="form-label">Driver</label>
@@ -210,6 +185,32 @@ try {
                                 <small class="text-muted">For a better user experience, consider upgrading this field with a JavaScript library like Select2 or TomSelect.</small>
                             </div>
                         </div>
+                        <hr class="my-4">
+
+                        <h5>4. Route Path, Durations & Pricing</h5>
+                        <div class="mb-3"><h6>Starting Point</h6><input type="text" class="form-control" name="starting_point" value="<?php echo htmlspecialchars($route_to_edit['starting_point'] ?? ''); ?>" required></div>
+                        
+                        <div id="stops-container">
+                             <?php if (!empty($stops_to_edit)): foreach ($stops_to_edit as $stop): ?>
+                                <div class="stop-item">
+                                    <div class="stop-item-content">
+                                        <div class="stop-header"><h6>Intermediate Stop</h6><button type="button" class="btn btn-sm btn-outline-danger remove-stop-btn">&times; Remove</button></div>
+                                        <div class="row">
+                                            <div class="col-md-8 mb-3"><label class="form-label small">Stop Name</label><input type="text" class="form-control" name="stop_name[]" value="<?php echo htmlspecialchars($stop['stop_name']); ?>" required></div>
+                                            <div class="col-md-4 mb-3"><label class="form-label small">Duration from Start (mins)</label><input type="number" class="form-control" name="duration[]" value="<?php echo $stop['duration_from_start_minutes'] ?? '0'; ?>" min="0"></div>
+                                        </div>
+                                        <label class="form-label small">Price from Starting Point</label>
+                                        <div class="price-grid">
+                                            <input type="number" class="form-control" name="price_sl[]" placeholder="Seater Lower" value="<?php echo $stop['price_seater_lower'] ?? ''; ?>">
+                                            <input type="number" class="form-control" name="price_su[]" placeholder="Seater Upper" value="<?php echo $stop['price_seater_upper'] ?? ''; ?>">
+                                            <input type="number" class="form-control" name="price_ll[]" placeholder="Sleeper Lower" value="<?php echo $stop['price_sleeper_lower'] ?? ''; ?>">
+                                            <input type="number" class="form-control" name="price_lu[]" placeholder="Sleeper Upper" value="<?php echo $stop['price_sleeper_upper'] ?? ''; ?>">
+                                        </div>
+                                    </div>
+                                </div>
+                             <?php endforeach; endif; ?>
+                        </div>
+                       
                         
                          
                         <button type="button" id="add-stop-btn" class="btn btn-secondary mt-2"><i class="fas fa-plus"></i> Add Stop</button>

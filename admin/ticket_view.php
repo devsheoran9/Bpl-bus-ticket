@@ -10,25 +10,39 @@ if (!$booking_id) {
 
 // --- Comprehensive query to fetch all necessary details in one go ---
 try {
+    // --- REMOVED JOIN to operators ---
     $stmt = $_conn_db->prepare("
         SELECT 
             b.*,
-            r.route_name,
+            r.route_name, r.route_id,
             sch.departure_time,
-            bu.bus_name, bu.registration_number,
-            op.operator_name, op.contact_phone AS operator_phone
+            bu.bus_name, bu.registration_number
         FROM bookings b
         JOIN routes r ON b.route_id = r.route_id
         JOIN buses bu ON b.bus_id = bu.bus_id
-        JOIN operators op ON bu.operator_id = op.operator_id
         LEFT JOIN route_schedules sch ON r.route_id = sch.route_id AND sch.operating_day = DATE_FORMAT(b.travel_date, '%a')
         WHERE b.booking_id = ?
     ");
     $stmt->execute([$booking_id]);
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$booking) {
-        die("Error: Booking details not found for the given ID.");
+    if (!$booking) die("Error: Booking details not found.");
+    
+    // --- NEW: Fetch assigned staff ---
+    $conductor_name = 'N/A';
+    $conductor_phone = 'N/A';
+    $staff_stmt = $_conn_db->prepare("
+        SELECT s.name, s.mobile
+        FROM route_staff_assignments rsa
+        JOIN staff s ON rsa.staff_id = s.staff_id
+        WHERE rsa.route_id = ? AND rsa.role = 'Conductor'
+        LIMIT 1
+    ");
+    $staff_stmt->execute([$booking['route_id']]);
+    $conductor_info = $staff_stmt->fetch(PDO::FETCH_ASSOC);
+    if ($conductor_info) {
+        $conductor_name = $conductor_info['name'];
+        $conductor_phone = $conductor_info['mobile'];
     }
 
     // Get the secure token for sharing
@@ -108,7 +122,7 @@ try {
                             </div>
                             <div class="detail-item">
                                 <div class="detail-icon"><i class="fas fa-user-tie"></i></div>
-                                <div class="detail-content"><span class="label">Operator Contact</span><span class="value"><?php echo htmlspecialchars($booking['operator_name'] ?? 'N/A'); ?> - <?php echo htmlspecialchars($booking['operator_phone'] ?? 'N/A'); ?></span></div>
+                                <div class="detail-content"><span class="label">Conductor Contact</span><span class="value"><?php echo htmlspecialchars($conductor_name); ?> - <?php echo htmlspecialchars($conductor_phone); ?></span></div>
                             </div>
                             <div class="detail-item">
                                 <div class="detail-icon"><i class="fas fa-calendar-alt"></i></div>

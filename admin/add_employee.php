@@ -105,7 +105,7 @@ try {
                                         $permissions_list = [
                                             'Tickets' => ['can_book_tickets' => 'Can Book', 'can_view_bookings' => 'Can View', 'can_delete_bookings' => 'Can Delete'],
                                             'Routes' => ['can_manage_routes' => 'Can Add', 'can_edit_routes' => 'Can Edit', 'can_delete_routes' => 'Can Delete'],
-                                            'Other' => ['can_manage_operators' => 'Operators', 'can_manage_buses' => 'Buses', 'can_change_password' => 'Change Password', 'can_manage_employees' => 'Manage Employees']
+                                            'Other' => ['can_manage_buses' => 'Buses', 'can_change_password' => 'Change Password', 'can_manage_employees' => 'Manage Employees']
                                         ];
                                         foreach ($permissions_list as $group => $perms):
                                         ?>

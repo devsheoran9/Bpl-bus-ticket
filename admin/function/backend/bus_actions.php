@@ -25,6 +25,8 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
         $description = trim($_POST['description'] ?? '');
         $status = $_POST['status'] ?? 'Inactive';
         $categories = $_POST['categories'] ?? [];
+        $engine_no = trim($_POST['engine_no'] ?? '') ?: null; // If empty string, make it NULL
+        $chassis_no = trim($_POST['chassis_no'] ?? '') ?: null; // If empty string, make it NULL
 
         if (empty($bus_name) || empty($registration_number) || empty($bus_type)) {
             $response['notif_desc'] = 'Please fill all required fields.';
@@ -44,8 +46,11 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
             $_conn_db->beginTransaction();
 
             // SQL now excludes operator_id
-            $stmt = $_conn_db->prepare("INSERT INTO buses (bus_name, registration_number, bus_type, description, status) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$bus_name, $registration_number, $bus_type, $description, $status]);
+            $stmt = $_conn_db->prepare(
+                "INSERT INTO buses (bus_name, registration_number, engine_no, chassis_no, bus_type, description, status) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([$bus_name, $registration_number, $engine_no, $chassis_no, $bus_type, $description, $status]);
             $new_bus_id = $_conn_db->lastInsertId();
 
             if (!empty($categories) && is_array($categories)) {
@@ -151,6 +156,8 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
         $status = $_POST['status'] ?? 'Inactive';
         $categories = $_POST['categories'] ?? [];
         $images_to_delete_str = $_POST['images_to_delete'] ?? '';
+        $engine_no = trim($_POST['engine_no'] ?? '') ?: null; // Handle new field
+        $chassis_no = trim($_POST['chassis_no'] ?? '') ?: null; // Handle new field
 
         // Validación
         if ($bus_id <= 0 || empty($bus_name) || empty($registration_number)) {
@@ -173,21 +180,18 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
 
             // 1. Actualizar los detalles principales del autobús en la tabla `buses`
             $sql = "UPDATE buses SET 
-                        bus_name = ?, registration_number = ?, 
-                        bus_type = ?, description = ?, status = ?,
-                        updated_at = NOW()
-                    WHERE bus_id = ?";
-            $stmt = $_conn_db->prepare($sql);
-            $stmt->execute([
-                $bus_name,
-                $registration_number,
-                
-                $bus_type,
-                $description,
-                $status,
-                $bus_id
-            ]);
-
+            bus_name = ?, registration_number = ?, 
+            engine_no = ?, chassis_no = ?, 
+            bus_type = ?, description = ?, status = ?,
+            updated_at = NOW()
+        WHERE bus_id = ?";
+$stmt = $_conn_db->prepare($sql);
+$stmt->execute([
+    $bus_name, $registration_number,
+    $engine_no, $chassis_no,
+    $bus_type, $description, $status,
+    $bus_id
+]);
             // 2. Sincronizar categorías: eliminar las antiguas, insertar las nuevas
             $stmt_delete_cats = $_conn_db->prepare("DELETE FROM bus_category_map WHERE bus_id = ?");
             $stmt_delete_cats->execute([$bus_id]);

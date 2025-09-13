@@ -182,7 +182,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                             <label for="registration_number" class="form-label">Registration Number <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="registration_number" name="registration_number" required>
                                         </div>
-
+     <!-- ============================================= -->
+     <div class="col-md-6 mb-3">
+                                            <label for="engine_no" class="form-label">Engine Number <small>(Optional)</small></label>
+                                            <input type="text" class="form-control" id="engine_no" name="engine_no">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="chassis_no" class="form-label">Chassis Number <small>(Optional)</small></label>
+                                            <input type="text" class="form-control" id="chassis_no" name="chassis_no">
+                                        </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="bus_type" class="form-label">Bus Type <span class="text-danger">*</span></label>
                                             <select class="form-select" id="bus_type" name="bus_type" required>

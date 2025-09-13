@@ -119,6 +119,14 @@ try {
                                         <input type="text" class="form-control" id="registration_number" name="registration_number" value="<?= htmlspecialchars($bus['registration_number']) ?>" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
+                                        <label for="engine_no" class="form-label">Engine Number <small>(Optional)</small></label>
+                                        <input type="text" class="form-control" id="engine_no" name="engine_no" value="<?= htmlspecialchars($bus['engine_no'] ?? '') ?>">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="chassis_no" class="form-label">Chassis Number <small>(Optional)</small></label>
+                                        <input type="text" class="form-control" id="chassis_no" name="chassis_no" value="<?= htmlspecialchars($bus['chassis_no'] ?? '') ?>">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
                                         <label for="bus_type" class="form-label">Bus Type <span class="text-danger">*</span></label>
                                         <select class="form-select" id="bus_type" name="bus_type" required>
                                             <option value="">Select Bus Type</option>
