@@ -56,7 +56,7 @@ try {
     // Create the secure URL that points to the public view page
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $base_url = rtrim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/');
-    $view_ticket_url = $base_url . '/ticket_public_view=?token=' . urlencode($token);
+    $view_ticket_url = $base_url . '/ticket_public_view?token=' . urlencode($token);
 
 
     // --- 4. Fetch Passengers & Transaction Details ---
