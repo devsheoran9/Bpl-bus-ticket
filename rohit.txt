@@ -1,0 +1,25 @@
+CREATE TABLE `settings` (
+  `setting_key` VARCHAR(100) NOT NULL,
+  `setting_value` TEXT DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Add a primary key to prevent duplicate setting names
+ALTER TABLE `settings`
+  ADD PRIMARY KEY (`setting_key`);
+
+-- Insert some default empty values so the keys exist from the start
+INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
+('company_name', ''),
+('company_address', ''),
+('email_primary', ''),
+('email_optional_1', ''),
+('email_optional_2', ''),
+('facebook_url', ''),
+('instagram_url', ''),
+('mobile_primary', ''),
+('mobile_optional_1', ''),
+('mobile_optional_2', ''),
+('twitter_url', ''),
+('whatsapp_primary', ''),
+('whatsapp_optional_1', ''),
+('youtube_url', '');
