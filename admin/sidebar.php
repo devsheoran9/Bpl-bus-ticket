@@ -142,8 +142,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </div>
             </li>
             <?php endif; ?>
-           
-            <!-- Link visible only if user has 'can_manage_employees' permission -->
+            
             <?php if (user_has_permission('can_manage_employees')): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page == 'add_employee' ? 'active' : ''; ?>" href="add_employee.php">
