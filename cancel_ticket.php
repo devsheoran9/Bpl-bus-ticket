@@ -67,15 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no'])) {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cancel Ticket</title>
-    <!-- Your CSS from header.php -->
-</head>
+ 
 
 <body>
 
@@ -101,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no'])) {
                                         <label for="ticket_no" class="form-label" style="font-weight: 500;">Ticket No. (PNR)</label>
                                         <div style="position: relative;">
                                             <i class="bi bi-ticket-perforated" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #adb5bd;"></i>
-                                            <input type="text" class="form-control" id="ticket_no" name="ticket_no" required value="<?php echo htmlspecialchars($_GET['ticket_no'] ?? ''); ?>" style="padding-left: 40px;">
+                                            <input type="text" class="form-control" id="ticket_no" name="ticket_no" required value="<?php echo htmlspecialchars($_GET['ticket_no'] ?? ''); ?>" style="padding-left: 40px;" placeholder="Enter ticket no">
                                         </div>
                                     </div>
                                     <div class="col-md-5">

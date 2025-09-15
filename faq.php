@@ -1,15 +1,4 @@
-<?php include 'includes/header.php'; ?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help & Support - BPL Tickets</title>
-    <!-- Your existing CSS from header.php -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-</head>
-
+<?php include 'includes/header.php'; ?> 
 <body style="background-color: #f8f9fa;">
 
     <!-- ======= FAQ Hero Section ======= -->
@@ -27,7 +16,7 @@
                 <h2 class="mb-4" style="font-weight: 600; color: #343a40;">Frequently Asked Questions</h2>
 
                 <!-- Tab Navigation -->
-                <ul class="nav nav-pills nav-fill mb-4" id="faqTab" role="tablist" style="background-color: #f8f9fa; border-radius: 10px; padding: 5px;">
+                <ul class="nav   nav-fill mb-4" id="faqTab" role="tablist" style="background-color: #f8f9fa; border-radius: 10px; padding: 5px;">
                     <li class="nav-item" role="presentation"><button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">General</button></li>
                     <li class="nav-item" role="presentation"><button class="nav-link" id="ticket-tab" data-bs-toggle="tab" data-bs-target="#ticket" type="button" role="tab">Ticket-related</button></li>
                     <li class="nav-item" role="presentation"><button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">Payment</button></li>

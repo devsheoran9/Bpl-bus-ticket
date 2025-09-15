@@ -75,75 +75,75 @@ try {
         </div>
 
         <!-- whats new -->
-      <div class="container">
-    <!-- START: What's New Section -->
-    <div style="width: 100%; margin: 40px auto; padding: 0 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <div class="container">
+            <!-- START: What's New Section -->
+            <div style="width: 100%; margin: 40px auto; padding: 0 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
-        <h2 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px;">What's New</h2>
+                <h2 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px;">What's New</h2>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
 
-            <!-- Card 1: Free Cancellation -->
-            <div style="background-color: #7b003a; border-radius: 16px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.1; color: white; transform: rotate(-15deg);">
-                    <!-- Suggested Icon: cancel / close-circle -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm4.3 13.3l-1.4 1.4L12 13.4l-2.9 2.9l-1.4-1.4l2.9-2.9l-2.9-2.9l1.4-1.4l2.9 2.9l2.9-2.9l1.4 1.4L13.4 12l2.9 2.9Z"/>
-                    </svg>
-                </div>
-                <div style="position: relative; z-index: 2;">
-                    <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">Hassle-Free Cancellation</h3>
-                    <p style="font-size: 16px; margin: 0 0 24px 0; opacity: 0.9;">Cancel anytime and get a 100% refund instantly.</p>
+                    <!-- Card 1: Free Cancellation -->
+                    <div style="background-color: #7b003a; border-radius: 16px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.1; color: white; transform: rotate(-15deg);">
+                            <!-- Suggested Icon: cancel / close-circle -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm4.3 13.3l-1.4 1.4L12 13.4l-2.9 2.9l-1.4-1.4l2.9-2.9l-2.9-2.9l1.4-1.4l2.9 2.9l2.9-2.9l1.4 1.4L13.4 12l2.9 2.9Z" />
+                            </svg>
+                        </div>
+                        <div style="position: relative; z-index: 2;">
+                            <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">Hassle-Free Cancellation</h3>
+                            <p style="font-size: 16px; margin: 0 0 24px 0; opacity: 0.9;">Cancel anytime and get a 100% refund instantly.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Bus Timetable -->
+                    <div style="background-color: #ffffff; border-radius: 16px; padding: 24px; color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                        <div style="position: absolute; right: -15px; bottom: -25px; font-size: 120px; opacity: 0.08; color: black; transform: rotate(-15deg);">
+                            <!-- Suggested Icon: clock -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7h1.5Z" />
+                            </svg>
+                        </div>
+                        <div style="position: relative; z-index: 2;">
+                            <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0;">Real-Time Bus Timetable</h3>
+                            <p style="font-size: 16px; margin: 0 0 16px 0; color: #555;">Check live bus timings for routes across your state.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: FlexiTicket -->
+                    <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border: 1px solid #b2ebf2; border-radius: 16px; padding: 24px; color: #00796b; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #004d40; transform: rotate(-15deg);">
+                            <!-- Suggested Icon: ticket -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M20 4H4v4a2 2 0 0 1 0 4v4h16v-4a2 2 0 0 1 0-4V4Zm0 2v2.59l.71.7l.29.71l-.29.71l-.71.7V16H4v-2.59l-.71-.7l-.29-.71l.29-.71l.71-.7V6h16Z" />
+                            </svg>
+                        </div>
+                        <div style="position: relative; z-index: 2;">
+                            <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #004d40;">FlexiTicket Options</h3>
+                            <p style="font-size: 16px; margin: 0 0 16px 0; color: #00695c;">Easily reschedule or cancel with special benefits.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Lightning Fast Refund -->
+                    <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border: 1px solid #ffe0b2; border-radius: 16px; padding: 24px; color: #e65100; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+                        <div style="position: absolute; right: -10px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #bf360c; transform: rotate(-15deg);">
+                            <!-- Suggested Icon: lightning -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M7 2v11h3v9l7-12h-4l4-8Z" />
+                            </svg>
+                        </div>
+                        <div style="position: relative; z-index: 2;">
+                            <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #bf360c;">Instant Refunds</h3>
+                            <p style="font-size: 16px; margin: 0 0 16px 0; color: #d84315;">Get your money back within minutes of cancellation.</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
-            <!-- Card 2: Bus Timetable -->
-            <div style="background-color: #ffffff; border-radius: 16px; padding: 24px; color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
-                <div style="position: absolute; right: -15px; bottom: -25px; font-size: 120px; opacity: 0.08; color: black; transform: rotate(-15deg);">
-                    <!-- Suggested Icon: clock -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7h1.5Z"/>
-                    </svg>
-                </div>
-                <div style="position: relative; z-index: 2;">
-                    <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0;">Real-Time Bus Timetable</h3>
-                    <p style="font-size: 16px; margin: 0 0 16px 0; color: #555;">Check live bus timings for routes across your state.</p>
-                </div>
-            </div>
-
-            <!-- Card 3: FlexiTicket -->
-            <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border: 1px solid #b2ebf2; border-radius: 16px; padding: 24px; color: #00796b; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #004d40; transform: rotate(-15deg);">
-                    <!-- Suggested Icon: ticket -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M20 4H4v4a2 2 0 0 1 0 4v4h16v-4a2 2 0 0 1 0-4V4Zm0 2v2.59l.71.7l.29.71l-.29.71l-.71.7V16H4v-2.59l-.71-.7l-.29-.71l.29-.71l.71-.7V6h16Z"/>
-                    </svg>
-                </div>
-                <div style="position: relative; z-index: 2;">
-                    <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #004d40;">FlexiTicket Options</h3>
-                    <p style="font-size: 16px; margin: 0 0 16px 0; color: #00695c;">Easily reschedule or cancel with special benefits.</p>
-                </div>
-            </div>
-
-            <!-- Card 4: Lightning Fast Refund -->
-            <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border: 1px solid #ffe0b2; border-radius: 16px; padding: 24px; color: #e65100; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                <div style="position: absolute; right: -10px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #bf360c; transform: rotate(-15deg);">
-                    <!-- Suggested Icon: lightning -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M7 2v11h3v9l7-12h-4l4-8Z"/>
-                    </svg>
-                </div>
-                <div style="position: relative; z-index: 2;">
-                    <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #bf360c;">Instant Refunds</h3>
-                    <p style="font-size: 16px; margin: 0 0 16px 0; color: #d84315;">Get your money back within minutes of cancellation.</p>
-                </div>
-            </div>
-
+            <!-- END: What's New Section -->
         </div>
-    </div>
-    <!-- END: What's New Section -->
-</div>
-    
+
 
 
         <section class="section">
@@ -242,6 +242,7 @@ try {
 
     </main>
     <?php include "includes/footer.php" ?>
+
     <script>
         const allLocations = <?php echo json_encode($all_locations); ?>;
     </script>

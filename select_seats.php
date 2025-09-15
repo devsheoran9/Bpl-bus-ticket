@@ -416,6 +416,17 @@ function get_transform_style($orientation)
 </style>
 
 <body>
+    <!-- ====================================================================== -->
+    <!-- NEW: Full Page Loader for Payment Verification -->
+    <!-- ====================================================================== -->
+    <div id="full-page-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 style="margin-top: 20px; color: #333; font-weight: 600;">Finalizing Your Booking...</h4>
+        <p style="color: #6c757d;">Please do not close or refresh this page.</p>
+    </div>
+
     <header class="top-header mt-5 pt-5">
         <div class="container">
             <div class="progress-steps">
@@ -949,6 +960,7 @@ function get_transform_style($orientation)
 
         <?php endif; ?>
     </main>
+
     <br><br><br><br>
 
     <div id="bottom-bar" class="bottom-action-bar">
@@ -964,10 +976,9 @@ function get_transform_style($orientation)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
-    <!-- Add the Razorpay Checkout Script -->
+
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <!-- --- MODIFIED: JavaScript updated to fix booking error --- -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectedSeats = new Map();
@@ -1316,7 +1327,7 @@ function get_transform_style($orientation)
                         actionBtn.textContent = 'Proceed to Payment';
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.error("AJAX Error:", jqXHR.responseText); // Log the raw HTML response
+                        console.error("AJAX Error:", jqXHR.responseText);
                         alert('An error occurred while preparing your payment. This is often due to a server configuration issue.');
                         actionBtn.disabled = false;
                         actionBtn.textContent = 'Proceed to Payment';
@@ -1325,6 +1336,15 @@ function get_transform_style($orientation)
             }
 
             function verifyPayment(paymentResponse, bookingId, isNewUser) {
+                const loader = document.getElementById('full-page-loader');
+                const mainContent = document.querySelector('main');
+                const bottomBar = document.getElementById('bottom-bar');
+                const headerContent = document.querySelector('header.top-header');
+
+                if (loader) loader.style.display = 'flex';
+                if (mainContent) mainContent.style.display = 'none';
+                if (bottomBar) bottomBar.style.display = 'none';
+                if (headerContent) headerContent.style.display = 'none';
                 const verificationData = {
                     razorpay_payment_id: paymentResponse.razorpay_payment_id,
                     razorpay_order_id: paymentResponse.razorpay_order_id,

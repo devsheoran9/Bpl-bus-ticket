@@ -15,8 +15,8 @@ $abc = user_login($type = 'header');
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"  />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <!-- Link to your new custom CSS file -->
     <link rel="stylesheet" href="css/custom.css?v=<?php echo time(); ?>">
 </head>
@@ -72,12 +72,12 @@ $abc = user_login($type = 'header');
                             <div class="icon-text-group"><i class="bi bi-person"></i><span>Personal information</span></div><i class="bi bi-chevron-right"></i>
                         </a>
                     </li>
-                     <li>
-                    <a href="cancel_ticket" class="sidebar-menu-item">
-                        <div class="icon-text-group"><i class="bi bi-scissors"></i><span>Cancel Ticket</span></div><i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>
-                <hr>
+                    <li>
+                        <a href="cancel_ticket" class="sidebar-menu-item">
+                            <div class="icon-text-group"><i class="bi bi-scissors"></i><span>Cancel Ticket</span></div><i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <hr>
                     <li>
                         <a href="add_review" class="sidebar-menu-item <?php if ($current_page == 'add_review.php') echo 'active'; ?>">
                             <div class="icon-text-group"><i class="bi bi-pencil-square"></i><span>Add your review</span></div><i class="bi bi-chevron-right"></i>
@@ -102,11 +102,11 @@ $abc = user_login($type = 'header');
             <hr>
             <h3 class="sidebar-heading">More</h3>
             <ul class="sidebar-menu">
-                <li>
+                <!-- <li>
                     <a href="#" class="sidebar-menu-item">
                         <div class="icon-text-group"><i class="bi bi-tag"></i><span>Offers</span></div><i class="bi bi-chevron-right"></i>
                     </a>
-                </li>
+                </li> -->
                 <li>
                     <a href="about_us" class="sidebar-menu-item <?php if ($current_page == 'about_us.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Know about us</span></div><i class="bi bi-chevron-right"></i>
@@ -117,7 +117,7 @@ $abc = user_login($type = 'header');
                         <div class="icon-text-group"><i class="bi bi-question-circle"></i><span>Help</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
-               
+
             </ul>
 
             <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
