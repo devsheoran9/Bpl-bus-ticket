@@ -56,7 +56,7 @@ try {
         die("Booking not found or you do not have permission to view this ticket.");
     }
 
-    $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
+    $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ? AND passenger_status = 'CONFIRMED'");
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -1,6 +1,11 @@
 <?php
 include 'includes/header.php';
-echo user_login("page");
+
+// 1. Enforce login.
+user_login("page");
+
+// 2. IMPORTANT: Replace 'your_user_email_variable' with the correct session key for the user's email.
+$session_email = $_SESSION['email'] ?? null;
 
 // Initialize variables
 $booking_details = null;
@@ -9,16 +14,15 @@ $cancellation_allowed = false;
 $error_message = $_SESSION['error_message'] ?? null;
 $success_message = $_SESSION['success_message'] ?? null;
 
-// Clear session messages after displaying them
+// Clear session messages after retrieving them
 unset($_SESSION['error_message'], $_SESSION['success_message']);
 
-// This part only handles the GET request to LOOKUP a ticket
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($_GET['email'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no'])) {
     $ticket_no = trim($_GET['ticket_no']);
-    $email = trim($_GET['email']);
 
-    if (!empty($ticket_no) && !empty($email)) {
+    if (!empty($ticket_no) && !empty($session_email)) {
         try {
+            // ===== FIX: THIS SQL QUERY IS NOW MORE ROBUST AND SHOULD NOT CRASH =====
             $stmt = $pdo->prepare("
                 SELECT
                     b.booking_id, b.ticket_no, b.travel_date, b.origin, b.destination, b.booking_status,
@@ -26,34 +30,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                     rs.departure_time
                 FROM bookings b
                 JOIN passengers p ON b.booking_id = p.booking_id
-                JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a')
-                WHERE b.ticket_no = ? AND b.contact_email = ?
+                JOIN route_schedules rs ON b.route_id = rs.route_id
+                WHERE
+                    b.ticket_no = ?
+                    AND b.contact_email = ?
+                    -- This LIKE condition correctly finds the day within a 'Mon,Tue,Wed' string
+                    AND rs.operating_day LIKE CONCAT('%', DATE_FORMAT(b.travel_date, '%a'), '%')
+                -- Group by passenger to prevent duplicates if a route has multiple matching schedules
+                GROUP BY p.passenger_id
             ");
-            $stmt->execute([$ticket_no, $email]);
+
+            $stmt->execute([$ticket_no, $session_email]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($results) {
                 $booking_details = $results[0];
                 $passengers = $results;
-
                 $departure_datetime_str = $booking_details['travel_date'] . ' ' . $booking_details['departure_time'];
                 $departure_timestamp = strtotime($departure_datetime_str);
-
-                //===  cencellation time ===
                 $cancellation_deadline = $departure_timestamp - (12 * 60 * 60);
 
-                // Check if the current time is before the new deadline
                 if (time() <= $cancellation_deadline) {
                     $cancellation_allowed = true;
-                } else { 
-                    $error_message = "The cancellation period for this ticket has expired. Tickets can only be cancelled up to 12 hours before departure.";
+                } else {
+                    $error_message = "The cancellation period for this ticket has expired.";
                 }
             } else {
-                $error_message = "No booking found with the provided Ticket No. and Email Address.";
+                $error_message = "The entered Ticket No. (PNR) was not found for your account. Please check the number and try again.";
             }
         } catch (PDOException $e) {
-            $error_message = "A database error occurred. Please try again later.";
-            error_log("Cancellation lookup error: " . $e->getMessage());
+            // This block will now only be reached for true connection errors
+            $error_message = "A critical database error occurred. Please contact support.";
+            // It's good practice to log the actual error for your own debugging
+            error_log("Cancellation lookup PDOException: " . $e->getMessage());
         }
     }
 }
@@ -80,8 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                                 <input type="text" class="form-control" id="ticket_no" name="ticket_no" required value="<?php echo htmlspecialchars($_GET['ticket_no'] ?? ''); ?>">
                             </div>
                             <div class="col-md-5">
-                                <label for="email" class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="email" name="email" required value="<?php echo htmlspecialchars($_GET['email'] ?? ''); ?>">
+                                <label for="email" class="form-label">Your Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required value="<?php echo htmlspecialchars($session_email ?? 'Email not found in session'); ?>" readonly>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary w-100">Find</button>
@@ -105,11 +114,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                             </div>
                         </div>
 
-                        <!-- The action now points to our new processing file -->
                         <form action="cancel_ticket_process" method="POST" id="cancellation-form">
                             <input type="hidden" name="booking_id" value="<?php echo $booking_details['booking_id']; ?>">
                             <input type="hidden" name="ticket_no" value="<?php echo htmlspecialchars($booking_details['ticket_no']); ?>">
-                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($_GET['email'] ?? ''); ?>">
+                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($session_email); ?>">
 
                             <h5 class="mb-3">Select Passengers to Cancel</h5>
                             <div class="table-responsive">
@@ -146,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
                                 </table>
                             </div>
                             <?php if ($cancellation_allowed && $active_passengers_exist): ?>
-                                <!-- This button now triggers the modal instead of submitting -->
                                 <button type="button" id="cancel-trigger-btn" class="btn btn-danger w-100 mt-3">Cancel Selected Tickets</button>
                             <?php elseif (!$active_passengers_exist): ?>
                                 <p class="text-center text-muted mt-3">All tickets for this booking have already been cancelled.</p>
@@ -192,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ticket_no']) && isset($
     </div>
 </div>
 
-
+<br><br><br><br><br>
 <?php include 'includes/footer.php'; ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

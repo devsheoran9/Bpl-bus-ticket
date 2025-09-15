@@ -1556,7 +1556,7 @@ footer .text-primary {
   border-radius: 1rem;
   box-shadow: var(--card-shadow);
   padding: 1.5rem;
-  z-index: -1;
+  z-index: 1;
   top: 90px;  
 }
 .filter-card h5 {
