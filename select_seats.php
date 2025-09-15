@@ -1223,7 +1223,7 @@ function get_transform_style($orientation)
                 };
 
                 $.ajax({
-                    url: 'process_booking',
+                    url: 'process_booking.php',
                     type: 'POST',
                     data: bookingData,
                     dataType: 'json',

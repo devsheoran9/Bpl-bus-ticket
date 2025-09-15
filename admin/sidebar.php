@@ -148,6 +148,13 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </a>
             </li>
             <?php endif; ?>
+            <?php if (user_has_permission('can_manage_cancellations')): // A new permission! ?>
+<li class="nav-item">
+    <a class="nav-link <?php echo $current_page == 'cancellations' ? 'active' : ''; ?>" href="cancellations.php">
+        <i class="fas fa-undo-alt me-2"></i>Cancellations
+    </a>
+</li>
+<?php endif; ?>
             <?php if (user_has_permission('can_manage_settings')): // A new permission! ?>
 <li class="nav-item">
     <a class="nav-link <?php echo $current_page == 'settings' ? 'active' : ''; ?>" href="settings.php">
