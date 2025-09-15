@@ -77,7 +77,7 @@ try {
             );
             $insert_stmt->execute([$name, $mobile, $email, $hashed_password, $password_salt, $permissions_to_store, $linked_staff_id]);
             
-            send_json_response('true', 'success', 'Employee account created successfully!');
+            send_json_response( 'success', 'Employee account created successfully!');
             break;
             
             case 'update_employee':

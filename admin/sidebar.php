@@ -71,9 +71,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </div>
             </li>
             <?php endif; ?>
-            <!-- =============================================== -->
-            <!--          TICKET BOOKING MENU END                -->
-            <!-- =============================================== -->
+             
 
             <?php // FIX: Changed the empty permission to 'can_manage_staff' ?>
             <?php if (user_has_permission('can_manage_staff')): ?>
@@ -150,8 +148,13 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </a>
             </li>
             <?php endif; ?>
-            
-            <!-- General links visible to everyone logged in -->
+            <?php if (user_has_permission('can_manage_settings')): // A new permission! ?>
+<li class="nav-item">
+    <a class="nav-link <?php echo $current_page == 'settings' ? 'active' : ''; ?>" href="settings.php">
+        <i class="fas fa-building nav-icon me-2"></i>Company Settings
+    </a>
+</li>
+<?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link" href="logout.php">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout

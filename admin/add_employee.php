@@ -18,7 +18,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
             $employee_to_edit = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($employee_to_edit) {
                 $edit_mode = true;
-                // Decode their current permissions to check the boxes
                 $employee_permissions = json_decode($employee_to_edit['permissions'], true) ?: [];
             }
         } catch (PDOException $e) {
@@ -31,11 +30,9 @@ if (isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['id'])) {
 // --- DATA FETCHING for form and list ---
 $all_staff = [];
 try {
-    // Fetch staff list for the dropdown
     $staff_stmt = $_conn_db->query("SELECT staff_id, name, mobile FROM staff WHERE status = 'Active' ORDER BY name ASC");
     $all_staff = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch existing employees list
     $stmt = $_conn_db->prepare("SELECT id, name, mobile, email, status, last_login_time, last_login_ip, session_token, linked_staff_id FROM admin WHERE type = 'employee' ORDER BY id DESC");
     $stmt->execute();
     $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -126,21 +123,26 @@ try {
                                     <label class="form-label fw-bold">Assign Permissions</label>
                                     <div class="row">
                                         <?php 
+                                        // --- CORRECTED AND EXPANDED PERMISSIONS LIST ---
                                         $permissions_list = [
                                             'Booking' => [
-                                                'can_book_tickets' => 'Can Book Tickets', 
-                                                'can_view_bookings' => 'Can View Bookings', 
-                                                'can_delete_bookings' => 'Can Delete Bookings'
+                                                'can_book_tickets'      => 'Book Tickets', 
+                                                'can_view_bookings'     => 'View Daily Bookings', 
+                                                'can_delete_bookings'   => 'Delete Bookings'
                                             ],
                                             'Management' => [
-                                                'can_manage_routes' => 'Manage Routes (Add/Edit)', 
-                                                'can_delete_routes' => 'Can Delete Routes',
-                                                'can_manage_buses' => 'Manage Buses', 
-                                                'can_manage_staff' => 'Manage Staff', 
-                                                'can_manage_employees' => 'Manage Employees'
+                                                'can_manage_routes'     => 'Manage Routes', 
+                                                'can_delete_routes'     => 'Delete Routes',
+                                                'can_manage_buses'      => 'Manage Buses', 
+                                                'can_manage_staff'      => 'Manage Staff', 
+                                                'can_manage_employees'  => 'Manage Employees'
                                             ],
                                             'Reporting' => [
-                                                'can_view_own_collections' => 'View Own Cash Report'
+                                                'can_view_own_collections' => 'View Own Cash Report',
+                                                'can_view_reports'         => 'View Admin Sales Report'
+                                            ],
+                                            'System' => [
+                                                'can_manage_settings'   => 'Manage Company Settings'
                                             ]
                                         ];
 
@@ -234,8 +236,17 @@ $(document).ready(function() {
                 url: form.attr('action'), type: 'POST', data: form.serialize(), dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        $.notify({ message: response.message }, { type: 'success' });
-                        setTimeout(() => window.location.href = 'add_employee.php', 1500);
+ 
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 2000,  
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect after the alert closes
+                        window.location.href = 'add_employee.php';
+                    });
                     } else {
                         $.notify({ message: response.message }, { type: 'danger' });
                     }
@@ -244,7 +255,7 @@ $(document).ready(function() {
                 complete: () => submitBtn.prop('disabled', false).html(originalBtnText)
             }).data('handler-attached', true);
         });
-    
+
     $('#linked_staff_id').on('change', function() {
         const selectedOption = $(this).find('option:selected');
         const staffName = selectedOption.data('name');

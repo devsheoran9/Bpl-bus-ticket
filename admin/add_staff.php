@@ -3,7 +3,7 @@
 global $_conn_db;
 include_once('function/_db.php');
 session_security_check();
-// check_permission('can_manage_staff');
+check_permission('can_manage_staff');
 
 $staff_to_edit = null;
 

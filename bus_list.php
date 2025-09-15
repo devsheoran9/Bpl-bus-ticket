@@ -52,23 +52,95 @@ try {
     // ======================================================================
     if ($is_search_performed) {
         $day_of_week = date('D', strtotime($journey_date));
-        $stmt = $_conn_db->prepare("SELECT b.bus_name, b.bus_id, b.bus_type, GROUP_CONCAT(DISTINCT bc.category_name SEPARATOR ',') AS categories, r.route_id, r.starting_point, r.ending_point, rsch.schedule_id, rsch.departure_time, (SELECT COUNT(s.seat_id) FROM seats s WHERE s.bus_id = b.bus_id AND s.is_bookable = 1) AS total_seats, (SELECT COUNT(p.passenger_id) FROM passengers p JOIN bookings bk ON p.booking_id = bk.booking_id WHERE bk.route_id = r.route_id AND bk.travel_date = :journey_date AND p.passenger_status = 'CONFIRMED') AS booked_seats, (SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :from_loc1 UNION SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.starting_point = :from_loc2 LIMIT 1) AS has_from, (SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :to_loc1 UNION SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.ending_point = :to_loc2 LIMIT 1) AS has_to, (SELECT COALESCE(rs.duration_from_start_minutes, 0) FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :from_loc3 LIMIT 1) AS from_duration, (SELECT rs.duration_from_start_minutes FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :to_loc3 LIMIT 1) AS to_duration_stop, (SELECT MAX(rs.duration_from_start_minutes) FROM route_stops rs WHERE rs.route_id = r.route_id) AS to_duration_end, (SELECT MIN(price) FROM (SELECT price_seater_lower AS price FROM route_stops WHERE route_id = r.route_id AND price_seater_lower > 0) AS prices) AS journey_price FROM route_schedules rsch JOIN routes r ON rsch.route_id = r.route_id JOIN buses b ON r.bus_id = b.bus_id LEFT JOIN bus_category_map bcm ON b.bus_id = bcm.bus_id LEFT JOIN bus_categories bc ON bcm.category_id = bc.category_id WHERE rsch.operating_day LIKE :day_of_week GROUP BY rsch.schedule_id HAVING has_from = 1 AND has_to = 1 ORDER BY rsch.departure_time ASC");
-        $stmt->execute([':from_loc1' => $from_location, ':from_loc2' => $from_location, ':from_loc3' => $from_location, ':to_loc1' => $to_location, ':to_loc2' => $to_location, ':to_loc3' => $to_location, ':day_of_week' => '%' . $day_of_week . '%', ':journey_date' => $journey_date]);
+         
+        // --- REVISED AND CORRECTED QUERY ---
+        $stmt = $_conn_db->prepare("
+            SELECT
+                b.bus_name, b.bus_id, b.bus_type,
+                r.route_id, r.starting_point, r.ending_point,
+                rsch.schedule_id, rsch.departure_time,
+                COUNT(DISTINCT s.seat_id) AS total_seats,
+                COUNT(DISTINCT p.passenger_id) AS booked_seats,
+                GROUP_CONCAT(DISTINCT bc.category_name SEPARATOR ', ') AS categories,
+                MIN(rs_prices.price_seater_lower) AS journey_price
+            FROM route_schedules rsch
+            JOIN routes r ON rsch.route_id = r.route_id
+            JOIN buses b ON r.bus_id = b.bus_id
+            LEFT JOIN seats s ON s.bus_id = b.bus_id AND s.is_bookable = 1
+            LEFT JOIN bookings bk ON bk.route_id = r.route_id AND bk.travel_date = :journey_date
+            LEFT JOIN passengers p ON p.booking_id = bk.booking_id AND p.passenger_status = 'CONFIRMED'
+            LEFT JOIN bus_category_map bcm ON b.bus_id = bcm.bus_id
+            LEFT JOIN bus_categories bc ON bcm.category_id = bc.category_id
+            LEFT JOIN route_stops rs_prices ON rs_prices.route_id = r.route_id AND rs_prices.price_seater_lower > 0
+            WHERE
+                rsch.operating_day = :day_of_week
+                AND EXISTS (
+                    SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.starting_point = :from_loc1
+                    UNION ALL
+                    SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :from_loc2
+                )
+                AND EXISTS (
+                    SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.ending_point = :to_loc3
+                    UNION ALL
+                    SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :to_loc4
+                )
+            GROUP BY rsch.schedule_id
+            ORDER BY rsch.departure_time ASC
+        ");
+
+        $stmt->execute([
+            ':journey_date' => $journey_date,
+            ':day_of_week' => $day_of_week,
+            ':from_loc1' => $from_location,
+            ':from_loc2' => $from_location,
+            ':to_loc3' => $to_location,
+            ':to_loc4' => $to_location
+        ]);
         $direct_matches_today = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // --- NEW: Prepare a statement to fetch durations efficiently ---
+        $duration_stmt = $_conn_db->prepare("
+            SELECT stop_name, duration_from_start_minutes FROM route_stops WHERE route_id = ?
+            UNION
+            SELECT starting_point, 0 FROM routes WHERE route_id = ?
+        ");
+
+        // --- MODIFIED PHP LOOP ---
         foreach ($direct_matches_today as $bus) {
+            // Fetch all durations for this specific route
+            $duration_stmt->execute([$bus['route_id'], $bus['route_id']]);
+            $durations = $duration_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
             $base_time = strtotime($journey_date . ' ' . $bus['departure_time']);
-            $from_offset = (int)($bus['from_duration'] ?? 0);
-            $to_offset = ($to_location == $bus['ending_point']) ? (int)$bus['to_duration_end'] : (int)$bus['to_duration_stop'];
+            
+            $from_offset = (int)($durations[$from_location] ?? 0);
+            $to_offset = (int)($durations[$to_location] ?? 0);
+
+            // If the destination is the route's final ending point, we need to find the max duration
+            if ($to_location == $bus['ending_point'] && !isset($durations[$to_location])) {
+                 $max_duration_stmt = $_conn_db->prepare("SELECT MAX(duration_from_start_minutes) FROM route_stops WHERE route_id = ?");
+                 $max_duration_stmt->execute([$bus['route_id']]);
+                 $to_offset = (int) $max_duration_stmt->fetchColumn();
+            }
+
             $bus['departure'] = date('H:i', $base_time + ($from_offset * 60));
-            if ($journey_date == date('Y-m-d') && strtotime($bus['departure']) < time()) continue;
+            
+            if ($journey_date == date('Y-m-d') && strtotime($bus['departure']) < time()) {
+                continue; // Skip buses that have already departed today
+            }
+            
             if ($to_offset > $from_offset) {
                 $bus['arrival'] = date('H:i', $base_time + ($to_offset * 60));
                 $duration_minutes = $to_offset - $from_offset;
                 $bus['duration'] = floor($duration_minutes / 60) . 'h ' . ($duration_minutes % 60) . 'm';
                 $bus['price'] = isset($bus['journey_price']) ? number_format($bus['journey_price'], 2) : 'N/A';
                 $bus['available_seats'] = (int)$bus['total_seats'] - (int)$bus['booked_seats'];
-                $bus['link_params'] = http_build_query(['schedule_id' => $bus['schedule_id'], 'from' => $from_location, 'to' => $to_location, 'date' => $journey_date]);
+                $bus['link_params'] = http_build_query([
+                    'schedule_id' => $bus['schedule_id'], 
+                    'from' => $from_location, 
+                    'to' => $to_location, 
+                    'date' => $journey_date
+                ]);
                 $direct_matches[] = $bus;
             }
         }
