@@ -48,7 +48,7 @@ try {
     $is_search_performed = ($from_location && $to_location && $journey_date);
 
     // ======================================================================
-    // 2. DIRECT SEARCH LOGIC 
+    // 2. DIRECT SEARCH LOGIC
     // ======================================================================
     if ($is_search_performed) {
         $day_of_week = date('D', strtotime($journey_date));
@@ -100,9 +100,9 @@ try {
     $error_message = "Database Error: " . $e->getMessage();
 }
 ?>
-
-
-
+ 
+    
+ 
 
 <body class="mt-5 pt-5">
 
@@ -178,6 +178,7 @@ try {
                         <?php foreach ($direct_matches as $bus): ?>
                             <?php $available_seats = max(0, (int)$bus['available_seats']); ?>
                             <div class="bus-list-item" data-bus-type="<?php echo htmlspecialchars($bus['bus_type']); ?>" data-departure-time="<?php echo $bus['departure']; ?>">
+                                <!-- === FIX: RESTORED HTML FOR DIRECT MATCHES === -->
                                 <div class="bus-item-main">
                                     <div class="bus-info">
                                         <h6><?php echo htmlspecialchars($bus['bus_name']); ?></h6>
@@ -214,6 +215,7 @@ try {
                     <?php if ($is_search_performed): ?>
                         <div class="filter-card text-center">
                             <p class="lead text-danger my-1 ">Sorry, no buses were found for your search on <?php echo date('d M, Y', strtotime($journey_date)); ?>.</p>
+                            <!-- <a href="index.php" class="btn btn-outline-danger">Try a Different Search</a> -->
                         </div>
                     <?php endif; ?>
 
@@ -276,7 +278,7 @@ try {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // ==================================================================
-            // AUTOCOMPLETE SCRIPT
+            // COMPLETE AUTOCOMPLETE SCRIPT
             // ==================================================================
             const allLocations = <?php echo json_encode($all_locations); ?>;
             const fromInput = document.getElementById('from-city');
@@ -344,7 +346,7 @@ try {
             });
 
             // ==================================================================
-            // FILTERING SCRIPT
+            // COMPLETE FILTERING SCRIPT
             // ==================================================================
             const directMatchData = <?php echo json_encode($direct_matches); ?>;
             const otherRoutesData = <?php echo json_encode($all_routes_for_js); ?>;
@@ -390,8 +392,10 @@ try {
                 busListItems.forEach(card => {
                     let cardBusTypes = [];
                     try {
+                        // This handles the JSON string from "Other Routes"
                         cardBusTypes = card.dataset.busTypes ? JSON.parse(card.dataset.busTypes) : [card.dataset.busType];
                     } catch (e) {
+                        // This is a fallback for the single value from "Direct Matches"
                         cardBusTypes = [card.dataset.busType];
                     }
 
@@ -409,12 +413,14 @@ try {
 
             function initializeFilters() {
                 const allBusTypes = new Set();
+                // === FIX: DETERMINE WHICH DATA TO BUILD FILTERS FROM ===
                 const dataToUseForFilters = directMatchData.length > 0 ? directMatchData.map(b => ({
                     bus_type: b.bus_type,
                     departure: b.departure
                 })) : otherRoutesData;
 
                 dataToUseForFilters.forEach(bus => {
+                    // Handle both single bus_type and array of bus_types
                     const types = Array.isArray(bus.bus_types) ? bus.bus_types : [bus.bus_type];
                     types.forEach(type => {
                         if (type) allBusTypes.add(type);
@@ -445,6 +451,7 @@ try {
                     timeHtml += '<small class="text-muted">No times to filter.</small>';
                 }
 
+                // Populate both desktop and mobile filters with unique IDs
                 busTypeContainers.forEach(container => {
                     const suffix = container.id.includes('mobile') ? 'm' : 'd';
                     container.innerHTML = busTypeHtml.replace(/id="type-([^"]+)"/g, `id="type-$1-${suffix}"`).replace(/for="type-([^"]+)"/g, `for="type-$1-${suffix}"`);
@@ -454,42 +461,15 @@ try {
                     container.innerHTML = timeHtml.replace(/id="time([^"]+)"/g, `id="time$1-${suffix}"`).replace(/for="time([^"]+)"/g, `for="time$1-${suffix}"`);
                 });
 
-                // ==================================================================
-                // ===== FIX: REWRITTEN, MORE ROBUST EVENT HANDLING LOGIC =====
-                // ==================================================================
-                const allFilterCheckboxes = document.querySelectorAll('.bus-type-filter, .time-filter');
-                allFilterCheckboxes.forEach(checkbox => {
-                    checkbox.addEventListener('click', function(event) {
-                        // The 'click' event fires before the 'checked' state is visually updated.
-                        // We use a minimal timeout to allow the browser to process the default click action first.
-                        setTimeout(() => {
-                            const clickedCheckbox = event.target;
-                            const isChecked = clickedCheckbox.checked;
-                            const currentId = clickedCheckbox.id;
-
-                            // Determine if this is a desktop ('-d') or mobile ('-m') checkbox
-                            const isDesktop = currentId.endsWith('-d');
-                            const isMobile = currentId.endsWith('-m');
-
-                            // If the ID format isn't what we expect, just update the list and exit
-                            if (!isDesktop && !isMobile) {
-                                updateFiltersAndBusList();
-                                return;
-                            }
-
-                            // Calculate the ID of the counterpart checkbox
-                            const baseId = currentId.slice(0, -2);
-                            const counterpartId = isDesktop ? `${baseId}-m` : `${baseId}-d`;
-                            const counterpartCheckbox = document.getElementById(counterpartId);
-
-                            // If the counterpart exists, update its 'checked' state to match
-                            if (counterpartCheckbox && counterpartCheckbox.checked !== isChecked) {
-                                counterpartCheckbox.checked = isChecked;
-                            }
-
-                            // Now that states are synced, apply the filter to the bus list
-                            updateFiltersAndBusList();
-                        }, 0);
+                // Sync desktop and mobile checkboxes
+                document.querySelectorAll('.bus-type-filter, .time-filter').forEach(filter => {
+                    filter.addEventListener('change', function() {
+                        const baseId = this.id.replace(/-m$/, '').replace(/-d$/, '');
+                        const isChecked = this.checked;
+                        document.querySelectorAll(`input[id^="${baseId}"]`).forEach(box => {
+                            if (box !== this) box.checked = isChecked;
+                        });
+                        updateFiltersAndBusList();
                     });
                 });
             }

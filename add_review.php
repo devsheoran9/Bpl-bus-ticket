@@ -1,14 +1,14 @@
 <?php
-include 'includes/header.php'; 
+include 'includes/header.php';
 echo user_login('page');
- 
+
 $userName = '';
 $userEmail = '';
 $userPhone = '';
 $userDataAvailable = false;
- 
+
 if (isset($_SESSION['user_id'])) {
-    try { 
+    try {
         $stmt = $pdo->prepare("SELECT username, email, mobile_no FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
