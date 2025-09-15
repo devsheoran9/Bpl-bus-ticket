@@ -150,7 +150,7 @@ try {
             <div class="container why-choose-container">
                 <h2 class="section-title" style="text-align: left;">bplBus: India’s Trusted Online Bus Booking Platform</h2>
                 <p>bplBus has been simplifying bus travel in India for over 2 years, serving more than 5 million happy travelers. We are committed to providing a smooth, fast, and reliable online ticket booking experience.</p>
-                <p>With 5200+ bus operators and 7,30,000+ routes across the country, bplBus makes it easy to reach your destination. Enjoy affordable fares when you book your bus tickets online with us.</p>
+                <p>With 100+ bus operators and 700+ routes across the country, bplBus makes it easy to reach your destination. Enjoy affordable fares when you book your bus tickets online with us.</p>
 
                 <div class="mb-2">
                     <h2 class="section-titlee" style="text-align: left; ">Why Choose BPL Bus for Bus Booking?</h2>
