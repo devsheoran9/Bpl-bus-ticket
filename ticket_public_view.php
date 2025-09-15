@@ -57,7 +57,6 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Bus Ticket - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
