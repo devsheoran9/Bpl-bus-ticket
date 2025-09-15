@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Sep 13, 2025 at 08:06 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.1.17
+-- Host: 127.0.0.1:3306
+-- Generation Time: Sep 15, 2025 at 07:38 AM
+-- Server version: 9.1.0
+-- PHP Version: 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -27,10 +27,11 @@ SET time_zone = "+00:00";
 -- Table structure for table `admin`
 --
 
-CREATE TABLE `admin` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `admin`;
+CREATE TABLE IF NOT EXISTS `admin` (
+  `id` int NOT NULL AUTO_INCREMENT,
   `type` varchar(20) NOT NULL DEFAULT 'employee',
-  `permissions` text DEFAULT NULL COMMENT 'JSON formatted permissions',
+  `permissions` text COMMENT 'JSON formatted permissions',
   `last_login_time` datetime DEFAULT NULL,
   `last_login_ip` varchar(45) DEFAULT NULL,
   `session_token` varchar(255) DEFAULT NULL,
@@ -41,8 +42,12 @@ CREATE TABLE `admin` (
   `password_salt` varchar(110) NOT NULL,
   `status` varchar(2) NOT NULL DEFAULT '1' COMMENT '1= active, 2 deactive',
   `ip_address` varchar(110) DEFAULT NULL,
-  `date_time` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  `date_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `email` (`email`),
+  KEY `id` (`id`),
+  KEY `mobile` (`mobile`)
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `admin`
@@ -57,14 +62,17 @@ INSERT INTO `admin` (`id`, `type`, `permissions`, `last_login_time`, `last_login
 -- Table structure for table `admin_activity_log`
 --
 
-CREATE TABLE `admin_activity_log` (
-  `log_id` int(11) NOT NULL,
-  `admin_id` int(11) NOT NULL,
-  `admin_name` varchar(255) NOT NULL,
-  `activity_type` enum('login','logout') NOT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `log_time` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `admin_activity_log`;
+CREATE TABLE IF NOT EXISTS `admin_activity_log` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `admin_id` int NOT NULL,
+  `admin_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `activity_type` enum('login','logout') COLLATE utf8mb4_general_ci NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `log_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `admin_id` (`admin_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin_activity_log`
@@ -166,14 +174,17 @@ INSERT INTO `admin_activity_log` (`log_id`, `admin_id`, `admin_name`, `activity_
 -- Table structure for table `booked_seats`
 --
 
-CREATE TABLE `booked_seats` (
-  `id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `route_id` int(11) NOT NULL,
-  `seat_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `travel_date` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `booked_seats`;
+CREATE TABLE IF NOT EXISTS `booked_seats` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `bus_id` int NOT NULL,
+  `route_id` int NOT NULL,
+  `seat_id` int NOT NULL,
+  `booking_id` int NOT NULL,
+  `travel_date` date NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `route_bus_seat_date` (`route_id`,`bus_id`,`seat_id`,`travel_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=165 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `booked_seats`
@@ -189,25 +200,30 @@ INSERT INTO `booked_seats` (`id`, `bus_id`, `route_id`, `seat_id`, `booking_id`,
 -- Table structure for table `bookings`
 --
 
-CREATE TABLE `bookings` (
-  `booking_id` int(11) NOT NULL,
-  `ticket_no` varchar(20) DEFAULT NULL,
-  `route_id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `booked_by_employee_id` int(11) DEFAULT NULL,
-  `origin` varchar(255) NOT NULL,
-  `destination` varchar(255) NOT NULL,
-  `contact_name` varchar(255) DEFAULT NULL,
-  `contact_email` varchar(255) DEFAULT NULL,
-  `contact_mobile` varchar(20) DEFAULT NULL,
+DROP TABLE IF EXISTS `bookings`;
+CREATE TABLE IF NOT EXISTS `bookings` (
+  `booking_id` int NOT NULL AUTO_INCREMENT,
+  `ticket_no` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `route_id` int NOT NULL,
+  `bus_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `booked_by_employee_id` int DEFAULT NULL,
+  `origin` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `destination` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `contact_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `contact_email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `contact_mobile` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `travel_date` date NOT NULL,
   `total_fare` decimal(10,2) NOT NULL,
-  `payment_status` enum('PAID','PENDING','FAILED','REFUNDED') NOT NULL DEFAULT 'PENDING',
-  `gateway_order_id` varchar(255) DEFAULT NULL,
-  `booking_status` enum('CONFIRMED','CANCELLED','PENDING') NOT NULL DEFAULT 'CONFIRMED',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `payment_status` enum('PAID','PENDING','FAILED','REFUNDED') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'PENDING',
+  `gateway_order_id` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `booking_status` enum('CONFIRMED','CANCELLED','PENDING') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'CONFIRMED',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`booking_id`),
+  UNIQUE KEY `ticket_no` (`ticket_no`),
+  KEY `route_id` (`route_id`),
+  KEY `bus_id` (`bus_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=167 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bookings`
@@ -215,7 +231,14 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`booking_id`, `ticket_no`, `route_id`, `bus_id`, `user_id`, `booked_by_employee_id`, `origin`, `destination`, `contact_name`, `contact_email`, `contact_mobile`, `travel_date`, `total_fare`, `payment_status`, `gateway_order_id`, `booking_status`, `created_at`) VALUES
 (158, 'BPL141633653', 25, 19, NULL, 1, 'Bhiwani,hashi Gate', 'Juiii', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-13', 300.00, 'PAID', NULL, 'CONFIRMED', '2025-09-13 05:48:28'),
-(159, 'BPL036615668', 25, 19, NULL, 1, 'Bhiwani,hashi Gate', 'Juiii', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-13', 100.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-13 06:00:50');
+(159, 'BPL036615668', 25, 19, NULL, 1, 'Bhiwani,hashi Gate', 'Juiii', NULL, 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-13', 100.00, 'PENDING', NULL, 'CONFIRMED', '2025-09-13 06:00:50'),
+(160, 'BPL104357921', 25, 19, 3, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'Sanjay Kumar Sheoran', 'sjsheoran111@gmail.com', '9728833428', '2025-09-13', 200.00, 'PENDING', 'order_RGyvPEquCJR3uV', 'CONFIRMED', '2025-09-13 06:08:54'),
+(161, 'BPL837525787', 25, 19, 4, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'JSNJ INFOMEDIA', 'jsnjworkmail@gmail.com', '8989898989', '2025-09-13', 1000.00, 'PAID', 'order_RH0vdLTvU4bSGH', 'CONFIRMED', '2025-09-13 08:06:28'),
+(162, 'BPL527400391', 25, 19, 4, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'JSNJ INFOMEDIA', 'jsnjworkmail@gmail.com', '8989898989', '2025-09-13', 1000.00, 'PAID', 'order_RH15OSCbYurIEK', 'CONFIRMED', '2025-09-13 08:15:44'),
+(163, 'BPL626854041', 25, 19, 4, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'JSNJ INFOMEDIA', 'jsnjworkmail@gmail.com', '8989898989', '2025-09-13', 600.00, 'PAID', 'order_RH2mul33JpCBBT', 'CONFIRMED', '2025-09-13 09:55:36'),
+(164, 'BPL072952098', 26, 20, 4, NULL, 'Loharu', 'Badhra', 'JSNJ INFOMEDIA', 'jsnjworkmail@gmail.com', '8989898989', '2025-09-14', 180.00, 'PAID', 'order_RH2tYbs86iLVjH', 'CONFIRMED', '2025-09-13 10:01:54'),
+(165, 'BPL901921187', 25, 19, 3, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'Sanjay Kumar Sheoran', 'sjsheoran111@gmail.com', '9728833428', '2025-09-15', 15600.00, 'PAID', 'order_RH5MK6UBgU1eJx', 'CONFIRMED', '2025-09-13 12:26:31'),
+(166, 'BPL041777760', 25, 19, 5, NULL, 'Bhiwani,hashi Gate', 'Badhra', 'Rohit', 'rohitmechujaatji@gmail.com', '8905288939', '2025-09-20', 200.00, 'PENDING', 'order_RHkMBv8LZGPINg', 'CONFIRMED', '2025-09-15 04:32:47');
 
 -- --------------------------------------------------------
 
@@ -223,22 +246,26 @@ INSERT INTO `bookings` (`booking_id`, `ticket_no`, `route_id`, `bus_id`, `user_i
 -- Table structure for table `buses`
 --
 
-CREATE TABLE `buses` (
-  `bus_id` int(11) NOT NULL,
-  `bus_name` varchar(255) NOT NULL,
-  `registration_number` varchar(100) NOT NULL,
-  `engine_no` varchar(100) DEFAULT NULL,
-  `chassis_no` varchar(100) DEFAULT NULL,
-  `bus_type` varchar(255) NOT NULL,
-  `total_seats` int(11) NOT NULL DEFAULT 0,
-  `seater_seats` int(11) DEFAULT 0,
-  `sleeper_seats` int(11) DEFAULT 0,
-  `amenities` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`amenities`)),
-  `description` text DEFAULT NULL,
-  `status` enum('Active','Inactive','Under Maintenance','Retired') DEFAULT 'Active',
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `buses`;
+CREATE TABLE IF NOT EXISTS `buses` (
+  `bus_id` int NOT NULL AUTO_INCREMENT,
+  `bus_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `registration_number` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `engine_no` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `chassis_no` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `bus_type` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `total_seats` int NOT NULL DEFAULT '0',
+  `seater_seats` int DEFAULT '0',
+  `sleeper_seats` int DEFAULT '0',
+  `amenities` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `description` text COLLATE utf8mb4_general_ci,
+  `status` enum('Active','Inactive','Under Maintenance','Retired') COLLATE utf8mb4_general_ci DEFAULT 'Active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`bus_id`),
+  UNIQUE KEY `registration_number` (`registration_number`),
+  KEY `idx_bus_status` (`status`)
+) ;
 
 --
 -- Dumping data for table `buses`
@@ -254,12 +281,15 @@ INSERT INTO `buses` (`bus_id`, `bus_name`, `registration_number`, `engine_no`, `
 -- Table structure for table `bus_categories`
 --
 
-CREATE TABLE `bus_categories` (
-  `category_id` int(11) NOT NULL,
-  `category_name` varchar(100) NOT NULL,
-  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `bus_categories`;
+CREATE TABLE IF NOT EXISTS `bus_categories` (
+  `category_id` int NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`),
+  UNIQUE KEY `category_name` (`category_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bus_categories`
@@ -290,11 +320,15 @@ INSERT INTO `bus_categories` (`category_id`, `category_name`, `status`, `created
 -- Table structure for table `bus_category_map`
 --
 
-CREATE TABLE `bus_category_map` (
-  `map_id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `category_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `bus_category_map`;
+CREATE TABLE IF NOT EXISTS `bus_category_map` (
+  `map_id` int NOT NULL AUTO_INCREMENT,
+  `bus_id` int NOT NULL,
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`map_id`),
+  KEY `bus_id` (`bus_id`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=92 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bus_category_map`
@@ -320,12 +354,15 @@ INSERT INTO `bus_category_map` (`map_id`, `bus_id`, `category_id`) VALUES
 -- Table structure for table `bus_images`
 --
 
-CREATE TABLE `bus_images` (
-  `image_id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `image_path` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `bus_images`;
+CREATE TABLE IF NOT EXISTS `bus_images` (
+  `image_id` int NOT NULL AUTO_INCREMENT,
+  `bus_id` int NOT NULL,
+  `image_path` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`image_id`),
+  KEY `bus_id` (`bus_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bus_images`
@@ -343,16 +380,28 @@ INSERT INTO `bus_images` (`image_id`, `bus_id`, `image_path`, `created_at`) VALU
 -- Table structure for table `cancellations`
 --
 
-CREATE TABLE `cancellations` (
-  `cancellation_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `passenger_id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `cancellations`;
+CREATE TABLE IF NOT EXISTS `cancellations` (
+  `cancellation_id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
+  `passenger_id` int NOT NULL,
   `amount_refunded` decimal(10,2) NOT NULL,
-  `cancellation_reason` varchar(255) DEFAULT NULL,
-  `gateway_refund_id` varchar(255) DEFAULT NULL,
-  `status` enum('COMPLETED','FAILED','PENDING') NOT NULL DEFAULT 'PENDING',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `cancellation_reason` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `gateway_refund_id` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `status` enum('COMPLETED','FAILED','PENDING') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'PENDING',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`cancellation_id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `passenger_id` (`passenger_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cancellations`
+--
+
+INSERT INTO `cancellations` (`cancellation_id`, `booking_id`, `passenger_id`, `amount_refunded`, `cancellation_reason`, `gateway_refund_id`, `status`, `created_at`) VALUES
+(1, 160, 166, 200.00, 'httt', NULL, 'COMPLETED', '2025-09-13 06:39:19'),
+(2, 166, 214, 200.00, 'Medical Emergency', NULL, 'COMPLETED', '2025-09-15 07:10:29');
 
 -- --------------------------------------------------------
 
@@ -360,14 +409,19 @@ CREATE TABLE `cancellations` (
 -- Table structure for table `cash_collections_log`
 --
 
-CREATE TABLE `cash_collections_log` (
-  `collection_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `cash_collections_log`;
+CREATE TABLE IF NOT EXISTS `cash_collections_log` (
+  `collection_id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
   `amount_collected` decimal(10,2) NOT NULL,
-  `collected_by_admin_id` int(11) NOT NULL,
-  `collected_from_employee_id` int(11) NOT NULL,
-  `collection_time` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `collected_by_admin_id` int NOT NULL,
+  `collected_from_employee_id` int NOT NULL,
+  `collection_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`collection_id`),
+  UNIQUE KEY `booking_id` (`booking_id`),
+  KEY `collected_by_admin_id` (`collected_by_admin_id`),
+  KEY `collected_from_employee_id` (`collected_from_employee_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=90 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -375,18 +429,21 @@ CREATE TABLE `cash_collections_log` (
 -- Table structure for table `passengers`
 --
 
-CREATE TABLE `passengers` (
-  `passenger_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `seat_id` int(11) NOT NULL,
-  `seat_code` varchar(50) NOT NULL,
-  `passenger_name` varchar(255) NOT NULL,
-  `passenger_mobile` varchar(20) NOT NULL,
-  `passenger_age` int(3) DEFAULT NULL,
-  `passenger_gender` enum('MALE','FEMALE','OTHER') NOT NULL,
+DROP TABLE IF EXISTS `passengers`;
+CREATE TABLE IF NOT EXISTS `passengers` (
+  `passenger_id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
+  `seat_id` int NOT NULL,
+  `seat_code` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `passenger_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `passenger_mobile` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `passenger_age` int DEFAULT NULL,
+  `passenger_gender` enum('MALE','FEMALE','OTHER') COLLATE utf8mb4_general_ci NOT NULL,
   `fare` decimal(10,2) NOT NULL,
-  `passenger_status` enum('CONFIRMED','CANCELLED') NOT NULL DEFAULT 'CONFIRMED'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `passenger_status` enum('CONFIRMED','CANCELLED') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'CONFIRMED',
+  PRIMARY KEY (`passenger_id`),
+  KEY `booking_id` (`booking_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=215 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `passengers`
@@ -394,7 +451,57 @@ CREATE TABLE `passengers` (
 
 INSERT INTO `passengers` (`passenger_id`, `booking_id`, `seat_id`, `seat_code`, `passenger_name`, `passenger_mobile`, `passenger_age`, `passenger_gender`, `fare`, `passenger_status`) VALUES
 (163, 158, 376, 'LP5', 'Rohit', '', 22, 'MALE', 300.00, 'CONFIRMED'),
-(164, 159, 372, 'LS1', 'rohit', '', 22, 'MALE', 100.00, 'CONFIRMED');
+(164, 159, 372, 'LS1', 'rohit', '', 22, 'MALE', 100.00, 'CONFIRMED'),
+(165, 160, 389, 'LS5', 'asd', '', 33, 'FEMALE', 200.00, 'CONFIRMED'),
+(166, 160, 385, 'LS3', 'asdasd', '', 23, 'MALE', 200.00, 'CANCELLED'),
+(167, 161, 395, 'UP1', 'Sanjay', '', 26, 'MALE', 500.00, 'CONFIRMED'),
+(168, 161, 396, 'UP2', 'Rohit', '', 19, 'MALE', 500.00, 'CONFIRMED'),
+(169, 162, 398, 'UP4', 'dfgdf', '', 45, 'MALE', 500.00, 'CONFIRMED'),
+(170, 162, 399, 'UP5', 'fgdf', '', 54, 'FEMALE', 500.00, 'CONFIRMED'),
+(171, 163, 375, 'LP4', 'sadasd', '', 3, 'MALE', 400.00, 'CONFIRMED'),
+(172, 163, 385, 'LS3', 'afdsfd', '', 34, 'MALE', 200.00, 'CONFIRMED'),
+(173, 164, 413, 'LP1', 'fdd', '', 4, 'MALE', 90.00, 'CONFIRMED'),
+(174, 164, 414, 'LP2', 'dfg', '', 5, 'FEMALE', 90.00, 'CONFIRMED'),
+(175, 165, 374, 'LP3', 'rfwe', '', 4, 'FEMALE', 400.00, 'CONFIRMED'),
+(176, 165, 381, 'LP10', '342', '', 34, 'FEMALE', 400.00, 'CONFIRMED'),
+(177, 165, 382, 'LP11', '324', '', 34, 'FEMALE', 400.00, 'CONFIRMED'),
+(178, 165, 371, 'LP2', '23432', '', 43, 'FEMALE', 400.00, 'CONFIRMED'),
+(179, 165, 370, 'LP1', '432', '', 43, 'FEMALE', 400.00, 'CONFIRMED'),
+(180, 165, 373, 'LS2', '434', '', 3, 'MALE', 200.00, 'CONFIRMED'),
+(181, 165, 372, 'LS1', '4323', '', 43, 'MALE', 200.00, 'CONFIRMED'),
+(182, 165, 389, 'LS5', '34', '', 43, 'FEMALE', 200.00, 'CONFIRMED'),
+(183, 165, 385, 'LS3', '343', '', 34, 'MALE', 200.00, 'CONFIRMED'),
+(184, 165, 376, 'LP5', '343', '', 43, 'MALE', 400.00, 'CONFIRMED'),
+(185, 165, 375, 'LP4', '434', '', 43, 'MALE', 400.00, 'CONFIRMED'),
+(186, 165, 378, 'LP7', '343', '', 43, 'FEMALE', 400.00, 'CONFIRMED'),
+(187, 165, 377, 'LP6', '34', '', 34, 'FEMALE', 400.00, 'CONFIRMED'),
+(188, 165, 379, 'LP8', '34', '', 43, 'OTHER', 400.00, 'CONFIRMED'),
+(189, 165, 380, 'LP9', '3', '', 34, 'MALE', 400.00, 'CONFIRMED'),
+(190, 165, 383, 'LP12', '343', '', 43, 'FEMALE', 400.00, 'CONFIRMED'),
+(191, 165, 384, 'LP13', '344', '', 4, 'MALE', 400.00, 'CONFIRMED'),
+(192, 165, 391, 'LS6', '43', '', 43, 'FEMALE', 200.00, 'CONFIRMED'),
+(193, 165, 393, 'LS8', '434', '', 43, 'MALE', 200.00, 'CONFIRMED'),
+(194, 165, 392, 'LS7', '34', '', 43, 'MALE', 200.00, 'CONFIRMED'),
+(195, 165, 411, 'UP17', '343', '', 43, 'OTHER', 500.00, 'CONFIRMED'),
+(196, 165, 412, 'UP18', '343', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(197, 165, 408, 'UP14', '43', '', 43, 'FEMALE', 500.00, 'CONFIRMED'),
+(198, 165, 407, 'UP13', '3', '', 34, 'MALE', 500.00, 'CONFIRMED'),
+(199, 165, 404, 'UP10', '43', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(200, 165, 405, 'UP11', '34', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(201, 165, 401, 'UP7', '34', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(202, 165, 402, 'UP8', '43', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(203, 165, 399, 'UP5', '43', '', 34, 'MALE', 500.00, 'CONFIRMED'),
+(204, 165, 398, 'UP4', '34', '', 43, 'OTHER', 500.00, 'CONFIRMED'),
+(205, 165, 395, 'UP1', '43', '', 34, 'FEMALE', 500.00, 'CONFIRMED'),
+(206, 165, 396, 'UP2', '34', '', 4, 'FEMALE', 500.00, 'CONFIRMED'),
+(207, 165, 397, 'UP3', '34', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(208, 165, 400, 'UP6', '3', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(209, 165, 403, 'UP9', '43', '', 4, 'MALE', 500.00, 'CONFIRMED'),
+(210, 165, 406, 'UP12', '43', '', 43, 'MALE', 500.00, 'CONFIRMED'),
+(211, 165, 409, 'UP15', '43', '', 43, 'FEMALE', 500.00, 'CONFIRMED'),
+(212, 165, 410, 'UP16', '34', '', 4, 'MALE', 500.00, 'CONFIRMED'),
+(213, 166, 385, 'LS3', 'Rohit', '', 18, 'MALE', 200.00, 'CONFIRMED'),
+(214, 166, 389, 'LS5', 'Rohiti', '', 19, 'FEMALE', 200.00, 'CANCELLED');
 
 -- --------------------------------------------------------
 
@@ -402,17 +509,27 @@ INSERT INTO `passengers` (`passenger_id`, `booking_id`, `seat_id`, `seat_code`, 
 -- Table structure for table `reviews`
 --
 
-CREATE TABLE `reviews` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `user_name` varchar(100) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `mobile` varchar(20) NOT NULL,
-  `rating` int(11) NOT NULL COMMENT 'Rating from 1 to 5',
-  `review_text` text NOT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1 = Active/Approved, 0 = Pending',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `reviews`;
+CREATE TABLE IF NOT EXISTS `reviews` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `user_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `mobile` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `rating` int NOT NULL COMMENT 'Rating from 1 to 5',
+  `review_text` text COLLATE utf8mb4_general_ci NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 = Active/Approved, 0 = Pending',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `user_id`, `user_name`, `email`, `mobile`, `rating`, `review_text`, `status`, `created_at`) VALUES
+(2, 3, 'Sanjay Kumar Sheoran', 'sjsheoran111@gmail.com', '9728833428', 5, 'nnjffn  n klnkl nbkln  np nil  ln n pnsp nsdop f', 1, '2025-09-13 10:35:27');
 
 -- --------------------------------------------------------
 
@@ -420,16 +537,19 @@ CREATE TABLE `reviews` (
 -- Table structure for table `routes`
 --
 
-CREATE TABLE `routes` (
-  `route_id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `route_name` varchar(255) NOT NULL,
-  `starting_point` varchar(255) NOT NULL,
-  `ending_point` varchar(255) NOT NULL,
-  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
-  `is_popular` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `routes`;
+CREATE TABLE IF NOT EXISTS `routes` (
+  `route_id` int NOT NULL AUTO_INCREMENT,
+  `bus_id` int NOT NULL,
+  `route_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `starting_point` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `ending_point` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Active',
+  `is_popular` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`route_id`),
+  KEY `bus_id` (`bus_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `routes`
@@ -447,12 +567,15 @@ INSERT INTO `routes` (`route_id`, `bus_id`, `route_name`, `starting_point`, `end
 -- Table structure for table `route_schedules`
 --
 
-CREATE TABLE `route_schedules` (
-  `schedule_id` int(11) NOT NULL,
-  `route_id` int(11) NOT NULL,
-  `operating_day` varchar(10) NOT NULL COMMENT 'e.g., Mon, Tue, Sun',
-  `departure_time` time NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `route_schedules`;
+CREATE TABLE IF NOT EXISTS `route_schedules` (
+  `schedule_id` int NOT NULL AUTO_INCREMENT,
+  `route_id` int NOT NULL,
+  `operating_day` varchar(10) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'e.g., Mon, Tue, Sun',
+  `departure_time` time NOT NULL,
+  PRIMARY KEY (`schedule_id`),
+  KEY `route_id` (`route_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `route_schedules`
@@ -479,11 +602,12 @@ INSERT INTO `route_schedules` (`schedule_id`, `route_id`, `operating_day`, `depa
 -- Table structure for table `route_staff_assignments`
 --
 
-CREATE TABLE `route_staff_assignments` (
-  `assignment_id` int(11) DEFAULT NULL,
-  `route_id` int(11) NOT NULL COMMENT 'Foreign key to the routes table',
-  `staff_id` int(11) NOT NULL COMMENT 'Foreign key to the staff table',
-  `role` varchar(100) NOT NULL COMMENT 'e.g., Driver, Co-Driver, Conductor, Helper'
+DROP TABLE IF EXISTS `route_staff_assignments`;
+CREATE TABLE IF NOT EXISTS `route_staff_assignments` (
+  `assignment_id` int DEFAULT NULL,
+  `route_id` int NOT NULL COMMENT 'Foreign key to the routes table',
+  `staff_id` int NOT NULL COMMENT 'Foreign key to the staff table',
+  `role` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'e.g., Driver, Co-Driver, Conductor, Helper'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -527,17 +651,20 @@ INSERT INTO `route_staff_assignments` (`assignment_id`, `route_id`, `staff_id`, 
 -- Table structure for table `route_stops`
 --
 
-CREATE TABLE `route_stops` (
-  `stop_id` int(11) NOT NULL,
-  `route_id` int(11) NOT NULL,
-  `stop_name` varchar(255) NOT NULL,
-  `stop_order` int(11) NOT NULL,
-  `duration_from_start_minutes` int(11) DEFAULT 0,
+DROP TABLE IF EXISTS `route_stops`;
+CREATE TABLE IF NOT EXISTS `route_stops` (
+  `stop_id` int NOT NULL AUTO_INCREMENT,
+  `route_id` int NOT NULL,
+  `stop_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `stop_order` int NOT NULL,
+  `duration_from_start_minutes` int DEFAULT '0',
   `price_seater_lower` decimal(10,2) DEFAULT NULL,
   `price_seater_upper` decimal(10,2) DEFAULT NULL,
   `price_sleeper_lower` decimal(10,2) DEFAULT NULL,
-  `price_sleeper_upper` decimal(10,2) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `price_sleeper_upper` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`stop_id`),
+  KEY `route_id` (`route_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=99 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `route_stops`
@@ -562,24 +689,30 @@ INSERT INTO `route_stops` (`stop_id`, `route_id`, `stop_name`, `stop_order`, `du
 -- Table structure for table `seats`
 --
 
-CREATE TABLE `seats` (
-  `seat_id` int(11) NOT NULL,
-  `bus_id` int(11) NOT NULL,
-  `seat_code` varchar(50) NOT NULL,
-  `deck` enum('LOWER','UPPER') NOT NULL,
-  `seat_type` enum('SEATER','SLEEPER','DRIVER','AISLE','TOILET','GANGWAY') NOT NULL DEFAULT 'SEATER',
-  `x_coordinate` int(11) NOT NULL,
-  `y_coordinate` int(11) NOT NULL,
-  `width` int(11) NOT NULL DEFAULT 40,
-  `height` int(11) NOT NULL DEFAULT 40,
-  `orientation` varchar(20) NOT NULL,
-  `base_price` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `gender_preference` enum('ANY','MALE','FEMALE') NOT NULL DEFAULT 'ANY',
-  `is_bookable` tinyint(1) NOT NULL DEFAULT 1,
-  `status` enum('AVAILABLE','DAMAGED','BLOCKED') NOT NULL DEFAULT 'AVAILABLE',
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `seats`;
+CREATE TABLE IF NOT EXISTS `seats` (
+  `seat_id` int NOT NULL AUTO_INCREMENT,
+  `bus_id` int NOT NULL,
+  `seat_code` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `deck` enum('LOWER','UPPER') COLLATE utf8mb4_general_ci NOT NULL,
+  `seat_type` enum('SEATER','SLEEPER','DRIVER','AISLE','TOILET','GANGWAY') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'SEATER',
+  `x_coordinate` int NOT NULL,
+  `y_coordinate` int NOT NULL,
+  `width` int NOT NULL DEFAULT '40',
+  `height` int NOT NULL DEFAULT '40',
+  `orientation` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `base_price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `gender_preference` enum('ANY','MALE','FEMALE') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'ANY',
+  `is_bookable` tinyint(1) NOT NULL DEFAULT '1',
+  `status` enum('AVAILABLE','DAMAGED','BLOCKED') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'AVAILABLE',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`seat_id`),
+  UNIQUE KEY `bus_id` (`bus_id`,`seat_code`),
+  KEY `idx_seats_bus_id` (`bus_id`),
+  KEY `idx_seats_deck` (`deck`),
+  KEY `idx_seats_is_bookable` (`is_bookable`)
+) ENGINE=InnoDB AUTO_INCREMENT=459 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `seats`
@@ -680,18 +813,23 @@ INSERT INTO `seats` (`seat_id`, `bus_id`, `seat_code`, `deck`, `seat_type`, `x_c
 -- Table structure for table `staff`
 --
 
-CREATE TABLE `staff` (
-  `staff_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `mobile` varchar(20) NOT NULL,
-  `designation` varchar(100) NOT NULL,
-  `driving_licence_no` varchar(100) DEFAULT NULL,
-  `aadhar_no` varchar(20) DEFAULT NULL,
-  `profile_image_path` varchar(255) DEFAULT NULL,
-  `remark` text DEFAULT NULL,
-  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `staff`;
+CREATE TABLE IF NOT EXISTS `staff` (
+  `staff_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `mobile` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `designation` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `driving_licence_no` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `aadhar_no` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `profile_image_path` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `remark` text COLLATE utf8mb4_general_ci,
+  `status` enum('Active','Inactive') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`staff_id`),
+  UNIQUE KEY `mobile` (`mobile`),
+  UNIQUE KEY `driving_licence_no` (`driving_licence_no`),
+  UNIQUE KEY `aadhar_no` (`aadhar_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `staff`
@@ -712,12 +850,16 @@ INSERT INTO `staff` (`staff_id`, `name`, `mobile`, `designation`, `driving_licen
 -- Table structure for table `ticket_access_tokens`
 --
 
-CREATE TABLE `ticket_access_tokens` (
-  `token_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `token` varchar(64) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `ticket_access_tokens`;
+CREATE TABLE IF NOT EXISTS `ticket_access_tokens` (
+  `token_id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`token_id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `booking_id` (`booking_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `ticket_access_tokens`
@@ -725,7 +867,14 @@ CREATE TABLE `ticket_access_tokens` (
 
 INSERT INTO `ticket_access_tokens` (`token_id`, `booking_id`, `token`, `created_at`) VALUES
 (32, 158, 'cbcb3b93b3244efdf0f953f2e3f42229', '2025-09-13 05:53:05'),
-(33, 159, '31c60129795ba36790b0f3fd71443997', '2025-09-13 06:00:58');
+(33, 159, '31c60129795ba36790b0f3fd71443997', '2025-09-13 06:00:58'),
+(34, 160, '9cfdc12335e84b80993d9b975390e806a3efac7f', '2025-09-13 06:14:37'),
+(35, 161, '4105bc09ce43c7acbe82b2c1bcef5aa326334591', '2025-09-13 08:07:40'),
+(36, 162, '4f21312f429dae8f2d61e725b02c187a97579f05', '2025-09-13 08:16:14'),
+(37, 163, 'c27afce1587768492b76bf0a39a9bf857a179f92', '2025-09-13 09:56:53'),
+(38, 164, '874b89aa0068f26ef56b0febd3098be98f5e7077', '2025-09-13 10:02:18'),
+(39, 165, 'caa0f858f079b994feead59f08cc15d1b1386245', '2025-09-13 12:26:57'),
+(40, 166, 'e9010cf6a8b30e00bdd1fe404d985b5d9bc0b9bd', '2025-09-15 04:33:22');
 
 -- --------------------------------------------------------
 
@@ -733,31 +882,42 @@ INSERT INTO `ticket_access_tokens` (`token_id`, `booking_id`, `token`, `created_
 -- Table structure for table `transactions`
 --
 
-CREATE TABLE `transactions` (
-  `transaction_id` int(11) NOT NULL,
-  `booking_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL COMMENT 'The user/customer who paid, if logged in',
-  `employee_id` int(11) DEFAULT NULL COMMENT 'The employee who processed the booking',
-  `payment_gateway` varchar(50) NOT NULL DEFAULT 'Razorpay',
-  `gateway_payment_id` varchar(255) NOT NULL COMMENT 'e.g., razorpay_payment_id',
-  `gateway_order_id` varchar(255) NOT NULL COMMENT 'e.g., razorpay_order_id',
-  `gateway_signature` varchar(255) DEFAULT NULL COMMENT 'e.g., razorpay_signature for verification',
+DROP TABLE IF EXISTS `transactions`;
+CREATE TABLE IF NOT EXISTS `transactions` (
+  `transaction_id` int NOT NULL AUTO_INCREMENT,
+  `booking_id` int NOT NULL,
+  `user_id` int DEFAULT NULL COMMENT 'The user/customer who paid, if logged in',
+  `employee_id` int DEFAULT NULL COMMENT 'The employee who processed the booking',
+  `payment_gateway` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Razorpay',
+  `gateway_payment_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'e.g., razorpay_payment_id',
+  `gateway_order_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'e.g., razorpay_order_id',
+  `gateway_signature` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'e.g., razorpay_signature for verification',
   `amount` decimal(10,2) NOT NULL,
-  `currency` varchar(10) NOT NULL DEFAULT 'INR',
-  `payment_status` enum('CREATED','AUTHORIZED','CAPTURED','REFUNDED','FAILED') NOT NULL,
-  `method` varchar(50) DEFAULT NULL COMMENT 'e.g., card, netbanking, upi',
-  `error_code` varchar(255) DEFAULT NULL,
-  `error_description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `currency` varchar(10) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'INR',
+  `payment_status` enum('CREATED','AUTHORIZED','CAPTURED','REFUNDED','FAILED') COLLATE utf8mb4_general_ci NOT NULL,
+  `method` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'e.g., card, netbanking, upi',
+  `error_code` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `error_description` text COLLATE utf8mb4_general_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`transaction_id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `gateway_payment_id` (`gateway_payment_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `transactions`
 --
 
 INSERT INTO `transactions` (`transaction_id`, `booking_id`, `user_id`, `employee_id`, `payment_gateway`, `gateway_payment_id`, `gateway_order_id`, `gateway_signature`, `amount`, `currency`, `payment_status`, `method`, `error_code`, `error_description`, `created_at`, `updated_at`) VALUES
-(26, 158, NULL, NULL, 'Razorpay', 'pay_RGya2aobcWkyQT', 'order_RGyZnNWuR4QZiw', '921f1c0a3cea9b4974a3279b1d944f8a0dd0b272c8953b51945504648aea1142', 300.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 05:48:57', '2025-09-13 05:48:57');
+(26, 158, NULL, NULL, 'Razorpay', 'pay_RGya2aobcWkyQT', 'order_RGyZnNWuR4QZiw', '921f1c0a3cea9b4974a3279b1d944f8a0dd0b272c8953b51945504648aea1142', 300.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 05:48:57', '2025-09-13 05:48:57'),
+(27, 160, 3, NULL, 'Razorpay', 'pay_RGyvausGhTlp8n', 'order_RGyvPEquCJR3uV', '069f7456ab386924ecc5f84406567131625c3a9867615c5bf66e3b30c49e2aab', 400.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 06:09:20', '2025-09-13 06:09:20'),
+(28, 161, 4, NULL, 'Razorpay', 'pay_RH0vo59bpGtgsh', 'order_RH0vdLTvU4bSGH', '45c9b35d18c920f0de10bd9b033b2ee52e035a71aef64ced24b9d1006216c345', 1000.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 08:06:55', '2025-09-13 08:06:55'),
+(29, 162, 4, NULL, 'Razorpay', 'pay_RH15dmD75Izxa4', 'order_RH15OSCbYurIEK', 'adf64c983882627a7c0bfe04aa620bc2ea5e473aea690bf6596a309961aa6e4d', 1000.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 08:16:13', '2025-09-13 08:16:13'),
+(30, 163, 4, NULL, 'Razorpay', 'pay_RH2nyAdSe3tR9X', 'order_RH2mul33JpCBBT', '54ec566938e0f4b90921632374943918e53b77009f16302ce677b6e521576092', 600.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 09:56:53', '2025-09-13 09:56:53'),
+(31, 164, 4, NULL, 'Razorpay', 'pay_RH2tgYSaqu8mDQ', 'order_RH2tYbs86iLVjH', 'ed9ffa954f4780923408ba18a7a090a8e10fee6731577a9f28d76b0b36867cf6', 180.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 10:02:18', '2025-09-13 10:02:18'),
+(32, 165, 3, NULL, 'Razorpay', 'pay_RH5MV1daPVwlhO', 'order_RH5MK6UBgU1eJx', 'fe6a4ef2159126f486331241e68fb1e635111ce966d4e95b0dd612ce749762c4', 15600.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-13 12:26:57', '2025-09-13 12:26:57'),
+(33, 166, 5, NULL, 'Razorpay', 'pay_RHkMUBjDA83JgC', 'order_RHkMBv8LZGPINg', 'cd6ae8cd937b32c209aec447dd48621f64ff50fe6d2721681a8f5e5074e8f79a', 400.00, 'INR', 'CAPTURED', 'online', NULL, NULL, '2025-09-15 04:33:22', '2025-09-15 04:33:22');
 
 -- --------------------------------------------------------
 
@@ -765,25 +925,30 @@ INSERT INTO `transactions` (`transaction_id`, `booking_id`, `user_id`, `employee
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `mobile_no` varchar(255) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  `ip_address` varchar(255) NOT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1=Active, 2=Deactivated',
-  `otp` varchar(255) DEFAULT NULL,
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `mobile_no` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `ip_address` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1=Active, 2=Deactivated',
+  `otp` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `otp_expires_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `mobile_no`, `email`, `ip_address`, `status`, `otp`, `otp_expires_at`, `created_at`) VALUES
-(3, 'Sanjay Kumar Sheoran', '$2y$10$z7lBSp5NypMVF1S05ZvNeui70bCZceCut.xYsUwAGecNIoqck5DO6', '9728833428', 'sjsheoran111@gmail.com', '::1', 1, NULL, NULL, '2025-09-11 11:49:54');
+(3, 'Sanjay Kumar Sheoran', '$2y$10$z7lBSp5NypMVF1S05ZvNeui70bCZceCut.xYsUwAGecNIoqck5DO6', '9728833428', 'sjsheoran111@gmail.com', '::1', 1, NULL, NULL, '2025-09-11 11:49:54'),
+(4, 'JSNJ INFOMEDIA', '$2y$10$Iw8K/JFn4B2KnNUyK/rCruXf3NZS8fH1/vfmEZuAdnCmG.cgMEtb.', '8989898989', 'jsnjworkmail@gmail.com', '::1', 1, NULL, NULL, '2025-09-13 13:36:28'),
+(5, 'Rohit', '$2y$10$YO47jehFVG8wwqqBqFCSi.iud.2BwSvF2N9Js2Zv05j7RwtOQu0.6', '8905288939', 'rohitmechujaatji@gmail.com', '::1', 1, NULL, NULL, '2025-09-15 10:02:47');
 
 -- --------------------------------------------------------
 
@@ -791,14 +956,32 @@ INSERT INTO `users` (`id`, `username`, `password`, `mobile_no`, `email`, `ip_add
 -- Table structure for table `users_login_token`
 --
 
-CREATE TABLE `users_login_token` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `token` varchar(255) NOT NULL,
-  `status` varchar(1) NOT NULL DEFAULT '1' COMMENT '1=active, 2=logout',
-  `date_time` timestamp NOT NULL DEFAULT current_timestamp(),
-  `ip_address` varchar(45) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `users_login_token`;
+CREATE TABLE IF NOT EXISTS `users_login_token` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `status` varchar(1) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '1' COMMENT '1=active, 2=logout',
+  `date_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users_login_token`
+--
+
+INSERT INTO `users_login_token` (`id`, `user_id`, `token`, `status`, `date_time`, `ip_address`) VALUES
+(24, 3, 'f65fe605ee9cde585b566d63082016593221748c39dcd7593a73855d654f73d0', '2', '2025-09-13 06:08:33', '::1'),
+(25, 4, 'f98f2eed42d9aac22ac629c0ebc6c0376fc0f052704a82a957e5d720ef5e0742', '2', '2025-09-13 08:07:17', '::1'),
+(26, 4, 'fed8750c1d61bb7677105238a3c640cab03d94989ce0d068f57ed2e6c850daca', '2', '2025-09-13 08:10:49', '::1'),
+(27, 4, '2c5b36ded624bc1406a89c0d70347d874e8bd9039598dc53370430a1e35674eb', '2', '2025-09-13 08:15:27', '::1'),
+(28, 4, '96b3d7015f2b86315a266b840121420bc753b2fd13fd82516d01c17efafe27f7', '2', '2025-09-13 09:48:46', '::1'),
+(29, 3, '280f06834ad71d6fad6cdb2bfa734e37ae605ddd34ca6ac8248f34de444871f1', '2', '2025-09-13 10:26:06', '::1'),
+(30, 3, '57f4ad9f4df27969fe448b93ab53eec79d9f9c013d2c6eab1b73c6588ef25105', '2', '2025-09-15 04:29:12', '::1'),
+(31, 5, '385c7919f850852b9a9b5127b9068eb1177871684a99e163780941820fc14cc9', '1', '2025-09-15 06:26:49', '::1'),
+(32, 3, 'adc3686f191f0d7e04f4d0f7ecfbd7539b48a6a2eb630090b2d6cc5cd66b97fe', '1', '2025-09-15 07:08:13', '::1');
 
 -- --------------------------------------------------------
 
@@ -806,323 +989,16 @@ CREATE TABLE `users_login_token` (
 -- Table structure for table `user_login_token`
 --
 
-CREATE TABLE `user_login_token` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `user_login_token`;
+CREATE TABLE IF NOT EXISTS `user_login_token` (
+  `id` int NOT NULL AUTO_INCREMENT,
   `user_id` varchar(110) NOT NULL,
   `token` varchar(110) NOT NULL,
   `status` varchar(2) DEFAULT '1' COMMENT '1 =active, 2 logout',
-  `date_time` timestamp NOT NULL DEFAULT current_timestamp(),
-  `ip_address` varchar(110) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `admin`
---
-ALTER TABLE `admin`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `email` (`email`),
-  ADD KEY `id` (`id`),
-  ADD KEY `mobile` (`mobile`);
-
---
--- Indexes for table `admin_activity_log`
---
-ALTER TABLE `admin_activity_log`
-  ADD PRIMARY KEY (`log_id`),
-  ADD KEY `admin_id` (`admin_id`);
-
---
--- Indexes for table `booked_seats`
---
-ALTER TABLE `booked_seats`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `route_bus_seat_date` (`route_id`,`bus_id`,`seat_id`,`travel_date`);
-
---
--- Indexes for table `bookings`
---
-ALTER TABLE `bookings`
-  ADD PRIMARY KEY (`booking_id`),
-  ADD UNIQUE KEY `ticket_no` (`ticket_no`),
-  ADD KEY `route_id` (`route_id`),
-  ADD KEY `bus_id` (`bus_id`);
-
---
--- Indexes for table `buses`
---
-ALTER TABLE `buses`
-  ADD PRIMARY KEY (`bus_id`),
-  ADD UNIQUE KEY `registration_number` (`registration_number`),
-  ADD KEY `idx_bus_status` (`status`);
-
---
--- Indexes for table `bus_categories`
---
-ALTER TABLE `bus_categories`
-  ADD PRIMARY KEY (`category_id`),
-  ADD UNIQUE KEY `category_name` (`category_name`);
-
---
--- Indexes for table `bus_category_map`
---
-ALTER TABLE `bus_category_map`
-  ADD PRIMARY KEY (`map_id`),
-  ADD KEY `bus_id` (`bus_id`),
-  ADD KEY `category_id` (`category_id`);
-
---
--- Indexes for table `bus_images`
---
-ALTER TABLE `bus_images`
-  ADD PRIMARY KEY (`image_id`),
-  ADD KEY `bus_id` (`bus_id`);
-
---
--- Indexes for table `cancellations`
---
-ALTER TABLE `cancellations`
-  ADD PRIMARY KEY (`cancellation_id`),
-  ADD KEY `booking_id` (`booking_id`),
-  ADD KEY `passenger_id` (`passenger_id`);
-
---
--- Indexes for table `cash_collections_log`
---
-ALTER TABLE `cash_collections_log`
-  ADD PRIMARY KEY (`collection_id`),
-  ADD UNIQUE KEY `booking_id` (`booking_id`),
-  ADD KEY `collected_by_admin_id` (`collected_by_admin_id`),
-  ADD KEY `collected_from_employee_id` (`collected_from_employee_id`);
-
---
--- Indexes for table `passengers`
---
-ALTER TABLE `passengers`
-  ADD PRIMARY KEY (`passenger_id`),
-  ADD KEY `booking_id` (`booking_id`);
-
---
--- Indexes for table `reviews`
---
-ALTER TABLE `reviews`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `routes`
---
-ALTER TABLE `routes`
-  ADD PRIMARY KEY (`route_id`),
-  ADD KEY `bus_id` (`bus_id`);
-
---
--- Indexes for table `route_schedules`
---
-ALTER TABLE `route_schedules`
-  ADD PRIMARY KEY (`schedule_id`),
-  ADD KEY `route_id` (`route_id`);
-
---
--- Indexes for table `route_stops`
---
-ALTER TABLE `route_stops`
-  ADD PRIMARY KEY (`stop_id`),
-  ADD KEY `route_id` (`route_id`);
-
---
--- Indexes for table `seats`
---
-ALTER TABLE `seats`
-  ADD PRIMARY KEY (`seat_id`),
-  ADD UNIQUE KEY `bus_id` (`bus_id`,`seat_code`),
-  ADD KEY `idx_seats_bus_id` (`bus_id`),
-  ADD KEY `idx_seats_deck` (`deck`),
-  ADD KEY `idx_seats_is_bookable` (`is_bookable`);
-
---
--- Indexes for table `staff`
---
-ALTER TABLE `staff`
-  ADD PRIMARY KEY (`staff_id`),
-  ADD UNIQUE KEY `mobile` (`mobile`),
-  ADD UNIQUE KEY `driving_licence_no` (`driving_licence_no`),
-  ADD UNIQUE KEY `aadhar_no` (`aadhar_no`);
-
---
--- Indexes for table `ticket_access_tokens`
---
-ALTER TABLE `ticket_access_tokens`
-  ADD PRIMARY KEY (`token_id`),
-  ADD UNIQUE KEY `token` (`token`),
-  ADD KEY `booking_id` (`booking_id`);
-
---
--- Indexes for table `transactions`
---
-ALTER TABLE `transactions`
-  ADD PRIMARY KEY (`transaction_id`),
-  ADD KEY `booking_id` (`booking_id`),
-  ADD KEY `gateway_payment_id` (`gateway_payment_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
-
---
--- Indexes for table `users_login_token`
---
-ALTER TABLE `users_login_token`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
-
---
--- Indexes for table `user_login_token`
---
-ALTER TABLE `user_login_token`
-  ADD PRIMARY KEY (`id`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `admin`
---
-ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `admin_activity_log`
---
-ALTER TABLE `admin_activity_log`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
-
---
--- AUTO_INCREMENT for table `booked_seats`
---
-ALTER TABLE `booked_seats`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
-
---
--- AUTO_INCREMENT for table `bookings`
---
-ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=160;
-
---
--- AUTO_INCREMENT for table `buses`
---
-ALTER TABLE `buses`
-  MODIFY `bus_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT for table `bus_categories`
---
-ALTER TABLE `bus_categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
-
---
--- AUTO_INCREMENT for table `bus_category_map`
---
-ALTER TABLE `bus_category_map`
-  MODIFY `map_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
-
---
--- AUTO_INCREMENT for table `bus_images`
---
-ALTER TABLE `bus_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
-
---
--- AUTO_INCREMENT for table `cancellations`
---
-ALTER TABLE `cancellations`
-  MODIFY `cancellation_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `cash_collections_log`
---
-ALTER TABLE `cash_collections_log`
-  MODIFY `collection_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
-
---
--- AUTO_INCREMENT for table `passengers`
---
-ALTER TABLE `passengers`
-  MODIFY `passenger_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
-
---
--- AUTO_INCREMENT for table `reviews`
---
-ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `routes`
---
-ALTER TABLE `routes`
-  MODIFY `route_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
-
---
--- AUTO_INCREMENT for table `route_schedules`
---
-ALTER TABLE `route_schedules`
-  MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
-
---
--- AUTO_INCREMENT for table `route_stops`
---
-ALTER TABLE `route_stops`
-  MODIFY `stop_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
-
---
--- AUTO_INCREMENT for table `seats`
---
-ALTER TABLE `seats`
-  MODIFY `seat_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=459;
-
---
--- AUTO_INCREMENT for table `staff`
---
-ALTER TABLE `staff`
-  MODIFY `staff_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
-
---
--- AUTO_INCREMENT for table `ticket_access_tokens`
---
-ALTER TABLE `ticket_access_tokens`
-  MODIFY `token_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
-
---
--- AUTO_INCREMENT for table `transactions`
---
-ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `users_login_token`
---
-ALTER TABLE `users_login_token`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
-
---
--- AUTO_INCREMENT for table `user_login_token`
---
-ALTER TABLE `user_login_token`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  `date_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ip_address` varchar(110) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=47 DEFAULT CHARSET=latin1;
 
 --
 -- Constraints for dumped tables
