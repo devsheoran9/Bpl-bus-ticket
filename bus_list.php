@@ -48,7 +48,7 @@ try {
     $is_search_performed = ($from_location && $to_location && $journey_date);
 
     // ======================================================================
-    // 2. DIRECT SEARCH LOGIC
+    // 2. DIRECT SEARCH LOGIC 
     // ======================================================================
     if ($is_search_performed) {
         $day_of_week = date('D', strtotime($journey_date));
