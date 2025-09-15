@@ -1,10 +1,5 @@
-<?php
-// This should be the path to your main PDO connection file
-require 'admin/function/_db.php';
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+<?php 
+require 'admin/function/_db.php'; 
 // --- 1. DETERMINE ACCESS METHOD & VALIDATE PERMISSIONS ---
 
 $access_token = trim($_GET['token'] ?? '');
