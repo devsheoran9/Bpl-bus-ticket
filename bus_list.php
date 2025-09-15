@@ -52,7 +52,7 @@ try {
     // ======================================================================
     if ($is_search_performed) {
         $day_of_week = date('D', strtotime($journey_date));
-         
+
         // --- REVISED AND CORRECTED QUERY ---
         $stmt = $_conn_db->prepare("
             SELECT
@@ -112,23 +112,23 @@ try {
             $durations = $duration_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
             $base_time = strtotime($journey_date . ' ' . $bus['departure_time']);
-            
+
             $from_offset = (int)($durations[$from_location] ?? 0);
             $to_offset = (int)($durations[$to_location] ?? 0);
 
             // If the destination is the route's final ending point, we need to find the max duration
             if ($to_location == $bus['ending_point'] && !isset($durations[$to_location])) {
-                 $max_duration_stmt = $_conn_db->prepare("SELECT MAX(duration_from_start_minutes) FROM route_stops WHERE route_id = ?");
-                 $max_duration_stmt->execute([$bus['route_id']]);
-                 $to_offset = (int) $max_duration_stmt->fetchColumn();
+                $max_duration_stmt = $_conn_db->prepare("SELECT MAX(duration_from_start_minutes) FROM route_stops WHERE route_id = ?");
+                $max_duration_stmt->execute([$bus['route_id']]);
+                $to_offset = (int) $max_duration_stmt->fetchColumn();
             }
 
             $bus['departure'] = date('H:i', $base_time + ($from_offset * 60));
-            
+
             if ($journey_date == date('Y-m-d') && strtotime($bus['departure']) < time()) {
                 continue; // Skip buses that have already departed today
             }
-            
+
             if ($to_offset > $from_offset) {
                 $bus['arrival'] = date('H:i', $base_time + ($to_offset * 60));
                 $duration_minutes = $to_offset - $from_offset;
@@ -136,9 +136,9 @@ try {
                 $bus['price'] = isset($bus['journey_price']) ? number_format($bus['journey_price'], 2) : 'N/A';
                 $bus['available_seats'] = (int)$bus['total_seats'] - (int)$bus['booked_seats'];
                 $bus['link_params'] = http_build_query([
-                    'schedule_id' => $bus['schedule_id'], 
-                    'from' => $from_location, 
-                    'to' => $to_location, 
+                    'schedule_id' => $bus['schedule_id'],
+                    'from' => $from_location,
+                    'to' => $to_location,
                     'date' => $journey_date
                 ]);
                 $direct_matches[] = $bus;
@@ -150,7 +150,19 @@ try {
     // 3. "OTHER AVAILABLE ROUTES" LOGIC
     // ======================================================================
     if (empty($direct_matches)) {
-        $all_schedules_stmt = $_conn_db->prepare("SELECT b.bus_name, b.bus_id, b.bus_type, r.route_id, r.starting_point, r.ending_point, rsch.schedule_id, rsch.departure_time, rsch.operating_day, (SELECT MIN(price) FROM (SELECT price_seater_lower AS price FROM route_stops WHERE route_id = r.route_id AND price_seater_lower > 0) AS prices) AS route_min_price FROM route_schedules rsch JOIN routes r ON rsch.route_id = r.route_id JOIN buses b ON r.bus_id = b.bus_id GROUP BY r.route_id ORDER BY r.starting_point, r.ending_point, rsch.departure_time ASC");
+        $all_schedules_stmt = $_conn_db->prepare("
+            SELECT 
+                b.bus_name, b.bus_id, b.bus_type, 
+                r.route_id, r.starting_point, r.ending_point, 
+                rsch.schedule_id, rsch.departure_time, rsch.operating_day,
+                MIN(rs_prices.price_seater_lower) AS route_min_price
+            FROM route_schedules rsch
+            JOIN routes r ON rsch.route_id = r.route_id
+            JOIN buses b ON r.bus_id = b.bus_id
+            LEFT JOIN route_stops rs_prices ON rs_prices.route_id = r.route_id AND rs_prices.price_seater_lower > 0
+            GROUP BY r.route_id
+            ORDER BY r.starting_point, r.ending_point, rsch.departure_time ASC
+        ");
         $all_schedules_stmt->execute();
         $all_available_schedules = $all_schedules_stmt->fetchAll(PDO::FETCH_ASSOC);
         $temp_routes = [];
@@ -172,9 +184,9 @@ try {
     $error_message = "Database Error: " . $e->getMessage();
 }
 ?>
- 
-    
- 
+
+
+
 
 <body class="mt-5 pt-5">
 

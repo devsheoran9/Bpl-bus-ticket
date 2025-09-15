@@ -32,4 +32,17 @@ include_once('common_function.php');
 
 $rozerapi = 'rzp_test_xISbqnYlqqrWvs';
 $rozersecretapi = 'RxquG8pfP9f5inluawqEAw92';
+
+ 
+// PHPMailer SMTP Configuration
+define('SMTP_HOSTT', 'smtp.gmail.com');
+define('SMTP_USERNAMEE', 'sjsheoran111@gmail.com');
+define('SMTP_PASSWORDD', 'lfse ihcq eioa zwns');
+define('SMTP_PORTT', 587);
+define('SMTP_SECUREE', 'tls');
+
+// Email "From" address
+define('MAIL_FROM_ADDRESSS', 'sjsheoran111@gmail.com');
+define('MAIL_FROM_NAMEE', 'BPL Bus Booking');
+ 
 ?>
