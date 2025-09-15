@@ -57,7 +57,6 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Bus Ticket - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
@@ -286,7 +285,6 @@ try {
                     </div>
                 </div>
                 <div class="stub-panel">
-                    <!-- === FIX: Use bus_name instead of operator_name === -->
                     <div class="brand"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
@@ -297,7 +295,7 @@ try {
                         <div class="label" style="font-size:11px;">Total Fare</div>
                         <div class="value" style="font-size:18px; font-weight: 700;">₹<?php echo number_format($booking_details['total_fare'], 2); ?></div>
                     </div>
-                    <div style="font-size:9px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details.</div>
+                    <div style="font-size:9px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details. Have a safe journey!</div>
                 </div>
             </div>
         </div>
@@ -305,9 +303,8 @@ try {
     <button id="download-btn" class="download-button"><i class="fas fa-download"></i> Download Ticket PDF</button>
 
     <script>
-        // The JavaScript for QR generation and PDF download is identical
         (function() {
-            const qrData = window.location.href; // QR code will simply link to the current page
+            const qrData = window.location.href;
             const qr = qrcode(0, 'M');
             qr.addData(qrData);
             qr.make();

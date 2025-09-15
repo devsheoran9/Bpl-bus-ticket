@@ -42,7 +42,6 @@ try {
 }
 
 ?>
-
 <style>
     .filter-card {
         background-color: #f8f9fa;
@@ -63,10 +62,18 @@ try {
         color: #0d6efd;
         font-size: 1.2rem;
         text-decoration: none;
+        transition: color 0.2s;
     }
 
     .view-btn:hover {
         color: #0a58ca;
+    }
+
+    /* Style for the 'Cancelled' text */
+    .status-cancelled {
+        color: #dc3545;
+        /* Bootstrap's danger color */
+        font-weight: bold;
     }
 </style>
 
@@ -75,7 +82,6 @@ try {
     <main class="container my-5 pt-5">
         <div class="bookings-container">
             <h2 class="text-center mb-4">My Bookings</h2>
-
             <!-- Filter Form -->
             <div class="filter-card">
                 <form action="bookings.php" method="GET" class="row g-2 align-items-center">
@@ -83,12 +89,7 @@ try {
                         <label for="month-filter" class="form-label fw-bold">Select Month to View:</label>
                     </div>
                     <div class="col-md-5">
-                        <input
-                            type="month"
-                            class="form-control"
-                            id="month-filter"
-                            name="month"
-                            value="<?php echo htmlspecialchars($selected_month); ?>">
+                        <input type="month" class="form-control" id="month-filter" name="month" value="<?php echo htmlspecialchars($selected_month); ?>">
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-danger w-100">Filter</button>
@@ -128,14 +129,32 @@ try {
                                     <td><?php echo date('d M, Y', strtotime($booking['travel_date'])); ?></td>
                                     <td>₹<?php echo number_format($booking['total_fare'], 2); ?></td>
                                     <td>
-                                        <span class="badge bg-success rounded-pill"><?php echo htmlspecialchars(ucfirst(strtolower($booking['booking_status']))); ?></span>
+                                        <?php
+                                        // === FIX APPLIED HERE: CONDITIONAL STATUS DISPLAY ===
+                                        $status_class = '';
+                                        if (strtoupper($booking['booking_status']) === 'CANCELLED') {
+                                            $status_class = 'bg-danger'; // Red badge for cancelled
+                                        } elseif (strtoupper($booking['booking_status']) === 'CONFIRMED') {
+                                            $status_class = 'bg-success'; // Green badge for confirmed
+                                        } else {
+                                            $status_class = 'bg-secondary'; // Grey for other statuses like PENDING
+                                        }
+                                        ?>
+                                        <span class="badge <?php echo $status_class; ?> rounded-pill">
+                                            <?php echo htmlspecialchars(ucfirst(strtolower($booking['booking_status']))); ?>
+                                        </span>
                                     </td>
                                     <td class="text-center">
-                                        <!-- === FIX APPLIED HERE === -->
-                                        <!-- The link now includes both the booking ID and the PNR (ticket_no) -->
-                                        <a href="view_ticket.php?id=<?php echo $booking['booking_id']; ?>&pnr=<?php echo urlencode($booking['ticket_no']); ?>" class="view-btn" title="View Ticket" target="_blank">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                        <?php
+                                        // === FIX APPLIED HERE: CONDITIONAL ACTION DISPLAY ===
+                                        if (strtoupper($booking['booking_status']) === 'CANCELLED'):
+                                        ?>
+                                            <span class="status-cancelled">Cancelled</span>
+                                        <?php else: ?>
+                                            <a href="view_ticket.php?id=<?php echo $booking['booking_id']; ?>&pnr=<?php echo urlencode($booking['ticket_no']); ?>" class="view-btn" title="View Ticket" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

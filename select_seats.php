@@ -191,6 +191,47 @@ function get_transform_style($orientation)
         /* Red */
     }
 
+    body {
+        background-color: #f8f9fa;
+        /* A light grey background color */
+        position: relative;
+        /* This is required for the ::before pseudo-element */
+        z-index: 1;
+        /* Ensures body is the base layer */
+    }
+
+    /* This creates a pseudo-element that will hold the background icon */
+    body::before {
+        content: "\f55e";
+        /* Font Awesome 5 bus icon unicode */
+        font-family: "Font Awesome 5 Free";
+        /* Use the Font Awesome font family */
+        font-weight: 900;
+        /* Use the 'solid' style icons */
+        position: fixed;
+        /* Fixes the icon in place during scroll */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        /* Centers the icon perfectly */
+        font-size: 40vw;
+        /* Responsive font size based on viewport width */
+        color: #e9ecef;
+        /* Very light grey color for the icon */
+        opacity: 0.5;
+        /* Makes it semi-transparent */
+        z-index: -1;
+        /* Places the icon BEHIND all other content */
+    }
+
+    /* Optional: On very small screens, you might want to slightly reduce the icon size */
+    @media (max-width: 576px) {
+        body::before {
+            font-size: 60vw;
+            /* Make it a bit larger relative to the smaller screen */
+        }
+    }
+
     .panel-card {
         background: #fff;
         border-radius: 16px;
@@ -822,9 +863,14 @@ function get_transform_style($orientation)
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="panel-card mb-4">
-                                <h5>Contact Details:
-                                    <span class="small text-danger" style="font-size:12px;"> (Your ticket will be sent to this email so write correct email.)</span>
-                                </h5>
+                                <h5>Contact Details: </h5>
+                                <?php if (isset($_SESSION['user_id'])) : ?>
+                                    <p class="small text-danger" style="font-size:12px;"> (If any details are incorrect, you can update them in your <a href="profile">profile page</a>.)</p>
+                                <?php else : ?>
+                                    <p class="small text-danger" style="font-size:12px;"> (Your ticket will be sent to this email so write correct email.)</p>
+                                <?php endif; ?>
+
+
                                 <?php if (isset($_SESSION['user_id'])) :
                                     $user_id = $_SESSION['user_id'];
                                     $stmt_user = $pdo->prepare("SELECT username, mobile_no, email FROM users WHERE id = ?");
