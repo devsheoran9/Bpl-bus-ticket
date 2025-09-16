@@ -5,7 +5,8 @@ session_security_check();
 check_permission('can_manage_cancellations');
 
 try {
-    // A comprehensive query to get all cancellation details
+    // --- NEW & IMPROVED QUERY ---
+    // Fetches the original passenger fare separately from the refunded amount
     $stmt = $_conn_db->query("
         SELECT
             c.cancellation_id,
@@ -17,12 +18,15 @@ try {
             b.travel_date,
             p.passenger_name,
             p.seat_code,
+            p.fare AS original_passenger_fare, -- Get the original fare from the passengers table
             t.gateway_payment_id
         FROM cancellations AS c
         JOIN bookings AS b ON c.booking_id = b.booking_id
         JOIN passengers AS p ON c.passenger_id = p.passenger_id
         LEFT JOIN transactions AS t ON c.booking_id = t.booking_id AND t.payment_status = 'CAPTURED'
-        ORDER BY FIELD(c.status, 'PENDING', 'COMPLETED', 'FAILED'), c.created_at DESC
+        ORDER BY 
+            FIELD(c.status, 'PENDING', 'COMPLETED', 'FAILED'), -- PENDING requests will always be on top
+            c.created_at DESC
     ");
     $cancellations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -38,9 +42,10 @@ try {
     <style>
         .table th { text-transform: uppercase; font-size: 0.8rem; }
         .actions-cell .btn { margin-left: 5px; }
-        /* Style for DataTables controls */
         .dataTables_wrapper .dataTables_filter { margin-bottom: 1rem; float: right; }
         .dataTables_wrapper .dt-buttons { margin-bottom: 1rem; float: left; }
+        .fare-column .original-fare { font-weight: 500; color: #6c757d; }
+        .fare-column .refund-amount { font-weight: bold; color: #dc3545; }
     </style>
 </head>
 <body>
@@ -60,24 +65,34 @@ try {
                             <tr>
                                 <th>Passenger / Ticket</th>
                                 <th>Journey Date</th>
-                                <th class="text-end">Refund Amount</th>
+                                <th class="text-end">Fare / Refund</th>
                                 <th class="text-center">Status</th>
-                                <th>Reason</th>
+                                <th>Reason / Refund ID</th>
                                 <th>Cancelled On</th>
                                 <th class="no-export text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($cancellations)): ?>
-                                <!-- This row is shown if there are no cancellations at all -->
-                            <?php else: foreach ($cancellations as $c): ?>
+                            <?php foreach ($cancellations as $c): ?>
                                 <tr id="cancellation-row-<?php echo $c['cancellation_id']; ?>">
                                     <td>
                                         <strong><?php echo htmlspecialchars($c['passenger_name']); ?></strong>
                                         <br><small class="text-muted"><?php echo htmlspecialchars($c['ticket_no']); ?></small>
                                     </td>
                                     <td><?php echo date('d M, Y', strtotime($c['travel_date'])); ?></td>
-                                    <td class="text-end fw-bold text-danger">₹<?php echo number_format($c['amount_refunded'], 2); ?></td>
+                                    
+                                    <!-- NEW: Fare / Refund Column -->
+                                    <td class="text-end fare-column">
+                                        <div class="original-fare" title="Original Ticket Price">
+                                            Pay: ₹<?php echo number_format($c['original_passenger_fare'], 2); ?>
+                                        </div>
+                                        <?php if ($c['refund_status'] === 'COMPLETED'): ?>
+                                            <div class="refund-amount" title="Amount Refunded">
+                                                Refunded: ₹<?php echo number_format($c['amount_refunded'], 2); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+
                                     <td class="text-center">
                                         <?php
                                             $status = $c['refund_status'];
@@ -88,8 +103,22 @@ try {
                                         ?>
                                         <span class="badge <?php echo $badge_class; ?>"><?php echo htmlspecialchars($status); ?></span>
                                     </td>
-                                    <td><small><?php echo htmlspecialchars($c['cancellation_reason'] ?: 'N/A'); ?></small></td>
+
+                                    <!-- NEW: Reason / Refund ID Column -->
+                                    <td>
+                                        <small>
+                                            <?php 
+                                            if ($status === 'COMPLETED' && !empty($c['gateway_refund_id'])) {
+                                                echo 'Refund ID: <strong>' . htmlspecialchars($c['gateway_refund_id']) . '</strong>';
+                                            } else {
+                                                echo htmlspecialchars($c['cancellation_reason'] ?: 'N/A');
+                                            }
+                                            ?>
+                                        </small>
+                                    </td>
+
                                     <td><?php echo date('d M Y, h:i A', strtotime($c['cancelled_on'])); ?></td>
+
                                     <td class="text-end actions-cell">
                                         <?php if ($status === 'PENDING'): ?>
                                             <button class="btn btn-sm btn-success action-btn" data-action="mark_refunded" data-id="<?php echo $c['cancellation_id']; ?>" title="Mark as Refunded">
@@ -101,7 +130,7 @@ try {
                                         <?php endif; ?>
                                     </td>
                                 </tr>
-                            <?php endforeach; endif; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -123,36 +152,32 @@ $(document).ready(function() {
             { extend: 'print', exportOptions: { columns: ':not(.no-export)' }, title: 'Cancellation Report' }
         ],
         "pageLength": 25,
-        "order": [[ 3, "asc" ], [ 5, "desc" ]], // Sort by Status (PENDING first), then by Date
+        // --- THIS IS THE FIX ---
+        // An empty array tells DataTables to respect the initial order from the HTML/PHP
+        "order": [], 
         "language": {
             "emptyTable": "No cancellation requests found."
         }
     });
 
-    // --- EVENT HANDLER FOR ACTION BUTTONS ---
+    // --- EVENT HANDLER FOR ACTION BUTTONS (This code is correct) ---
     $('#cancellations-table tbody').on('click', '.action-btn', async function() {
         const button = $(this);
         const action = button.data('action');
         const cancellationId = button.data('id');
-        const row = button.closest('tr');
         
         let swalConfig = {};
 
         if (action === 'mark_refunded') {
             swalConfig = {
                 title: 'Mark as Refunded',
-                html: `
-                    <p class="text-start mb-3">Enter the payment gateway's refund ID to confirm.</p>
-                    <input id="swal-refund-id" class="swal2-input" placeholder="Refund Transaction ID (Optional)">
-                `,
+                html: `<p class="text-start mb-3">Enter the payment gateway's refund ID to confirm.</p><input id="swal-refund-id" class="swal2-input" placeholder="Refund Transaction ID (Optional)">`,
                 confirmButtonText: 'Confirm Refund',
                 confirmButtonColor: '#198754',
                 showCancelButton: true,
                 focusConfirm: false,
                 preConfirm: () => {
-                    return {
-                        gateway_refund_id: document.getElementById('swal-refund-id').value
-                    }
+                    return { gateway_refund_id: document.getElementById('swal-refund-id').value }
                 }
             };
         } else if (action === 'mark_failed') {
