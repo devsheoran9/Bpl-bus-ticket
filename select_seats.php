@@ -1364,8 +1364,8 @@ function get_transform_style($orientation)
                         actionBtn.disabled = true;
                     },
                     success: function(data) {
-                        if (data.success) {
-                            let redirectUrl = `booking_confirmation?id=${bookingId}`;
+                        if (data.success && data.booking_id && data.ticket_no) {
+                            let redirectUrl = `booking_confirmation.php?id=${data.booking_id}&ticket=${data.ticket_no}`;
                             if (isNewUser) {
                                 redirectUrl += '&new_user=true';
                             }

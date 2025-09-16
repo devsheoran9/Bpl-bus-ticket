@@ -37,7 +37,7 @@
                 <div class="col-md-7 col-lg-8">
                     <p> © 2024 Copyright:
                         <a href="#" style="text-decoration: none;">
-                            <strong class="text-primary">BusGo.com</strong>
+                            <strong class="text-primary">bplBus.com</strong>
                         </a>
                     </p>
                 </div>

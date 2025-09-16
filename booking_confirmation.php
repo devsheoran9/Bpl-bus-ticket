@@ -4,36 +4,41 @@ include 'includes/header.php';
 
 // --- 1. Security & Input Validation ---
 $booking_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$booking_id) {
-    die("Error: A valid Booking ID is required.");
+
+// --- FIX IS HERE: Use a modern, reliable method to get the ticket number ---
+$ticket_no = $_GET['ticket'] ?? null;
+
+// Check for both parameters
+if (!$booking_id || !$ticket_no) {
+    die("Error: A valid Booking ID and Ticket Number are required.");
 }
 
 $is_new_user = isset($_GET['new_user']) && $_GET['new_user'] === 'true';
-
-if (!$is_new_user) {
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login");
-        exit();
-    }
-    $logged_in_user_id = $_SESSION['user_id'];
-}
+$is_logged_in = isset($_SESSION['user_id']);
+$logged_in_user_id = $is_logged_in ? $_SESSION['user_id'] : null;
 
 // Initialize variables
 $booking_details = null;
 $passengers = [];
 $transaction_details = null;
-$view_ticket_url = '#'; // Default URL
+$view_ticket_url = '#';
 
 try {
-    // --- 2. Database Fetching ---
-    if ($is_new_user) {
-        $sql = "SELECT b.*, bu.bus_name, bu.registration_number, rs.departure_time, r.starting_point, r.ending_point FROM bookings b JOIN buses bu ON b.bus_id = bu.bus_id JOIN routes r ON b.route_id = r.route_id LEFT JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a') WHERE b.booking_id = ?";
+    // --- 2. Database Fetching Logic (Now correctly receives the ticket number) ---
+    $base_sql = "SELECT b.*, bu.bus_name, bu.registration_number, rs.departure_time, r.starting_point, r.ending_point 
+                 FROM bookings b 
+                 JOIN buses bu ON b.bus_id = bu.bus_id 
+                 JOIN routes r ON b.route_id = r.route_id 
+                 LEFT JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a')";
+
+    if ($is_logged_in) {
+        $sql = $base_sql . " WHERE b.booking_id = ? AND b.ticket_no = ? AND b.user_id = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$booking_id]);
+        $stmt->execute([$booking_id, $ticket_no, $logged_in_user_id]);
     } else {
-        $sql = "SELECT b.*, bu.bus_name, bu.registration_number, rs.departure_time, r.starting_point, r.ending_point FROM bookings b JOIN buses bu ON b.bus_id = bu.bus_id JOIN routes r ON b.route_id = r.route_id LEFT JOIN route_schedules rs ON b.route_id = rs.route_id AND rs.operating_day = DATE_FORMAT(b.travel_date, '%a') WHERE b.booking_id = ? AND b.user_id = ?";
+        $sql = $base_sql . " WHERE b.booking_id = ? AND b.ticket_no = ?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$booking_id, $logged_in_user_id]);
+        $stmt->execute([$booking_id, $ticket_no]);
     }
 
     $booking_details = $stmt->fetch();
@@ -42,28 +47,25 @@ try {
         die("Booking not found or you do not have permission to view this confirmation.");
     }
 
+
     // --- 3. GENERATE/RETRIEVE SECURE TOKEN & CREATE TICKET URL ---
-    // This logic runs for BOTH logged-in and new users to ensure consistency.
+    // --- 3. GENERATE/RETRIEVE SECURE TOKEN & CREATE TICKET URL ---
     $tokenStmt = $pdo->prepare("SELECT token FROM ticket_access_tokens WHERE booking_id = ?");
     $tokenStmt->execute([$booking_id]);
     $token = $tokenStmt->fetchColumn();
     if (!$token) {
-        $token = bin2hex(random_bytes(20)); // Create a new token if one doesn't exist
+        $token = bin2hex(random_bytes(20));
         $insertStmt = $pdo->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
         $insertStmt->execute([$booking_id, $token]);
     }
-
-    // Create the secure URL that points to the public view page
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $base_url = rtrim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/');
-    $view_ticket_url = $base_url . '/ticket_public_view?token=' . urlencode($token);
-
+    $view_ticket_url = $base_url . '/ticket_public_view.php?token=' . urlencode($token);
 
     // --- 4. Fetch Passengers & Transaction Details ---
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll();
-
     $transStmt = $pdo->prepare("SELECT gateway_payment_id FROM transactions WHERE booking_id = ? ORDER BY transaction_id DESC LIMIT 1");
     $transStmt->execute([$booking_id]);
     $transaction_details = $transStmt->fetch();
@@ -72,11 +74,9 @@ try {
     $stmt_origin = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $stmt_origin->execute([$booking_details['route_id'], $booking_details['origin']]);
     $origin_minutes = (int)$stmt_origin->fetchColumn();
-
     $stmt_dest = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $stmt_dest->execute([$booking_details['route_id'], $booking_details['destination']]);
     $destination_minutes = (int)$stmt_dest->fetchColumn();
-
     $route_departure_datetime = new DateTime($booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00'));
     $actual_departure_datetime = (clone $route_departure_datetime)->modify("+$origin_minutes minutes");
     $actual_arrival_datetime = (clone $route_departure_datetime)->modify("+$destination_minutes minutes");
@@ -84,6 +84,7 @@ try {
     die("An error occurred while fetching booking details: " . $e->getMessage());
 }
 ?>
+ 
 
 <style>
     .confirmation-card {
@@ -171,7 +172,7 @@ try {
                                         <small class="text-muted">(Your mobile number is your default password.)</small>
                                     </dd>
                                 </dl>
-                                <a href="login" class="btn btn-primary mt-3">Login to Your Account</a>
+                                <a href="login.php" class="btn btn-primary mt-3">Login to Your Account</a>
                             </div>
                         </div>
                     </div>
@@ -256,7 +257,7 @@ try {
                 <div class="text-center mt-4 pt-3 border-top">
                     <p class="text-muted small">A copy of the ticket has also been sent to your registered email address.</p>
                     <a href="<?php echo htmlspecialchars($view_ticket_url); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
-                    <a href="index" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
+                    <a href="index.php" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
                 </div>
             </div>
         </div>

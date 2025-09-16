@@ -103,7 +103,7 @@ if (!$initial_schedule_id) {
 
         $booked_seats_info = [];
         if ($is_bus_available) {
-            $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED'");
+            $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED' AND p.passenger_status = 'CONFIRMED'");
             $stmt_booked->execute([$route_id, $bus_id, $journey_date]);
             $booked_results = $stmt_booked->fetchAll();
             foreach ($booked_results as $row) {
@@ -135,6 +135,7 @@ if (!$initial_schedule_id) {
         $error_message = "An error occurred: " . $e->getMessage();
     }
 }
+
 
 function get_seat_classes($seat)
 {
@@ -190,10 +191,51 @@ function get_transform_style($orientation)
         /* Red */
     }
 
+    body {
+        background-color: #f8f9fa;
+        /* A light grey background color */
+        position: relative;
+        /* This is required for the ::before pseudo-element */
+        z-index: 1;
+        /* Ensures body is the base layer */
+    }
+
+    /* This creates a pseudo-element that will hold the background icon */
+    body::before {
+        content: "\f55e";
+        /* Font Awesome 5 bus icon unicode */
+        font-family: "Font Awesome 5 Free";
+        /* Use the Font Awesome font family */
+        font-weight: 900;
+        /* Use the 'solid' style icons */
+        position: fixed;
+        /* Fixes the icon in place during scroll */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        /* Centers the icon perfectly */
+        font-size: 40vw;
+        /* Responsive font size based on viewport width */
+        color: #e9ecef;
+        /* Very light grey color for the icon */
+        opacity: 0.5;
+        /* Makes it semi-transparent */
+        z-index: -1;
+        /* Places the icon BEHIND all other content */
+    }
+
+    /* Optional: On very small screens, you might want to slightly reduce the icon size */
+    @media (max-width: 576px) {
+        body::before {
+            font-size: 60vw;
+            /* Make it a bit larger relative to the smaller screen */
+        }
+    }
+
     .panel-card {
         background: #fff;
         border-radius: 16px;
-        padding: 24px;
+
         box-shadow: 0 4px 25px rgba(44, 62, 80, 0.08);
         margin-bottom: 24px;
         border: 1px solid #eaeaea;
@@ -201,7 +243,7 @@ function get_transform_style($orientation)
 
     .deck-layout-wrapper {
         display: flex;
-        gap: 20px;
+        gap: 10px;
         justify-content: center;
         flex-wrap: wrap;
     }
@@ -216,7 +258,6 @@ function get_transform_style($orientation)
     .deck {
         position: relative;
         background-color: #fcfcfc;
-        /* background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px); */
         background-size: var(--grid-size) var(--grid-size);
     }
 
@@ -375,6 +416,17 @@ function get_transform_style($orientation)
 </style>
 
 <body>
+    <!-- ====================================================================== -->
+    <!-- NEW: Full Page Loader for Payment Verification -->
+    <!-- ====================================================================== -->
+    <div id="full-page-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 style="margin-top: 20px; color: #333; font-weight: 600;">Finalizing Your Booking...</h4>
+        <p style="color: #6c757d;">Please do not close or refresh this page.</p>
+    </div>
+
     <header class="top-header mt-5 pt-5">
         <div class="container">
             <div class="progress-steps">
@@ -397,8 +449,8 @@ function get_transform_style($orientation)
                     <div class="col-md-6">
                         <div class="panel-card">
                             <?php if (!$is_bus_available) : ?><div class="alert alert-warning text-center" role="alert"><strong><?php echo htmlspecialchars($availability_message); ?></strong></div><?php endif; ?>
-                            <h5>Boarding points</h5>
-                            <p class="text-muted">Select Boarding Point</p>
+                            <h5>Boarding points <span class="text-muted" style="font-size:14px">(Select Boarding Point)</span></h5>
+
                             <?php foreach ($all_points as $index => $point) : if ($index === count($all_points) - 1) continue; ?>
                                 <div class="point-option <?php if (!$is_bus_available) echo 'disabled'; ?>" data-order="<?php echo $point['order']; ?>">
                                     <input type="radio" name="boarding_point" id="bp<?php echo $index; ?>" value="<?php echo htmlspecialchars($point['name']); ?>" <?php if ($point['name'] === $from_location) echo 'checked'; ?> <?php if (!$is_bus_available) echo 'disabled'; ?>>
@@ -413,8 +465,8 @@ function get_transform_style($orientation)
                     <div class="col-md-6">
                         <div class="panel-card">
                             <?php if (!$is_bus_available) : ?><div class="alert alert-warning text-center" role="alert"><strong><?php echo htmlspecialchars($availability_message); ?></strong></div><?php endif; ?>
-                            <h5>Dropping points</h5>
-                            <p class="text-muted">Select Dropping Point</p>
+                            <h5>Dropping points <span class="text-muted" style="font-size:14px">(Select Dropping Point)</span></h5>
+                            <!-- <p class="text-muted">Select Dropping Point </p> -->
                             <?php foreach ($all_points as $index => $point) : if ($index === 0) continue; ?>
                                 <div class="point-option <?php if (!$is_bus_available) echo 'disabled'; ?>" data-order="<?php echo $point['order']; ?>">
                                     <input type="radio" name="dropping_point" id="dp<?php echo $index; ?>" value="<?php echo htmlspecialchars($point['name']); ?>" <?php if ($point['name'] === $to_location) echo 'checked'; ?> <?php if (!$is_bus_available) echo 'disabled'; ?>>
@@ -516,73 +568,114 @@ function get_transform_style($orientation)
                         <div class="panel-card">
                             <h5>Know your seat types</h5>
                             <div class="seat-legend">
-                                <div class="legend-row fw-bold text-muted">
-                                    <div class="small">SEAT TYPES</div>
-                                    <div class="small text-center">SEATER</div>
-                                    <div class="small text-center">SLEEPER</div>
+                                <!-- Header Row -->
+                                <div style="display: flex; align-items: center; text-align: center; font-weight: bold; color: #6c757d; font-size: 0.8em; padding: 8px 0; border-bottom: 2px solid #dee2e6;">
+                                    <div style="flex: 1; text-align: left;">SEAT TYPES</div>
+                                    <div style="width: 90px;">SEATER</div>
+                                    <div style="width: 90px;">SLEEPER</div>
                                 </div>
-                                <hr class="my-2">
-                                <div class="legend-row">
-                                    <div class="small">Available</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available"></div>
+
+                                <!-- Available -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border:  1px solid #34C759; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #010f05ff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Available for Male</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available male-only"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available male-only"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border:  1px solid #34C759; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #010f05ff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Available for Female</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat available female-only"></div>
+
+                                <!-- Available for Male -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available only for male passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border: 1px solid #007bff; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.2em;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat available female-only"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked by Male</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold sold-male"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold sold-male"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border: 1px solid #007bff; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.5em;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked by Female</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold sold-female"></div>
+
+                                <!-- Available for Female -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Available only for female passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; border: 1px solid #e91e63; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.2em;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold sold-female"></div>
-                                    </div>
-                                </div>
-                                <div class="legend-row">
-                                    <div class="small">Booked</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat sold"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat sold"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; border: 1px solid #e91e63; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.5em;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="legend-row">
-                                    <div class="small">Selected by you</div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat seat selected-any"></div>
+
+                                <!-- Booked -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Already booked</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px;   background-color: #f0f0f0;   border: 1px solid #e0e0e0;   border-radius: 6px;   font-size: 12px;   display: flex;   justify-content: center;   align-items: center;">
+                                            Sold
+                                        </div>
+
                                     </div>
-                                    <div class="d-flex justify-content-center">
-                                        <div class="legend-seat sleeper seat selected-any"></div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; font-size:12px; display: flex; justify-content: center;  align-items:center;">Sold</div>
+                                    </div>
+                                </div>
+
+                                <!-- Booked by Male -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by male passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.2em; opacity: 0.5;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.5em; opacity: 0.5;">
+                                            <i class="fas fa-male"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Booked by Female -->
+                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by female passenger</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.2em; opacity: 0.5;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.5em; opacity: 0.5;">
+                                            <i class="fas fa-female"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selected by you -->
+                                <div style="display: flex; align-items: center; padding: 10px 0;">
+                                    <div style="flex: 1; font-size: 0.9em; color: #555;">Selected by you</div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 30px; background-color: #147dfc; border: 1px solid #147dfc; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #fff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    </div>
+                                    <div style="width: 90px; display: flex; justify-content: center;">
+                                        <div style="width: 35px; height: 50px; background-color: #147dfc; border: 1px solid #147dfc; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #fff; font-size: 12px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -633,7 +726,120 @@ function get_transform_style($orientation)
                                         <h5>Rest Stop Information</h5>
                                         <p class="small text-muted">This service includes designated rest stops. The crew will announce the duration of each stop.</p>
                                     </div>
+                                    <hr>
+                                    <div class="info-section" style="margin-top: 25px; ">
+                                        <h5 style="font-size: 1.4em; color: #333; font-weight: 600; margin-bottom: 20px;">6 amenities</h5>
+
+                                        <!-- Amenity Item: Blankets -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-bed"></i> <!-- Using 'bed' as a proxy for blankets/bedding -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Blankets</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Charging Point -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-charging-station"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Charging Point</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Reading Light -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="far fa-lightbulb"></i> <!-- Using the 'regular' version for an outline style -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Reading Light</span>
+                                        </div>
+
+                                        <!-- Amenity Item: CCTV -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-video"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">CCTV</span>
+                                        </div>
+
+                                        <!-- Amenity Item: Bed Sheet -->
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-bed"></i> <!-- Using 'bed' as a proxy for blankets/bedding -->
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Bed Sheet</span>
+                                        </div>
+
+
+                                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <div style="width: 35px; text-align: center; color: #555; font-size: 1.2em;">
+                                                <i class="fas fa-shield-alt"></i>
+                                            </div>
+                                            <span style="font-size: 1em; color: #333;">Safety</span>
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <div class="info-section" style="margin-top: 25px;">
+                                        <h5 style="font-size: 1.4em; color: #333; font-weight: 600; margin-bottom: 20px;">Other Policies</h5>
+
+                                        <!-- Child Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-child"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Child passenger policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Children above the age of 3 will need a ticket</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Luggage Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-suitcase-rolling"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Luggage policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">2 pieces of luggage will be accepted free of charge per passenger. Excess items will be chargeable<br>Excess baggage over 20 kgs per passenger will be chargeable</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pets Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-paw"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Pets Policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Pets are not allowed</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Liquor Policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-wine-bottle"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Liquor Policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6;">Carrying or consuming liquor inside the bus is prohibited. Bus operator reserves the right to deboard drunk passengers.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pick up time policy -->
+                                        <div style="display: flex; align-items: flex-start; margin-bottom: 20px;">
+                                            <div style="width: 40px; text-align: center; color: #555; font-size: 1.5em; padding-top: 3px;">
+                                                <i class="fas fa-bus-alt"></i>
+                                            </div>
+                                            <div style="flex: 1; padding-left: 10px;">
+                                                <strong style="display: block; font-size: 1em; color: #333; font-weight: 600; margin-bottom: 4px;">Pick up time policy</strong>
+                                                <p style="font-size: 0.9em; color: #666; margin: 0; line-height: 1.6; ">Bus operator is not obligated to wait beyond the scheduled departure time of the bus. No refund request will be entertained for late arriving passengers.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <div class="tab-pane fade" id="route-pane" role="tabpanel">
                                     <div class="info-section">
                                         <h5>Bus Route</h5>
@@ -668,8 +874,14 @@ function get_transform_style($orientation)
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="panel-card mb-4">
-                                <h5>Contact Details</h5>
-                                <p class="small text-muted">Your ticket will be sent to this email so write correct email.</p>
+                                <h5>Contact Details: </h5>
+                                <?php if (isset($_SESSION['user_id'])) : ?>
+                                    <p class="small text-danger" style="font-size:12px;"> (If any details are incorrect, you can update them in your <a href="profile">profile page</a>.)</p>
+                                <?php else : ?>
+                                    <p class="small text-danger" style="font-size:12px;"> (Your ticket will be sent to this email so write correct email.)</p>
+                                <?php endif; ?>
+
+
                                 <?php if (isset($_SESSION['user_id'])) :
                                     $user_id = $_SESSION['user_id'];
                                     $stmt_user = $pdo->prepare("SELECT username, mobile_no, email FROM users WHERE id = ?");
@@ -680,35 +892,40 @@ function get_transform_style($orientation)
                                         $mobile_no = htmlspecialchars($user['mobile_no'] ?? '');
                                         $email     = htmlspecialchars($user['email'] ?? '');
                                 ?>
-                                        <div class="mb-3">
-                                            <label class="form-label">Name</label>
-                                            <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Phone</label>
-                                            <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
+                                        <div class="row g-1">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Name<span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="contact_name" value="<?php echo $username; ?>" readonly>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Phone<span class="text-danger">*</span></label>
+                                                <input type="tel" class="form-control" name="contact_mobile" value="<?php echo $mobile_no; ?>" readonly>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label">Email<span class="text-danger">*</span></label>
+                                                <input type="email" class="form-control" name="contact_email" value="<?php echo $email; ?>" readonly>
+                                            </div>
                                         </div>
                                     <?php endif;
                                 else : ?>
-                                    <div class="mb-3">
-                                        <label class="form-label">Name</label>
-                                        <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone</label>
-                                        <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
+                                    <div class="row g-1">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Name<span class="text-danger">*</span></label>
+                                            <input type="text" name="contact_name" class="form-control" placeholder="Full Name" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Phone<span class="text-danger">*</span></label>
+                                            <input type="tel" name="contact_mobile" class="form-control" placeholder="Mobile Number" required>
+                                        </div>
+                                        <div class="col-md-5 ">
+                                            <label class="form-label">Email<span class="text-danger">*</span></label>
+                                            <input type="email" name="contact_email" class="form-control" placeholder="example@email.com" required>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
-                                <div id="passenger-details-forms"></div>
+
                             </div>
+                            <div id="passenger-details-forms"></div>
                         </div>
 
                         <div class="col-lg-6">
@@ -730,8 +947,8 @@ function get_transform_style($orientation)
                                     </div>
                                     <hr>
                                     <div class="summary-item">
-                                        <div><strong>Selected Seats</strong></div>
-                                        <div id="summary-seat-numbers" class="border p-2 ms-2 " style="border-radius:5px;"></div>
+                                        <div><strong>Selected Seats: </strong></div>
+                                        <div id="summary-seat-numbers" class="border p-1 ms-2 " style="border-radius:5px; background: #ffefda;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -743,6 +960,44 @@ function get_transform_style($orientation)
 
         <?php endif; ?>
     </main>
+    <!-- ====================================================================== -->
+    <!-- NEW: Custom Alert Modal for Existing User -->
+    <!-- ====================================================================== -->
+    <!-- ====================================================================== -->
+    <!-- NEW: Awesome Custom Alert Modal for Existing User -->
+    <!-- ====================================================================== -->
+    <div class="modal fade" id="customAlertModal" tabindex="-1" aria-labelledby="customAlertModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); background-color: #f8f9fa; overflow: hidden; position: relative;">
+
+                <!-- Faded Background Icon -->
+                <div style="position: absolute; right: -40px; top: -30px; font-size: 180px; color: #e9ecef; opacity: 0.7; z-index: 1; transform: rotate(-15deg);">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+
+                <!-- Modal Content -->
+                <div style="position: relative; z-index: 2; padding: 2rem;">
+                    <!-- Top Icon -->
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background-color: #e6f7ff; color: #007bff; font-size: 2rem;">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+                    </div>
+
+                    <div class="modal-body text-center" style="padding: 0;">
+                        <h5 class="modal-title mb-2" id="customAlertModalLabel" style="font-weight: 700; color: #343a40; font-size: 1.5rem;">Account Found</h5>
+                        <p id="customAlertMessage" style="color: #6c757d; margin-bottom: 0;">An account with this email or mobile number already exists.</p>
+                        <p class="text-muted" style="font-size: 0.9rem; margin-top: 5px;">Please log in, or change the details to continue as a guest.</p>
+                    </div>
+
+                    <div class="modal-footer" style="border: none; justify-content: center; gap: 15px; padding: 1.5rem 0 0;">
+                        <button type="button" class="btn" data-bs-dismiss="modal" id="changeDetailsBtn" style="background-color: #e9ecef; color: #495057; font-weight: 600; padding: 10px 25px; border-radius: 50px; border: none;">Change Details</button>
+                        <a href="login.php" class="btn btn-primary" id="loginBtn" style="font-weight: 600; padding: 10px 25px; border-radius: 50px; background-color: #007bff; border: none;">Log In Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <br><br><br><br>
 
     <div id="bottom-bar" class="bottom-action-bar">
@@ -758,10 +1013,9 @@ function get_transform_style($orientation)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
-   <!-- === NEW: Add the Razorpay Checkout Script === -->
+
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <!-- --- MODIFIED: JavaScript updated to fix booking error --- -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectedSeats = new Map();
@@ -977,14 +1231,15 @@ function get_transform_style($orientation)
                         genderSelectHtml = `<select name="passenger_gender_${uniqueId}" class="form-select" required><option value="" selected disabled>Select Gender</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>`;
                     }
                     const formHtml = `
-                    <div class="panel-card mb-3 passenger-form" id="passenger-form-${uniqueId}">
-                        <h6>Passenger ${passengerCount} <span class="badge bg-secondary">${seatCode}</span></h6>
-                        <div class="row">
-                            <div class="col-md-5 mb-3"><label class="form-label">Name</label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
-                            <div class="col-md-3 mb-3"><label class="form-label">Age</label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1"></div>
-                            <div class="col-md-4 mb-3"><label class="form-label">Gender</label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
+                <div class="panel-card mb-1 mt-2 passenger-form" id="passenger-form-${uniqueId}">
+                    <h6>Passenger ${passengerCount} <span class="badge bg-secondary" style="background-color: rgb(29 203 48) !important;">${seatCode}</span></h6>
+                    <div class="row p-2">
+                        <div class="col-12 col-md-5 mb-1 g-1"><label class="form-label"></label><input type="text" name="passenger_name_${uniqueId}" class="form-control" required placeholder="Full Name"></div>
+                        <div class="col-4 col-md-3 mb-1 g-1"><label class="form-label"></label><input type="number" name="passenger_age_${uniqueId}" class="form-control" required placeholder="Age" min="1" max="100" >
                         </div>
-                    </div>`;
+                        <div class="col-8 col-md-4 mb-1 g-1"><label class="form-label"></label><div class="input-group"><span class="input-group-text"><i class="fas fa-venus-mars text-danger"></i></span>${genderSelectHtml}</div></div>
+                    </div>
+                </div>`;
                     container.insertAdjacentHTML('beforeend', formHtml);
                     passengerCount++;
                 }
@@ -996,37 +1251,28 @@ function get_transform_style($orientation)
                 let firstInvalidElement = null;
                 let passengersData = [];
 
+                // Form validation logic (this part is correct and remains the same)
                 document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
                 selectedSeats.forEach((seatData, seatCode) => {
                     const uniqueId = seatCode.replace(/[^a-zA-Z0-9]/g, '');
                     const nameEl = form.querySelector(`input[name="passenger_name_${uniqueId}"]`);
                     const ageEl = form.querySelector(`input[name="passenger_age_${uniqueId}"]`);
                     const genderEl = form.querySelector(`select[name="passenger_gender_${uniqueId}"]`);
-                    const ageValue = parseInt(ageEl ? ageEl.value : '0', 10);
-
                     if (!nameEl || !nameEl.value.trim()) {
                         isValid = false;
-                        if (nameEl) {
-                            nameEl.classList.add('is-invalid');
-                            if (!firstInvalidElement) firstInvalidElement = nameEl;
-                        }
+                        if (nameEl) nameEl.classList.add('is-invalid');
+                        if (!firstInvalidElement) firstInvalidElement = nameEl;
                     }
-                    if (!ageEl || isNaN(ageValue) || ageValue <= 0) {
+                    if (!ageEl || isNaN(parseInt(ageEl.value, 10)) || parseInt(ageEl.value, 10) <= 0) {
                         isValid = false;
-                        if (ageEl) {
-                            ageEl.classList.add('is-invalid');
-                            if (!firstInvalidElement) firstInvalidElement = ageEl;
-                        }
+                        if (ageEl) ageEl.classList.add('is-invalid');
+                        if (!firstInvalidElement) firstInvalidElement = ageEl;
                     }
                     if (!genderEl || !genderEl.value) {
                         isValid = false;
-                        if (genderEl) {
-                            genderEl.classList.add('is-invalid');
-                            if (!firstInvalidElement) firstInvalidElement = genderEl;
-                        }
+                        if (genderEl) genderEl.classList.add('is-invalid');
+                        if (!firstInvalidElement) firstInvalidElement = genderEl;
                     }
-
                     passengersData.push({
                         seat_code: seatCode,
                         fare: seatData.price,
@@ -1035,7 +1281,6 @@ function get_transform_style($orientation)
                         gender: genderEl ? genderEl.value : ''
                     });
                 });
-
                 form.querySelectorAll('[name^="contact_"][required]').forEach(input => {
                     if (!input.value.trim()) {
                         input.classList.add('is-invalid');
@@ -1043,64 +1288,166 @@ function get_transform_style($orientation)
                         if (!firstInvalidElement) firstInvalidElement = input;
                     }
                 });
-
                 if (!isValid) {
                     alert('Please fill in all required fields correctly.');
                     if (firstInvalidElement) firstInvalidElement.focus();
                     return;
                 }
 
-                const formData = new FormData(form);
-                formData.append('origin', document.querySelector('input[name="boarding_point"]:checked').value);
-                formData.append('destination', document.querySelector('input[name="dropping_point"]:checked').value);
-                formData.append('total_fare', document.getElementById('total-price').textContent);
-                formData.append('passengers', JSON.stringify(passengersData));
+                const bookingData = {
+                    route_id: form.querySelector('input[name="route_id"]').value,
+                    bus_id: form.querySelector('input[name="bus_id"]').value,
+                    schedule_id: form.querySelector('input[name="schedule_id"]').value,
+                    travel_date: form.querySelector('input[name="travel_date"]').value,
+                    contact_name: form.querySelector('input[name="contact_name"]').value,
+                    contact_mobile: form.querySelector('input[name="contact_mobile"]').value,
+                    contact_email: form.querySelector('input[name="contact_email"]').value,
+                    origin: document.querySelector('input[name="boarding_point"]:checked').value,
+                    destination: document.querySelector('input[name="dropping_point"]:checked').value,
+                    total_fare: document.getElementById('total-price').textContent,
+                    passengers: JSON.stringify(passengersData)
+                };
 
-                actionBtn.disabled = true;
-                actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
-
-                fetch('process_booking', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.text().then(text => {
-                                throw new Error(text || 'Server error')
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // === MODIFIED REDIRECT LOGIC ===
-                        if (data.success) {
-                            // Start building the redirect URL
-                            let redirectUrl = `booking_confirmation?id=${data.booking_id}`;
-                            // If the server told us a new user was created, add the flag
-                            if (data.new_user) {
-                                redirectUrl += '&new_user=true';
-                            }
-                            // Redirect to the correctly formed URL
-                            window.location.href = redirectUrl;
-                        } else {
-                            // The message here will now come from the JSON response
-                            alert('Booking Failed: ' + data.message);
+                $.ajax({
+                    url: 'process_booking.php',
+                    type: 'POST',
+                    data: bookingData,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        actionBtn.disabled = true;
+                        actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Preparing Payment...';
+                    },
+                    success: function(data) {
+                        // This part for successful processing is correct
+                        const options = {
+                            "key": data.razorpay_key_id,
+                            "amount": data.amount,
+                            "currency": "INR",
+                            "name": "BPL Bus Booking",
+                            "description": "Bus Ticket Payment",
+                            "order_id": data.razorpay_order_id,
+                            "handler": function(response) {
+                                verifyPayment(response, data.booking_id, data.new_user);
+                            },
+                            "prefill": {
+                                "name": data.contact_name,
+                                "email": data.contact_email,
+                                "contact": data.contact_mobile
+                            },
+                            "theme": {
+                                "color": "#dc3545",
+                                "backdrop_color": "rgba(36, 31, 31, 0.6)"
+                            },
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function(response) {
+                            alert("Payment Failed: " + response.error.description);
                             actionBtn.disabled = false;
                             actionBtn.textContent = 'Proceed to Payment';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Fetch Error:', error);
-                        // Try to parse the error if it's JSON
-                        try {
-                            const errData = JSON.parse(error.message);
-                            alert('An error occurred: ' + errData.message);
-                        } catch (e) {
-                            alert('An unexpected error occurred. Please try again.');
-                        }
+                        });
+                        rzp.open();
                         actionBtn.disabled = false;
                         actionBtn.textContent = 'Proceed to Payment';
-                    });
+                    },
+                    // === THE FIX IS IN THIS ERROR BLOCK ===
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // First, always re-enable the button
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Proceed to Payment';
+                        let errorMessage = 'An unexpected error occurred. Please try again.';
+
+                        // Check if the server sent back a JSON error response (which our PHP script does)
+                        if (jqXHR.responseText) {
+                            try {
+                                const response = JSON.parse(jqXHR.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+
+                                    // Check if it's the specific "account exists" error
+                                    if (errorMessage.includes("An account with this email or mobile number already exists")) {
+                                        // Trigger the custom modal instead of the alert
+                                        const customAlertModal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+                                        document.getElementById('customAlertMessage').textContent = errorMessage;
+                                        customAlertModal.show();
+                                        return; // Stop further execution
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Could not parse JSON response:", jqXHR.responseText);
+                                errorMessage = 'A server error occurred. Please try again later.';
+                            }
+                        }
+
+                        // Fallback to a standard alert for any other type of error
+                        alert(errorMessage);
+                    }
+                });
+            }
+
+            function verifyPayment(paymentResponse, bookingId, isNewUser) {
+                const loader = document.getElementById('full-page-loader');
+                const mainContent = document.querySelector('main');
+                const bottomBar = document.getElementById('bottom-bar');
+                const headerContent = document.querySelector('header.top-header');
+
+                if (loader) loader.style.display = 'flex';
+                if (mainContent) mainContent.style.display = 'none';
+                if (bottomBar) bottomBar.style.display = 'none';
+                if (headerContent) headerContent.style.display = 'none';
+                const verificationData = {
+                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                    razorpay_order_id: paymentResponse.razorpay_order_id,
+                    razorpay_signature: paymentResponse.razorpay_signature,
+                    booking_id: bookingId,
+                    is_new_user: isNewUser
+                };
+                const actionBtn = document.getElementById('action-btn');
+
+                $.ajax({
+                    url: 'payment_verify',
+                    type: 'POST',
+                    data: verificationData,
+                    dataType: 'json',
+                    beforeSend: function() {
+                        actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying Payment...';
+                        actionBtn.disabled = true;
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            let redirectUrl = `booking_confirmation?id=${bookingId}`;
+                            if (isNewUser) {
+                                redirectUrl += '&new_user=true';
+                            }
+                            window.location.href = redirectUrl;
+                        } else {
+                            // Handles cases where the server responds with { success: false, message: '...' }
+                            alert('Payment Verification Failed: ' + data.message);
+                            actionBtn.textContent = 'Proceed to Payment';
+                            actionBtn.disabled = false;
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // *** FIX: This block provides detailed error messages ***
+                        let errorMessage = 'A critical error occurred while verifying your payment. Please contact support immediately.';
+
+                        // Try to get a specific message from the server's JSON response (for 400 errors)
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                            errorMessage = jqXHR.responseJSON.message;
+                        } else if (jqXHR.status === 0) {
+                            errorMessage = 'Network error. Please check your internet connection and try again.';
+                        } else {
+                            // For non-JSON errors (like a fatal PHP error notice being returned as text)
+                            console.error("AJAX Verification Error:", {
+                                status: jqXHR.status,
+                                responseText: jqXHR.responseText
+                            });
+                        }
+
+                        alert(errorMessage);
+                        actionBtn.textContent = 'Proceed to Payment';
+                        actionBtn.disabled = false;
+                    }
+                });
             }
 
             function updateFinalSummary() {

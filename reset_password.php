@@ -1,5 +1,5 @@
 <?php
-require "./admin/function/_db.php";
+ include 'includes/header.php';
 
 $user_can_reset = false;
 
@@ -31,9 +31,9 @@ if (!$user_can_reset) {
     exit();
 }
 
-include 'includes/header.php';
 ?>
 
+<body>
 <div class="container my-5 pt-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-4">
@@ -57,4 +57,8 @@ include 'includes/header.php';
     </div>
 </div>
 
+<br><br><br><br><br>
 <?php include 'includes/footer.php'; ?>
+
+</body>
+</html>
