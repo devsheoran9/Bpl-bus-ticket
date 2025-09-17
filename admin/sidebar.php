@@ -83,9 +83,17 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <?php endif; ?>
             
             <?php // FIX: Changed 'main_admin' to a more flexible 'can_view_reports' permission ?>
+            
+            <?php if (user_has_permission('main_admin')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'todays_departures' ? 'active' : ''; ?>" href="todays_departures">
+                    <i class="fas fa-chart-bar nav-icon me-2"></i>Todays Departures
+                </a>
+            </li>
+            <?php endif; ?>
             <?php if (user_has_permission('can_view_reports')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings.php">
+                <a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings">
                     <i class="fas fa-chart-bar nav-icon me-2"></i>Bookings Report
                 </a>
             </li>
@@ -162,6 +170,19 @@ $is_booking_active = in_array($current_page, $booking_pages);
     </a>
 </li>
 <?php endif; ?>
+<?php if ($_SESSION['user']['type'] === 'main_admin'): ?>
+    <li class="nav-item">
+                            <a class="nav-link <?php echo $current_page == 'profile' ? 'active' : ''; ?>" href="profile.php">
+                                <i class="fas fa-user-circle me-2"></i>My Profile
+                            </a>
+                        </li>
+
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page == 'change_password' ? 'active' : ''; ?>" href="change_password.php">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a>
+            </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link" href="logout.php">
                     <i class="fas fa-sign-out-alt me-2"></i>Logout

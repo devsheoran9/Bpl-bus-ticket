@@ -222,7 +222,8 @@ try {
     <div class="main-content">
         <?php include_once('header.php');?>
         <div class="container-fluid">
-            <h2 class="mb-4 mt-4 text-center">Manage Seat Layout for <span id="current_bus_name"><?php echo $bus_name_display; ?></span></h2>
+            <h2 class="mb-2 mt-2 text-center">Manage Seat Layout for <span id="current_bus_name"><?php echo $bus_name_display; ?></span></h2>
+            <a href="view_all_buses" class="btn bg-warning text-dark p-2 my-2 ">View Buses</a>
             <div class="row">
                  <div class="col-lg-3 col-md-4   col-12 mb-4 desktop-palette">
                     <div class="card w-100 mb-1  desktop-palette"  >

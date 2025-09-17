@@ -1,14 +1,18 @@
 <?php
-// change_password.php
+// profile.php
 include_once('function/_db.php');
 session_security_check();
-check_permission('main_admin');
+
+// Fetch the current user's data from the session to pre-fill the form
+$current_name = $_SESSION['user']['name'] ?? '';
+$current_mobile = $_SESSION['user']['mobile'] ?? '';
+$current_email = $_SESSION['user']['email'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <?php include "head.php"; ?>
-    <title>Change Password</title>
+    <title>My Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
     :root {
@@ -39,7 +43,7 @@ check_permission('main_admin');
         box-sizing: border-box;
     }
 
-    
+  
 
     /* Animated Background */
     .background-animation {
@@ -105,15 +109,15 @@ check_permission('main_admin');
         }
     }
 
-    
+   
 
-    .change-password-container {
+    .profile-container {
         width: 100%;
-        max-width: 480px;
+        max-width: 600px;
         margin: 0 auto;
     }
 
-    .change-password-card {
+    .profile-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -124,12 +128,12 @@ check_permission('main_admin');
         transition: all 0.3s ease;
     }
 
-    .change-password-card:hover {
+    .profile-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 
-    .change-password-card::before {
+    .profile-card::before {
         content: '';
         position: absolute;
         top: 0;
@@ -140,10 +144,11 @@ check_permission('main_admin');
     }
 
     .card-header-custom {
-        background:white;
         text-align: center;
         padding: 3rem 2rem 2rem;
         position: relative;
+        background: transparent;
+        border: none;
     }
 
     .icon-container {
@@ -159,7 +164,7 @@ check_permission('main_admin');
         transition: all 0.3s ease;
     }
 
-    .change-password-card:hover .icon-container {
+    .profile-card:hover .icon-container {
         transform: scale(1.1) rotate(5deg);
     }
 
@@ -236,6 +241,17 @@ check_permission('main_admin');
         color: var(--primary);
     }
 
+    .input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-group .form-control {
+        padding-right: 3.5rem;
+        padding-left: 3rem;
+    }
+
     .toggle-password {
         position: absolute;
         right: 1rem;
@@ -254,75 +270,45 @@ check_permission('main_admin');
         background: var(--primary-light);
     }
 
-    /* Password Strength Indicator */
-    .password-strength {
-        margin-top: 0.75rem;
-        display: none;
-    }
-
-    .password-strength.show {
-        display: block;
-        animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .strength-bar {
-        height: 4px;
-        background: var(--border-color);
-        border-radius: 2px;
+    .security-alert {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin: 2rem 0;
+        position: relative;
         overflow: hidden;
+    }
+
+    .security-alert::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--warning);
+    }
+
+    .alert-heading {
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--warning);
         margin-bottom: 0.5rem;
     }
 
-    .strength-fill {
-        height: 100%;
-        transition: all 0.3s ease;
-        border-radius: 2px;
-    }
-
-    .strength-text {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.75rem;
-    }
-
-    .strength-label {
-        font-weight: 600;
-    }
-
-    .strength-requirements {
-        list-style: none;
-        padding: 0;
-        margin: 0.5rem 0 0;
-        font-size: 0.75rem;
-    }
-
-    .strength-requirements li {
-        display: flex;
-        align-items: center;
-        margin-bottom: 0.25rem;
-        color: var(--text-muted);
-        transition: color 0.2s ease;
-    }
-
-    .strength-requirements li.valid {
-        color: var(--success);
-    }
-
-    .strength-requirements li i {
+    .alert-heading i {
         margin-right: 0.5rem;
-        width: 12px;
+        font-size: 1.125rem;
+    }
+
+    .security-alert p {
+        color: var(--text-dark);
+        margin: 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
     }
 
     .btn-primary {
@@ -419,30 +405,39 @@ check_permission('main_admin');
         box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
 
-    /* Security Notice */
-    .security-notice {
-        background: linear-gradient(135deg, var(--primary-light), rgba(99, 102, 241, 0.1));
-        border: 1px solid rgba(59, 130, 246, 0.2);
+    /* Profile Info Cards */
+    .info-card {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: var(--radius-lg);
         padding: 1rem;
-        margin-top: 1.5rem;
-        text-align: center;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
     }
 
-    .security-notice i {
-        color: var(--primary);
-        margin-right: 0.5rem;
+    .info-card:hover {
+        background: rgba(255, 255, 255, 0.7);
+        transform: translateY(-2px);
     }
 
-    .security-notice span {
-        font-size: 0.875rem;
-        color: var(--text-dark);
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
         font-weight: 500;
+        color: var(--text-dark);
     }
 
     /* Responsive Design */
     @media (max-width: 640px) {
-         
+        
 
         .card-header-custom {
             padding: 2rem 1.5rem 1.5rem;
@@ -464,6 +459,23 @@ check_permission('main_admin');
         .icon-container i {
             font-size: 1.5rem;
         }
+
+        .form-control {
+            padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+        }
+
+        .input-group .form-control {
+            padding-right: 3rem;
+        }
+
+        .input-icon {
+            left: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .toggle-password {
+            right: 0.75rem;
+        }
     }
 
     /* Success Animation */
@@ -482,6 +494,15 @@ check_permission('main_admin');
     .success-animation {
         animation: successPulse 0.6s ease-in-out;
     }
+
+    /* Focus improvements */
+    .form-control:focus + .input-icon {
+        color: var(--primary);
+    }
+
+    .form-group:focus-within .form-label {
+        color: var(--primary);
+    }
     </style>
 </head>
 <body>
@@ -497,81 +518,70 @@ check_permission('main_admin');
         <?php include_once('sidebar.php'); ?>
         <div class="main-content">
         <?php include_once('header.php'); ?>
-            <div class="container-fluid">
-            <div class="change-password-container">
-                <div class="change-password-card">
+        <div class="container-fluid">
+         
+            <div class="profile-container mt-4">
+                <div class="profile-card">
                     <div class="card-header-custom">
                         <div class="icon-container">
-                            <i class="fas fa-key"></i>
+                            <i class="fas fa-user-edit"></i>
                         </div>
-                        <h3>Change Your Password</h3>
-                        <p>Update your account security credentials</p>
+                        <h3>My Profile</h3>
+                        <p>Update your personal information</p>
                     </div>
                     <div class="card-body">
-                        <form id="changePasswordForm" data-parsley-validate>
+                        <form id="profileForm" data-parsley-validate>
                             <div class="form-group">
-                                <label for="current_password" class="form-label">Current Password</label>
+                                <label for="name" class="form-label">Full Name</label>
                                 <div class="input-wrapper">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($current_name); ?>" placeholder="Enter your full name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mobile" class="form-label">Mobile Number</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-phone input-icon"></i>
+                                    <input type="tel" class="form-control" id="mobile" name="mobile" value="<?php echo htmlspecialchars($current_mobile); ?>" placeholder="Enter your mobile number" required data-parsley-type="digits" data-parsley-length="[10, 10]">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($current_email); ?>" placeholder="Enter your email address" required>
+                                </div>
+                            </div>
+
+                            <div class="security-alert">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Security Confirmation Required
+                                </h6>
+                                <p>For your security, please enter your current password to save changes to your profile.</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password_confirm" class="form-label">Current Password</label>
+                                <div class="input-group">
                                     <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Enter your current password" required>
-                                    <button type="button" class="toggle-password" data-target="current_password">
-                                        <i class="fas fa-eye"></i>
+                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" placeholder="Enter your current password" required>
+                                    <button type="button" class="toggle-password">
+                                        <i class="fa fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="new_password" class="form-label">New Password</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-shield-alt input-icon"></i>
-                                    <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Enter your new password" data-parsley-minlength="6" required>
-                                    <button type="button" class="toggle-password" data-target="new_password">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                <div class="password-strength" id="passwordStrength">
-                                    <div class="strength-bar">
-                                        <div class="strength-fill" id="strengthFill"></div>
-                                    </div>
-                                    <div class="strength-text">
-                                        <span>Password Strength</span>
-                                        <span class="strength-label" id="strengthLabel">Weak</span>
-                                    </div>
-                                    <ul class="strength-requirements" id="strengthRequirements">
-                                        <li id="req-length"><i class="fas fa-times"></i> At least 8 characters</li>
-                                        <li id="req-upper"><i class="fas fa-times"></i> One uppercase letter</li>
-                                        <li id="req-lower"><i class="fas fa-times"></i> One lowercase letter</li>
-                                        <li id="req-number"><i class="fas fa-times"></i> One number</li>
-                                        <li id="req-special"><i class="fas fa-times"></i> One special character</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="confirm_password" class="form-label">Confirm New Password</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-check-circle input-icon"></i>
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm your new password" data-parsley-equalto="#new_password" required>
-                                    <button type="button" class="toggle-password" data-target="confirm_password">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <button type="submit" id="submit-btn" class="btn-primary">
-                                <i class="fas fa-check-circle"></i>
-                                Update Password
+                            <button type="submit" id="submit-btn" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
                             </button>
-
-                            <div class="security-notice">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Your password will be encrypted and stored securely</span>
-                            </div>
                         </form>
                     </div>
                 </div>
             </div>
-            </div>
+        </div>
         </div>
     </div>
 
@@ -584,12 +594,11 @@ check_permission('main_admin');
     <script>
     $(document).ready(function() {
         // Initialize Parsley
-        $('#changePasswordForm').parsley();
+        $('#profileForm').parsley();
 
         // Password visibility toggle
         $('.toggle-password').on('click', function() {
-            const targetId = $(this).data('target');
-            const passwordField = $('#' + targetId);
+            const passwordField = $(this).siblings('input');
             const icon = $(this).find('i');
             const isPassword = passwordField.attr('type') === 'password';
             
@@ -597,63 +606,8 @@ check_permission('main_admin');
             icon.toggleClass('fa-eye fa-eye-slash');
         });
 
-        // Password strength checker
-        $('#new_password').on('input', function() {
-            const password = $(this).val();
-            const strengthContainer = $('#passwordStrength');
-            const strengthFill = $('#strengthFill');
-            const strengthLabel = $('#strengthLabel');
-            
-            if (password.length === 0) {
-                strengthContainer.removeClass('show');
-                return;
-            }
-            
-            strengthContainer.addClass('show');
-            
-            let score = 0;
-            const requirements = {
-                length: password.length >= 8,
-                upper: /[A-Z]/.test(password),
-                lower: /[a-z]/.test(password),
-                number: /[0-9]/.test(password),
-                special: /[^A-Za-z0-9]/.test(password)
-            };
-            
-            // Update requirement indicators
-            Object.keys(requirements).forEach(req => {
-                const element = $('#req-' + req);
-                const icon = element.find('i');
-                
-                if (requirements[req]) {
-                    element.addClass('valid');
-                    icon.removeClass('fa-times').addClass('fa-check');
-                    score++;
-                } else {
-                    element.removeClass('valid');
-                    icon.removeClass('fa-check').addClass('fa-times');
-                }
-            });
-            
-            // Update strength bar and label
-            const strengthData = [
-                { width: '20%', color: '#EF4444', label: 'Very Weak' },
-                { width: '40%', color: '#F59E0B', label: 'Weak' },
-                { width: '60%', color: '#F59E0B', label: 'Fair' },
-                { width: '80%', color: '#3B82F6', label: 'Good' },
-                { width: '100%', color: '#10B981', label: 'Strong' }
-            ];
-            
-            const currentStrength = strengthData[score - 1] || strengthData[0];
-            strengthFill.css({
-                'width': currentStrength.width,
-                'background-color': currentStrength.color
-            });
-            strengthLabel.text(currentStrength.label).css('color', currentStrength.color);
-        });
-
-        // Form submission
-        $('#changePasswordForm').on('submit', function(e) {
+        // Form submission with AJAX and SweetAlert2
+        $('#profileForm').on('submit', function(e) {
             e.preventDefault();
             
             if (!$(this).parsley().isValid()) {
@@ -665,17 +619,17 @@ check_permission('main_admin');
             const originalText = submitBtn.html();
             
             // Show loading state
-            submitBtn.prop('disabled', true).html('<span class="spinner"></span>Updating Password...');
+            submitBtn.prop('disabled', true).html('<span class="spinner"></span>Saving Changes...');
             
             $.ajax({
-                url: 'function/backend/change_password_action.php',
+                url: 'function/backend/profile_actions.php',
                 type: 'POST',
                 data: form.serialize(),
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
                         // Add success animation
-                        $('.change-password-card').addClass('success-animation');
+                        $('.profile-card').addClass('success-animation');
                         
                         Swal.fire({
                             title: 'Success!',
@@ -686,25 +640,15 @@ check_permission('main_admin');
                             customClass: {
                                 popup: 'animated fadeInDown'
                             }
-                        }).then(() => {
-                            if (response.redirect) {
-                                window.location.href = response.redirect;
-                            }
                         });
                         
-                        // Reset form
-                        form[0].reset();
-                        $('#passwordStrength').removeClass('show');
+                        // Update the header with the new name if it exists
+                        if (response.new_name) {
+                            $('.dropdown-toggle').html(`<i class="fas fa-user me-2"></i> ${response.new_name}`);
+                        }
                         
-                        // Reset password visibility
-                        $('.toggle-password').each(function() {
-                            const targetId = $(this).data('target');
-                            const passwordField = $('#' + targetId);
-                            const icon = $(this).find('i');
-                            
-                            passwordField.attr('type', 'password');
-                            icon.removeClass('fa-eye-slash').addClass('fa-eye');
-                        });
+                        // Clear the password field after successful update
+                        $('#password_confirm').val('');
                         
                     } else {
                         Swal.fire({
@@ -736,6 +680,14 @@ check_permission('main_admin');
             $(this).closest('.form-group').find('.form-label').css('color', 'var(--primary)');
         }).on('blur', function() {
             $(this).closest('.form-group').find('.form-label').css('color', 'var(--text-dark)');
+        });
+
+        // Input validation feedback
+        $('.form-control').on('input', function() {
+            const field = $(this);
+            if (field.hasClass('parsley-error')) {
+                field.parsley().validate();
+            }
         });
     });
     </script>

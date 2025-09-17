@@ -343,6 +343,40 @@ td {
 .filter-section .form-select {
     height: calc(1.5em + .75rem + 2px);
     /* Align height with other inputs */
+} 
+
+/* CSS */
+.button-13 {
+  background-color: #fff;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  box-shadow: rgba(213, 217, 217, .5) 0 2px 5px 0;
+  box-sizing: border-box;
+  color: #0f1111;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Amazon Ember",sans-serif;
+  font-size: 13px;
+  line-height: 29px;
+  padding: 2px 12px 2px 11px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  width: auto;
+}
+
+.button-13:hover {
+  background-color: #f7fafa;
+}
+
+.button-13:focus {
+  border-color: #008296;
+  box-shadow: rgba(213, 217, 217, .5) 0 2px 5px 0;
+  outline: 0;
 }
 
 .filter-section .btn {
@@ -2034,27 +2068,7 @@ legend {
     .note-toolbar {
         border-bottom: 1px solid #ced4da;
     }
-    .btn-primary {
-        background-color: #28a745;
-        border-color: #28a745;
-        padding: 12px 25px;
-        font-size: 1.1em;
-        font-weight: 600;
-        border-radius: 6px;
-        box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-        transition: background-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .btn-primary:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
-        box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
-    }
-    .btn-primary:active {
-        background-color: #1e7e34;
-        border-color: #1c7430;
-        box-shadow: 0 2px 5px rgba(40, 167, 69, 0.4);
-        transform: translateY(1px);
-    }
+  
    
     fieldset {
         border: 1px solid #ddd !important;

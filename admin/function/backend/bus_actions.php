@@ -61,7 +61,9 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
             }
 
             $upload_dir = "uploads/bus_images/";
-            if (!is_dir($upload_dir)) { mkdir($upload_dir, 0775, true); }
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0775, true);
+            }
 
             if (isset($_FILES['bus_images']) && !empty($_FILES['bus_images']['name'][0])) {
                 $stmt_img = $_conn_db->prepare("INSERT INTO bus_images (bus_id, image_path) VALUES (?, ?)");
@@ -80,7 +82,9 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
 
             $_conn_db->commit();
             $response = [
-                'res' => 'true', 'notif_type' => 'success', 'notif_title' => 'Success',
+                'res' => 'true',
+                'notif_type' => 'success',
+                'notif_title' => 'Success',
                 'notif_desc' => 'Bus added successfully! You can now manage its seats.',
                 'goTo' => 'manage_seats.php?bus_id=' . $new_bus_id
             ];
@@ -89,8 +93,7 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
             error_log("Add bus error: " . $e->getMessage());
             $response['notif_desc'] = 'A database error occurred. Please check the logs.';
         }
-    }
-    elseif ($action === 'get_all_categories') {
+    } elseif ($action === 'get_all_categories') {
         try {
             $stmt = $_conn_db->query("SELECT category_id, category_name FROM bus_categories WHERE status = 'Active' ORDER BY category_name");
             $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -185,13 +188,17 @@ if (isset($_POST['action']) || isset($_GET['action'])) {
             bus_type = ?, description = ?, status = ?,
             updated_at = NOW()
         WHERE bus_id = ?";
-$stmt = $_conn_db->prepare($sql);
-$stmt->execute([
-    $bus_name, $registration_number,
-    $engine_no, $chassis_no,
-    $bus_type, $description, $status,
-    $bus_id
-]);
+            $stmt = $_conn_db->prepare($sql);
+            $stmt->execute([
+                $bus_name,
+                $registration_number,
+                $engine_no,
+                $chassis_no,
+                $bus_type,
+                $description,
+                $status,
+                $bus_id
+            ]);
             // 2. Sincronizar categorías: eliminar las antiguas, insertar las nuevas
             $stmt_delete_cats = $_conn_db->prepare("DELETE FROM bus_category_map WHERE bus_id = ?");
             $stmt_delete_cats->execute([$bus_id]);
@@ -256,33 +263,71 @@ $stmt->execute([
             $response['notif_desc'] = 'Database error updating bus: ' . $e->getMessage();
         }
     } elseif ($action === 'delete_bus') {
-        $bus_id = (int)($_POST['bus_id'] ?? 0);
-        if ($bus_id <= 0) {
+        $bus_id_to_delete = (int)($_POST['bus_id'] ?? 0);
+        $deleting_employee_id = $_SESSION['user']['id']; // Get the ID of the logged-in admin
+    
+        if ($bus_id_to_delete <= 0) {
             $response['notif_desc'] = 'Invalid bus ID provided.';
             echo json_encode($response);
             exit();
         }
-
+    
+        $_conn_db->beginTransaction();
         try {
-            $_conn_db->beginTransaction();
-
-            // Pehle saari seats delete karein
-            $stmt_seats = $_conn_db->prepare("DELETE FROM seats WHERE bus_id = ?");
-            $stmt_seats->execute([$bus_id]);
-
-            // Phir bus ko delete karein
-            $stmt_bus = $_conn_db->prepare("DELETE FROM buses WHERE bus_id = ?");
-            $stmt_bus->execute([$bus_id]);
-
+            // --- STEP 1: FETCH the bus data before deleting it ---
+            $stmt_fetch = $_conn_db->prepare("SELECT * FROM buses WHERE bus_id = ?");
+            $stmt_fetch->execute([$bus_id_to_delete]);
+            $bus_data_to_archive = $stmt_fetch->fetch(PDO::FETCH_ASSOC);
+    
+            if (!$bus_data_to_archive) {
+                throw new Exception("Bus not found. It may have already been deleted.");
+            }
+    
+            // --- STEP 2: INSERT the fetched data into the `deleted_buses` archive table ---
+            $sql_archive = "
+                INSERT INTO deleted_buses 
+                    (bus_id, bus_name, registration_number, engine_no, chassis_no, 
+                     bus_type, amenities, description, status, created_at, updated_at, 
+                     deleted_by_employee_id, deleted_at)
+                VALUES
+                    (:bus_id, :bus_name, :registration_number, :engine_no, :chassis_no,
+                     :bus_type, :amenities, :description, :status, :created_at, :updated_at,
+                     :deleted_by_employee_id, NOW())
+            ";
+            
+            $stmt_archive = $_conn_db->prepare($sql_archive);
+            
+            // Bind all the parameters from the fetched data
+            $stmt_archive->execute([
+                ':bus_id' => $bus_data_to_archive['bus_id'],
+                ':bus_name' => $bus_data_to_archive['bus_name'],
+                ':registration_number' => $bus_data_to_archive['registration_number'],
+                ':engine_no' => $bus_data_to_archive['engine_no'],
+                ':chassis_no' => $bus_data_to_archive['chassis_no'],
+                ':bus_type' => $bus_data_to_archive['bus_type'],
+                ':amenities' => $bus_data_to_archive['amenities'],
+                ':description' => $bus_data_to_archive['description'],
+                ':status' => $bus_data_to_archive['status'],
+                ':created_at' => $bus_data_to_archive['created_at'],
+                ':updated_at' => $bus_data_to_archive['updated_at'],
+                ':deleted_by_employee_id' => $deleting_employee_id // Add the admin's ID
+            ]);
+    
+            // --- STEP 3: Now, PERMANENTLY DELETE the bus and its related data ---
+            // The foreign key constraints with ON DELETE CASCADE will handle the rest.
+            // If a bus is deleted, its seats, category maps, images, and routes will be deleted automatically.
+            $stmt_delete = $_conn_db->prepare("DELETE FROM buses WHERE bus_id = ?");
+            $stmt_delete->execute([$bus_id_to_delete]);
+    
+            // If all steps succeed, commit the changes
             $_conn_db->commit();
-
+    
             $response['res'] = 'true';
             $response['notif_type'] = 'success';
             $response['notif_title'] = 'Deleted';
-            $response['notif_desc'] = 'The bus and all its seats have been deleted.';
-            $response['notif_popup'] = 'false'; // Chhota notification
-
-        } catch (PDOException $e) {
+            $response['notif_desc'] = 'The bus has been successfully archived and deleted.';
+    
+        } catch (Exception $e) { // Catch both PDO and regular exceptions
             $_conn_db->rollBack();
             error_log("Delete bus error: " . $e->getMessage());
             $response['notif_desc'] = 'Database error deleting bus: ' . $e->getMessage();
@@ -429,7 +474,7 @@ $stmt->execute([
             error_log("Update seat error: " . $e->getMessage());
             $response['notif_desc'] = 'Database error updating seat: ' . $e->getMessage();
         }
-    } elseif ($action === 'delete_seat') { 
+    } elseif ($action === 'delete_seat') {
         $seat_id = (int)($_POST['seat_id'] ?? 0);
         $bus_id = (int)($_POST['bus_id'] ?? 0); // सुरक्षा जांच के लिए bus_id जोड़ा गया
 

@@ -3,7 +3,7 @@ global $_conn_db;
 include_once('function/_db.php');
 // check_user_login();
 session_security_check(); 
-
+check_permission('can_edit_buses');
 // 1. Get and validate the bus ID from the URL
 $bus_id = isset($_GET['bus_id']) ? (int)$_GET['bus_id'] : 0;
 if ($bus_id <= 0) {
@@ -109,24 +109,24 @@ try {
                                 <h6 class="text-primary">Basic Information</h6>
                                 <hr class="mt-2 mb-4">
                                 
-                                <div class="row g-3">
-                                    <div class="col-md-6 mb-3">
+                                <div class="row g-1">
+                                    <div class="col-md-6 col-6 mb-3">
                                         <label for="bus_name" class="form-label">Bus Name/Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="bus_name" name="bus_name" value="<?= htmlspecialchars($bus['bus_name']) ?>" required>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-6 col-6 mb-3">
                                         <label for="registration_number" class="form-label">Registration Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="registration_number" name="registration_number" value="<?= htmlspecialchars($bus['registration_number']) ?>" required>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-6 col-6 mb-3">
                                         <label for="engine_no" class="form-label">Engine Number <small>(Optional)</small></label>
                                         <input type="text" class="form-control" id="engine_no" name="engine_no" value="<?= htmlspecialchars($bus['engine_no'] ?? '') ?>">
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-6 col-6 mb-3">
                                         <label for="chassis_no" class="form-label">Chassis Number <small>(Optional)</small></label>
                                         <input type="text" class="form-control" id="chassis_no" name="chassis_no" value="<?= htmlspecialchars($bus['chassis_no'] ?? '') ?>">
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-6  mb-3">
                                         <label for="bus_type" class="form-label">Bus Type <span class="text-danger">*</span></label>
                                         <select class="form-select" id="bus_type" name="bus_type" required>
                                             <option value="">Select Bus Type</option>

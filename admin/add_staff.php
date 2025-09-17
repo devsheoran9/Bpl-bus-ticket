@@ -25,7 +25,12 @@ function get_initials($name) {
     $words = explode(" ", $name);
     $initials = "";
     if (isset($words[0])) $initials .= strtoupper(substr($words[0], 0, 1));
-    if (isset($words[1])) $initials .= strtoupper(substr($words[1], 0, 1));
+    // FIXED: Cannot use isset() on the result of an expression
+    // First, check if $words[1] exists. If it does, then process it.
+    if (isset($words[1]) && !empty($words[1])) { // Added !empty for robustness against empty second names
+        $cleaned_second_word = str_replace('.', '', $words[1]);
+        $initials .= strtoupper(substr($cleaned_second_word, 0, 1));
+    }
     return $initials ?: '?';
 }
 ?>
@@ -35,11 +40,13 @@ function get_initials($name) {
     <?php include "head.php"; ?>
     <title>Manage Staff</title>
     <style>
-        /* --- General & Form Styling (Similar to original) --- */
+        /* --- General & Form Styling --- */
         :root {
             --primary: #5E50F9; --primary-light: #F0EEFF;
             --secondary: #6c757d; --light-gray: #f8f9fa;
             --border-color: #dee2e6; --card-shadow: 0 8px 30px rgba(0,0,0,0.06);
+            --text-dark: #212529;
+            --text-muted: #6c757d;
         }
         body { background-color: var(--light-gray); }
         .card { border-radius: 1rem; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
@@ -50,7 +57,7 @@ function get_initials($name) {
         .submit-btn { padding: 0.75rem; font-weight: 600; border-radius: 0.5rem; }
         #dl-number-wrapper { display: none; }
         
-        /* --- CUSTOM TABLE STYLING --- */
+        /* --- CUSTOM TABLE STYLING (for larger screens) --- */
         .table { border-collapse: separate; border-spacing: 0; }
         .table thead th {
             background-color: #f8f9fa;
@@ -70,24 +77,148 @@ function get_initials($name) {
             width: 50px; height: 50px;
             border-radius: 50%; object-fit: cover;
             flex-shrink: 0;
+            border: 1px solid var(--border-color);
         }
         .staff-avatar-initials-table {
             width: 50px; height: 50px; border-radius: 50%;
-            background-color: var(--primary); color: white;
+            background-color: var(--primary-light); color: var(--primary);
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem; font-weight: 600;
             flex-shrink: 0;
+            border: 1px solid var(--border-color);
         }
-        .staff-name-table { font-weight: 600; color: #212529; display: block; }
-        .staff-mobile-table { font-size: 0.85rem; color: var(--secondary); display: block; }
+        .staff-name-table { font-weight: 600; color: var(--text-dark); display: block; }
+        .staff-mobile-table { font-size: 0.85rem; color: var(--text-muted); display: block; }
         .designation-badge {
             font-size: 0.8rem;
             font-weight: 500;
             padding: 0.4em 0.8em;
             border-radius: 20px;
+            background-color: var(--primary-light);
+            color: var(--primary);
         }
         .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
         .action-buttons .btn { padding: 0.3rem 0.7rem; }
+
+        /* --- CUSTOM COMPACT CARD STYLING (for smaller screens - White Theme) --- */
+        .staff-card-sm {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Subtler shadow */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .staff-card-sm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+
+        .staff-card-sm .card-body {
+            padding: 0.75rem 1rem; /* Reduced padding */
+        }
+        .staff-card-sm .staff-header-compact {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem; /* Smaller gap */
+            padding-bottom: 0.75rem; /* Separates header from details */
+            border-bottom: 1px dashed var(--border-color); /* Dashed line for subtle separation */
+            margin-bottom: 0.75rem;
+        }
+        .staff-avatar-card-compact {
+            width: 40px; height: 40px; /* Smaller avatar */
+            min-width: 40px; /* Prevent shrinking */
+            border-radius: 50%;
+            background-color: var(--primary-light); /* Light background for initials */
+            color: var(--primary); /* Primary text color for initials */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem; /* Smaller font size */
+            font-weight: 600;
+            overflow: hidden;
+            border: 1px solid var(--primary-light); /* Subtle border */
+        }
+        .staff-avatar-card-compact img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .staff-name-designation-wrapper {
+            flex-grow: 1;
+        }
+        .staff-name-card-compact {
+            font-size: 0.95rem; /* Smaller name font */
+            font-weight: 600;
+            margin-bottom: 0.1rem;
+            color: var(--text-dark);
+        }
+        .designation-badge-card-compact {
+            font-size: 0.7rem; /* Smaller badge font */
+            font-weight: 500;
+            padding: 0.2em 0.5em; /* Smaller padding */
+            border-radius: 12px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .staff-details-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to single column */
+            gap: 0.5rem; /* Reduced gap between detail items */
+            margin-bottom: 0.75rem;
+        }
+        @media (min-width: 420px) { /* Adjust breakpoint for two columns if desired */
+            .staff-details-grid {
+                grid-template-columns: repeat(2, 1fr); /* Two columns on slightly wider small screens */
+            }
+        }
+        
+        .detail-item-compact {
+            display: flex;
+            flex-direction: column; /* Stack label and value */
+        }
+        .detail-label-compact {
+            font-size: 0.65rem; /* Very small label */
+            color: var(--text-muted);
+            margin-bottom: 0; /* No margin */
+            line-height: 1;
+        }
+        .detail-value-compact {
+            font-size: 0.85rem; /* Compact value font */
+            font-weight: 500;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem; /* Small gap for icon */
+            line-height: 1.2;
+        }
+        .detail-value-compact .fas {
+            font-size: 0.7rem; /* Smaller icon */
+        }
+
+        .staff-remark-compact {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-top: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .staff-card-sm .card-footer {
+            background-color: transparent; /* Transparent footer background */
+            border-top: 1px solid var(--border-color); /* Light border */
+            padding: 0.75rem 1rem; /* Consistent padding */
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            text-align: right; /* Align buttons to the right */
+        }
+        .staff-card-sm .card-footer .btn {
+            font-size: 0.8rem; /* Smaller buttons */
+            padding: 0.35rem 0.7rem; /* Compact padding */
+            border-radius: 0.4rem;
+        }
+        /* No Staff Member Message for Cards */
+        .staff-list-cards .alert {
+            box-shadow: var(--card-shadow);
+        }
     </style>
 </head>
 <body>
@@ -109,12 +240,12 @@ function get_initials($name) {
                                 <input type="hidden" name="existing_image" value="<?php echo htmlspecialchars($staff_to_edit['profile_image_path'] ?? ''); ?>">
 
                                 <!-- START: MODIFIED FORM LAYOUT -->
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
+                                <div class="row g-1 mb-3">
+                                    <div class="col-md-6 col-6">
                                         <label class="form-label">Full Name <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="name" value="<?php echo htmlspecialchars($staff_to_edit['name'] ?? ''); ?>" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 col-6">
                                         <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
                                         <input type="tel" class="form-control" name="mobile" value="<?php echo htmlspecialchars($staff_to_edit['mobile'] ?? ''); ?>" required>
                                     </div>
@@ -136,12 +267,12 @@ function get_initials($name) {
                                     <input type="text" class="form-control" id="driving_licence_no" name="driving_licence_no" value="<?php echo htmlspecialchars($staff_to_edit['driving_licence_no'] ?? ''); ?>">
                                 </div>
                                 
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
+                                <div class="row g-1 mb-3">
+                                    <div class="col-md-6 col-sm-12">
                                         <label class="form-label">Aadhar Number <small>(Optional)</small></label>
                                         <input type="text" class="form-control" name="aadhar_no" value="<?php echo htmlspecialchars($staff_to_edit['aadhar_no'] ?? ''); ?>">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6 col-sm-12">
                                         <label class="form-label">Profile Image <small>(Optional)</small></label>
                                         <input type="file" class="form-control" name="profile_image" accept="image/*">
                                     </div>
@@ -161,8 +292,10 @@ function get_initials($name) {
                         </div>
                     </div>
                 </div>
+                
                 <div class="col-xl-8">
-                     <div class="card">
+                     <!-- Staff List Table (Visible on medium screens and up) -->
+                     <div class="card d-none d-md-block">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <span>Staff List</span>
                             <span class="badge bg-primary rounded-pill"><?php echo count($staff_list); ?> Total</span>
@@ -202,7 +335,7 @@ function get_initials($name) {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-primary-light text-primary designation-badge">
+                                                    <span class="badge designation-badge">
                                                         <?php echo htmlspecialchars($staff['designation']); ?>
                                                     </span>
                                                 </td>
@@ -228,6 +361,75 @@ function get_initials($name) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Staff List Cards (Visible on small screens only) -->
+                    <div class="d-md-none mt-4 staff-list-cards">
+                        <h5 class="mb-3">Staff List <span class="badge bg-primary rounded-pill ms-2"><?php echo count($staff_list); ?> Total</span></h5>
+                        <?php if (empty($staff_list)): ?>
+                            <div class="alert alert-info text-center mt-3" role="alert">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <p class="mb-0">No staff members have been added yet.</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="row row-cols-1 g-3">
+                                <?php foreach ($staff_list as $staff): ?>
+                                    <div class="col">
+                                        <div class="card staff-card-sm" id="staff-card-<?php echo $staff['staff_id']; ?>">
+                                            <div class="card-body">
+                                                <div class="staff-header-compact">
+                                                    <div class="staff-avatar-card-compact">
+                                                        <?php if (!empty($staff['profile_image_path'])): ?>
+                                                            <img src="uploads/staff_images/<?php echo htmlspecialchars($staff['profile_image_path']); ?>" alt="Profile">
+                                                        <?php else: ?>
+                                                            <span><?php echo get_initials($staff['name']); ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="staff-name-designation-wrapper">
+                                                        <h6 class="staff-name-card-compact"><?php echo htmlspecialchars($staff['name']); ?></h6>
+                                                        <span class="badge designation-badge-card-compact"><?php echo htmlspecialchars($staff['designation']); ?></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="staff-details-grid">
+                                                    <div class="detail-item-compact">
+                                                        <small class="detail-label-compact">Mobile</small>
+                                                        <span class="detail-value-compact"><i class="fas fa-phone-alt"></i><?php echo htmlspecialchars($staff['mobile']); ?></span>
+                                                    </div>
+                                                    <?php if ($staff['designation'] == 'Driver' && !empty($staff['driving_licence_no'])): ?>
+                                                        <div class="detail-item-compact">
+                                                            <small class="detail-label-compact">DL No.</small>
+                                                            <span class="detail-value-compact"><i class="fas fa-id-card"></i><?php echo htmlspecialchars($staff['driving_licence_no']); ?></span>
+                                                        </div>
+                                                    <?php elseif (!empty($staff['aadhar_no'])): ?>
+                                                        <div class="detail-item-compact">
+                                                            <small class="detail-label-compact">Aadhar No.</small>
+                                                            <span class="detail-value-compact"><i class="fas fa-id-card-alt"></i><?php echo htmlspecialchars($staff['aadhar_no']); ?></span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="detail-item-compact">
+                                                            <small class="detail-label-compact">ID Details</small>
+                                                            <span class="detail-value-compact text-muted">N/A</span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <?php if (!empty($staff['remark'])): ?>
+                                                    <p class="staff-remark-compact mb-0">
+                                                        <small class="detail-label-compact">Remark</small>
+                                                        <?php echo htmlspecialchars($staff['remark']); ?>
+                                                    </p>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="card-footer d-flex justify-content-end gap-2">
+                                                <a href="add_staff.php?action=edit&id=<?php echo $staff['staff_id']; ?>" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-pencil-alt me-1"></i> Edit</a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-staff-btn-card" data-id="<?php echo $staff['staff_id']; ?>" title="Delete"><i class="fas fa-trash-alt me-1"></i> Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -247,18 +449,19 @@ $(document).ready(function() {
             dlInput.prop('required', true);
         } else {
             dlWrapper.slideUp();
-            dlInput.prop('required', false).val('');
+            dlInput.prop('required', false).val(''); // Clear value when hidden
         }
     }
+    // Initial check on page load
     toggleDlField();
+    // Event listener for changes
     designationSelect.on('change', toggleDlField);
  
     
-    
-    // --- AJAX DELETE FUNCTIONALITY (UPDATED FOR TABLE) ---
-    $('.delete-staff-btn').on('click', function() {
+    // --- AJAX DELETE FUNCTIONALITY (Unified for both Table and Cards) ---
+    $(document).on('click', '.delete-staff-btn, .delete-staff-btn-card', function() {
         const staffId = $(this).data('id');
-        const row = $('#staff-row-' + staffId); // Target the table row
+        const targetElement = $('#staff-row-' + staffId).length ? $('#staff-row-' + staffId) : $('#staff-card-' + staffId);
 
         Swal.fire({
             title: 'Are you sure?',
@@ -277,8 +480,17 @@ $(document).ready(function() {
                     dataType: 'json',
                     success: function(response) {
                         if (response.status === 'success') {
-                            row.css('background-color', '#ffdddd').fadeOut(600, function() { 
-                                $(this).remove(); 
+                            targetElement.css('background-color', '#ffdddd').fadeOut(600, function() {
+                                $(this).remove();
+                                // Refresh count badges if needed
+                                let currentTotal = parseInt($('.badge.rounded-pill').text().split(' ')[0]);
+                                if (!isNaN(currentTotal) && currentTotal > 0) {
+                                    $('.badge.rounded-pill').text((currentTotal - 1) + ' Total');
+                                }
+                                // If no staff left, show the empty message for cards
+                                if ($('.staff-list-cards .row.row-cols-1 .col').length === 0) {
+                                    $('.staff-list-cards').html('<div class="alert alert-info text-center mt-3" role="alert"><i class="fas fa-users fa-2x mb-2"></i><p class="mb-0">No staff members have been added yet.</p></div>');
+                                }
                             });
                             $.notify({ message: response.message }, { type: 'success' });
                         } else {

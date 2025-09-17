@@ -27,6 +27,8 @@ if (!$cancellation_id) {
 }
 
 
+
+
 // ====================================================================
 // --- ACTION: MARK REFUND AS COMPLETED (WITH AUTOMATIC AMOUNT) ---
 // ====================================================================
@@ -38,18 +40,23 @@ if ($action === 'mark_refunded') {
         // --- STEP 1: GET THE ORIGINAL PASSENGER FARE ---
         // We join cancellations with passengers to find the original fare paid.
         $stmt_fare = $_conn_db->prepare("
-            SELECT p.fare 
-            FROM cancellations c
-            JOIN passengers p ON c.passenger_id = p.passenger_id
-            WHERE c.cancellation_id = ?
-        ");
-        $stmt_fare->execute([$cancellation_id]);
-        $original_fare = $stmt_fare->fetchColumn();
-
-        // Check if the fare was found. It returns false if no row is found.
-        if ($original_fare === false) {
-            throw new Exception('Could not find original fare for this cancellation request.');
-        }
+        SELECT p.fare, p.passenger_id
+        FROM cancellations c
+        JOIN passengers p ON c.passenger_id = p.passenger_id
+        WHERE c.cancellation_id = ?
+    ");
+    $stmt_fare->execute([$cancellation_id]);
+    $row = $stmt_fare->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$row) {
+        throw new Exception('Could not find original fare for this cancellation request.');
+    }
+    
+    $original_fare = $row['fare'];
+    $passenger_id  = $row['passenger_id'];
+    
+    // delete passenger
+   
         
         // --- STEP 2: UPDATE THE CANCELLATION RECORD ---
         // The `amount_refunded` is now the fetched `original_fare`.
@@ -68,6 +75,12 @@ if ($action === 'mark_refunded') {
             $_conn_db->commit();
             // Then send the confirmation email
             sendCancellationStatusEmail($cancellation_id, $_conn_db);
+            $stmt_del = $_conn_db->prepare("DELETE FROM passengers WHERE passenger_id = ?");
+            $stmt_del->execute([$passenger_id]);
+                
+                if ($stmt_del === false) {
+                    throw new Exception('error');
+                }
             send_json_response('success', 'Refund has been successfully marked as COMPLETED for ₹' . number_format($original_fare, 2) . '.');
         } else {
             // This means the cancellation was not in PENDING state or didn't exist
@@ -101,8 +114,7 @@ elseif ($action === 'mark_failed') {
         $stmt_passenger = $_conn_db->prepare("UPDATE passengers SET passenger_status = 'CONFIRMED' WHERE passenger_id = ?");
         $stmt_passenger->execute([$ids['passenger_id']]);
 
-        $stmt_booked_seat = $_conn_db->prepare("INSERT IGNORE INTO booked_seats (booking_id, route_id, bus_id, seat_id, travel_date) VALUES (?, ?, ?, ?, ?)");
-        $stmt_booked_seat->execute([$ids['booking_id'], $ids['route_id'], $ids['bus_id'], $ids['seat_id'], $ids['travel_date']]);
+      
 
         $stmt_main_booking = $_conn_db->prepare("UPDATE bookings SET booking_status = 'CONFIRMED' WHERE booking_id = ? AND booking_status = 'CANCELLED'");
         $stmt_main_booking->execute([$ids['booking_id']]);

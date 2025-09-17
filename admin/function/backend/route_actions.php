@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Backend AJAX handler for all route-related actions.
  * - Handles saving/updating routes, schedules, stops, and staff assignments.
@@ -22,7 +23,8 @@ include_once('../_db.php');
  * @param string $notif_desc  - The main message for the notification.
  * @param string $goTo        - (Optional) A URL to redirect to upon success.
  */
-function send_response($res, $notif_type, $notif_title, $notif_desc, $goTo = '') {
+function send_response($res, $notif_type, $notif_title, $notif_desc, $goTo = '')
+{
     echo json_encode([
         'res' => $res,
         'notif_type' => $notif_type,
@@ -40,26 +42,85 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
 // --- ROUTER: Determine which action to perform ---
 $action = $_POST['action'] ?? '';
-
-// ===================================================
-//  ACTION: DELETE ROUTE
-// ===================================================
+ 
 if ($action == 'delete_route') {
-    $route_id = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
-    if (!$route_id) {
+    $route_id_to_delete = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
+    $deleting_employee_id = $_SESSION['user']['id']; // Get the logged-in admin's ID
+
+    if (!$route_id_to_delete) {
         send_response('false', 'warning', 'Invalid Input', 'A valid Route ID was not provided.');
     }
-    
+
+    $_conn_db->beginTransaction();
     try {
-        // Because of cascading deletes in the database schema, deleting a route
-        // will automatically delete its related schedules, stops, and staff assignments.
-        $stmt = $_conn_db->prepare("DELETE FROM routes WHERE route_id = ?");
-        $stmt->execute([$route_id]);
-        send_response('true', 'success', 'Success', 'The route and all its related data have been deleted.', 'view_routes.php');
-    } catch (PDOException $e) {
-        // Log the detailed error for the admin, but show a generic message to the user.
+        // --- STEP 1: FETCH ALL DATA RELATED TO THE ROUTE ---
+        // A. Fetch main route details
+        $stmt_route = $_conn_db->prepare("SELECT * FROM routes WHERE route_id = ?");
+        $stmt_route->execute([$route_id_to_delete]);
+        $route_data = $stmt_route->fetch(PDO::FETCH_ASSOC);
+
+        if (!$route_data) {
+            throw new Exception("Route not found. It may have already been deleted.");
+        }
+
+        // B. Fetch route stops
+        $stmt_stops = $_conn_db->prepare("SELECT * FROM route_stops WHERE route_id = ?");
+        $stmt_stops->execute([$route_id_to_delete]);
+        $stops_data = $stmt_stops->fetchAll(PDO::FETCH_ASSOC);
+
+        // C. Fetch route staff assignments
+        $stmt_staff = $_conn_db->prepare("SELECT * FROM route_staff_assignments WHERE route_id = ?");
+        $stmt_staff->execute([$route_id_to_delete]);
+        $staff_data = $stmt_staff->fetchAll(PDO::FETCH_ASSOC);
+        
+        // --- STEP 2: ARCHIVE ALL FETCHED DATA ---
+        // A. Archive the main route record
+        $sql_archive_route = "
+            INSERT INTO deleted_routes (route_id, bus_id, route_name, starting_point, ending_point, status, is_popular, created_at, deleted_by_employee_id, deleted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ";
+        $stmt_archive_route = $_conn_db->prepare($sql_archive_route);
+        $stmt_archive_route->execute([
+            $route_data['route_id'], $route_data['bus_id'], $route_data['route_name'], $route_data['starting_point'],
+            $route_data['ending_point'], $route_data['status'], $route_data['is_popular'], $route_data['created_at'],
+            $deleting_employee_id
+        ]);
+        
+        // B. Archive the route stops
+        if (!empty($stops_data)) {
+            $sql_archive_stops = "INSERT INTO deleted_route_stops VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt_archive_stops = $_conn_db->prepare($sql_archive_stops);
+            foreach ($stops_data as $stop) {
+                $stmt_archive_stops->execute(array_values($stop));
+            }
+        }
+        
+        // C. Archive the staff assignments
+        if (!empty($staff_data)) {
+            $sql_archive_staff = "INSERT INTO deleted_route_staff_assignments VALUES (?, ?, ?, ?)";
+            $stmt_archive_staff = $_conn_db->prepare($sql_archive_staff);
+            foreach ($staff_data as $staff) {
+                $stmt_archive_staff->execute(array_values($staff));
+            }
+        }
+        
+        // --- STEP 3: PERMANENTLY DELETE THE ROUTE FROM THE LIVE TABLES ---
+        // The ON DELETE CASCADE constraint will automatically delete related records
+        // from route_schedules, route_stops, and route_staff_assignments.
+        $stmt_delete = $_conn_db->prepare("DELETE FROM routes WHERE route_id = ?");
+        $stmt_delete->execute([$route_id_to_delete]);
+        
+        if ($stmt_delete->rowCount() > 0) {
+            $_conn_db->commit();
+            send_response('true', 'success', 'Success', 'The route has been successfully archived and deleted.', 'view_routes.php');
+        } else {
+            throw new Exception("Deletion failed after archiving.");
+        }
+
+    } catch (Exception $e) { // Catch both PDO and regular exceptions
+        $_conn_db->rollBack();
         error_log("Route Deletion Failed: " . $e->getMessage());
-        send_response('false', 'danger', 'Database Error', 'Could not delete the route. It might be in use.');
+        send_response('false', 'danger', 'Database Error', 'Could not delete the route.');
     }
 }
 
@@ -80,8 +141,10 @@ if ($action == 'save_route') {
     $departure_times_specific = $_POST['departure_time'] ?? [];
     $stop_names = $_POST['stop_name'] ?? [];
     $durations = $_POST['duration'] ?? [];
-    $prices_sl = $_POST['price_sl'] ?? []; $prices_su = $_POST['price_su'] ?? [];
-    $prices_ll = $_POST['price_ll'] ?? []; $prices_lu = $_POST['price_lu'] ?? [];
+    $prices_sl = $_POST['price_sl'] ?? [];
+    $prices_su = $_POST['price_su'] ?? [];
+    $prices_ll = $_POST['price_ll'] ?? [];
+    $prices_lu = $_POST['price_lu'] ?? [];
 
     // Get staff assignment data
     $driver_id = filter_input(INPUT_POST, 'staff_driver', FILTER_VALIDATE_INT);
@@ -102,12 +165,12 @@ if ($action == 'save_route') {
             $sql = "UPDATE routes SET bus_id = ?, route_name = ?, starting_point = ?, ending_point = ?, status = ? WHERE route_id = ?";
             $stmt = $_conn_db->prepare($sql);
             $stmt->execute([$bus_id, $route_name, $starting_point, $ending_point, $status, $route_id]);
-            
+
             // Clean up all old related data. This is simpler and more reliable than comparing changes.
             $_conn_db->prepare("DELETE FROM route_schedules WHERE route_id = ?")->execute([$route_id]);
             $_conn_db->prepare("DELETE FROM route_stops WHERE route_id = ?")->execute([$route_id]);
             $_conn_db->prepare("DELETE FROM route_staff_assignments WHERE route_id = ?")->execute([$route_id]);
-            
+
             $current_route_id = $route_id;
         } else {
             // For a new route, insert a new record.
@@ -127,7 +190,7 @@ if ($action == 'save_route') {
                 }
             }
         }
-        
+
         // --- Part C: Insert all 'route_stops' ---
         if (!empty($stop_names)) {
             $sql_stop = "INSERT INTO route_stops (route_id, stop_name, stop_order, duration_from_start_minutes, price_seater_lower, price_seater_upper, price_sleeper_lower, price_sleeper_upper) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -135,7 +198,9 @@ if ($action == 'save_route') {
             foreach ($stop_names as $index => $stop_name) {
                 if (!empty(trim($stop_name))) {
                     $stmt_stop->execute([
-                        $current_route_id, trim($stop_name), $index + 1,
+                        $current_route_id,
+                        trim($stop_name),
+                        $index + 1,
                         $durations[$index] ?? 0,
                         !empty($prices_sl[$index]) ? $prices_sl[$index] : null,
                         !empty($prices_su[$index]) ? $prices_su[$index] : null,
@@ -145,14 +210,16 @@ if ($action == 'save_route') {
                 }
             }
         }
-        
+
         // --- Part D: Insert the 'route_staff_assignments' ---
         $sql_staff = "INSERT INTO route_staff_assignments (route_id, staff_id, role) VALUES (?, ?, ?)";
         $stmt_staff = $_conn_db->prepare($sql_staff);
 
         $single_assignments = [
-            'Driver'       => $driver_id, 'Co-Driver'    => $co_driver_id,
-            'Conductor'    => $conductor_id, 'Co-Conductor' => $co_conductor_id
+            'Driver'       => $driver_id,
+            'Co-Driver'    => $co_driver_id,
+            'Conductor'    => $conductor_id,
+            'Co-Conductor' => $co_conductor_id
         ];
 
         foreach ($single_assignments as $role => $staff_id) {
@@ -160,21 +227,20 @@ if ($action == 'save_route') {
                 $stmt_staff->execute([$current_route_id, $staff_id, $role]);
             }
         }
-        
+
         foreach ($helper_ids as $helper_id) {
             $helper_id_int = filter_var($helper_id, FILTER_VALIDATE_INT);
             if ($helper_id_int) {
                 $stmt_staff->execute([$current_route_id, $helper_id_int, 'Helper']);
             }
         }
- 
+
         $_conn_db->commit();
         send_response('true', 'success', 'Success', 'Route has been saved successfully.', 'view_routes.php');
-
-    } catch (Exception $e) {  
-$_conn_db->rollBack(); 
-error_log("Route Save Failed: " . $e->getMessage());  
-send_response('false', 'danger', 'Database Error', 'Error: ' . $e->getMessage());
+    } catch (Exception $e) {
+        $_conn_db->rollBack();
+        error_log("Route Save Failed: " . $e->getMessage());
+        send_response('false', 'danger', 'Database Error', 'Error: ' . $e->getMessage());
     }
 }
 
@@ -192,7 +258,7 @@ if ($action == 'toggle_popular') {
     try {
         $stmt = $_conn_db->prepare("UPDATE routes SET is_popular = ? WHERE route_id = ?");
         $stmt->execute([$is_popular, $route_id]);
-        
+
         $status_text = ($is_popular == 1) ? 'marked as popular' : 'unmarked as popular';
         send_response('true', 'success', 'Success', 'Route has been successfully ' . $status_text . '.');
     } catch (PDOException $e) {
@@ -200,7 +266,6 @@ if ($action == 'toggle_popular') {
         send_response('false', 'danger', 'Database Error', 'Could not update the route status.');
     }
 }
- 
+
 // --- FALLBACK: If no action matched ---
 send_response('false', 'warning', 'Unknown Action', 'The requested action "' . htmlspecialchars($action) . '" is not valid.');
-?>

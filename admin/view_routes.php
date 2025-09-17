@@ -3,11 +3,13 @@
 
 global $_conn_db;
 include_once('function/_db.php');
-session_security_check(); // सुनिश्चित करता है कि उपयोगकर्ता लॉग इन है और सत्र मान्य है
+session_security_check();  
 $can_add_routes = user_has_permission('can_manage_routes');
 $can_edit_routes = user_has_permission('can_edit_routes');
 $can_delete_routes = user_has_permission('can_delete_routes');
-// --- डेटा प्राप्त करने का तर्क ---
+ 
+$can_toggle_popular = user_has_permission('can_toggle_popular_route');
+check_permission('can_manage_routes');
 $routes_list = [];
 $all_stops = [];
 $all_schedules = [];
@@ -54,7 +56,7 @@ try {
     <title>View All Routes</title>
     <style>
         body { background-color: #f8f9fa; }
-        .page-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #dee2e6; }
+        .page-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 5px; border-bottom: 1px solid #dee2e6; }
         .route-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 25px; }
         .route-card { background-color: #fff; border: 1px solid #e9ecef; border-left-width: 5px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.2s ease-in-out; display: flex; flex-direction: column; }
         .route-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -90,9 +92,16 @@ try {
     <div class="main-content">
         <?php include_once('header.php'); ?>
         <div class="container-fluid">
-            <div class="page-header my-4">
+            <div class="page-header my-1">
+               
+                <a href="deleted_routes_report" class="button-13 bg-danger text-light">View Deleted Routes</a>    
+                <a href="add_route.php" class="button-13 bg-secondary text-light"><i class="fas fa-plus me-2"></i>Add New Route</a> 
+            </div>
+            <div class="page-header ">
+              
                 <h2>All Saved Routes</h2>
-                <a href="add_route.php" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add New Route</a>
+                
+             
             </div>
 
             <?php if (empty($routes_list)): ?>
@@ -115,9 +124,11 @@ try {
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="form-check form-switch" title="Toggle Popular Status">
+                                        <?php if ($can_edit_routes): ?>
                                             <input class="form-check-input popular-toggle" type="checkbox" role="switch" 
                                                    data-route-id="<?php echo $route['route_id']; ?>" 
                                                    <?php echo $route['is_popular'] ? 'checked' : ''; ?>>
+                                                   <?php endif; ?>
                                         </div>
                                         <span class="badge fs-6 <?php echo $route['status'] == 'Active' ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'; ?>"><?php echo $route['status']; ?></span>
                                     </div>

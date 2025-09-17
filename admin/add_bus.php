@@ -173,21 +173,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     <hr class="mt-2 mb-4">
 
                                     <!-- Bus Details -->
-                                    <div class="row g-3">
-                                        <div class="col-md-6 mb-3">
+                                    <div class="row g-1">
+                                        <div class="col-md-6 col-6 mb-3">
                                             <label for="bus_name" class="form-label">Bus Name/Number <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="bus_name" name="bus_name" required>
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-6 col-6 mb-3">
                                             <label for="registration_number" class="form-label">Registration Number <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="registration_number" name="registration_number" required>
                                         </div>
      <!-- ============================================= -->
-     <div class="col-md-6 mb-3">
+     <div class="col-md-6 col-6 mb-3">
                                             <label for="engine_no" class="form-label">Engine Number <small>(Optional)</small></label>
                                             <input type="text" class="form-control" id="engine_no" name="engine_no">
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-6 col-6 mb-3">
                                             <label for="chassis_no" class="form-label">Chassis Number <small>(Optional)</small></label>
                                             <input type="text" class="form-control" id="chassis_no" name="chassis_no">
                                         </div>
