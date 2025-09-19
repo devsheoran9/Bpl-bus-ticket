@@ -37,7 +37,7 @@
                 <div class="text-center mb-5">
                     <h2 style="font-weight: 600; color: #343a40;">Our Growth is a Reflection of Your Trust</h2>
                 </div>
-                <div class="row text-center">
+                <div class="row text-center g-1">
                     <div class="col-lg-3 col-6 mb-4">
                         <div style="background: #f8f9fa; padding: 2rem; border-radius: 15px; border: 1px solid #dee2e6;">
                             <h3 style="font-size: 2.5rem; font-weight: 700; color: #7b003a; margin: 0;">1M+</h3>
