@@ -37,7 +37,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* padding-top: 70px; */
 }
-
+.input-group > .form-control:focus ,
+.input-group> .form-floating:focus,
+.input-group> .form-select:focus {
+z-index: 0 !important;
+}
 /* ===================================================================
    2. Reusable Components (Buttons, Sections)
    =================================================================== */
