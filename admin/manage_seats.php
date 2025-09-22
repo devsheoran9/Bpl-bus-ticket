@@ -3,6 +3,7 @@ global $_conn_db;
 include_once('function/_db.php');
 // check_user_login();
 session_security_check(); 
+check_permission('can_manage_seats');
 
 $name = $_SESSION['user']['name'] ?? 'Guest';
 $email = $_SESSION['user']['email'] ?? '';

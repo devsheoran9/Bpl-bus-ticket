@@ -134,7 +134,7 @@ try {
         }
 
         .seat.status-available:hover {
-            background-color: #d1e7dd;
+            /* background-color: #d1e7dd; */
         }
 
         .seat.status-booked {

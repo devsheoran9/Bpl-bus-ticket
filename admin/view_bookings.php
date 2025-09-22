@@ -50,7 +50,9 @@ $user_can_delete = user_has_permission('can_delete_bookings');
             color: #343a40;
             line-height: 1.6;
         }
-
+        #wrapper{
+            display: block;
+        }
         .container-fluid {
             padding-top: 1.5rem;
             padding-bottom: 2rem;
@@ -64,7 +66,7 @@ $user_can_delete = user_has_permission('can_delete_bookings');
         }
 
         /* --- Filter Card --- */
-        .filter-card {
+        .rbd_filters_panel {
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
@@ -74,21 +76,21 @@ $user_can_delete = user_has_permission('can_delete_bookings');
             border-top: 5px solid #0d6efd; /* Blue accent */
         }
 
-        .filter-card .form-label { font-weight: 600; font-size: 0.875rem; color: #495057; }
-        .filter-card .form-control, .filter-card .form-select {
+        .rbd_filters_panel .form-label { font-weight: 600; font-size: 0.875rem; color: #495057; }
+        .rbd_filters_panel .form-control, .rbd_filters_panel .form-select {
             border-radius: 0.5rem; border: 1px solid #ced4da; padding: 0.6rem 1rem;
             font-size: 0.95rem; transition: all 0.2s ease;
         }
-        .filter-card .form-control:focus, .filter-card .form-select:focus {
+        .rbd_filters_panel .form-control:focus, .rbd_filters_panel .form-select:focus {
             border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2);
         }
-        .filter-card .btn {
+        .rbd_filters_panel .btn {
             border-radius: 0.5rem; font-weight: 600; padding: 0.6rem 1.2rem;
             font-size: 0.95rem; transition: all 0.2s ease-in-out;
         }
 
         /* --- Details Panel --- */
-        #details-panel {
+        #rbd_route_info_panel {
             background: #fff;
             border-radius: 12px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.06);
@@ -97,99 +99,128 @@ $user_can_delete = user_has_permission('can_delete_bookings');
             display: none; /* Hidden by default */
             border-top: 5px solid #198754; /* Green accent */
         }
-        #details-panel .card-header {
+        #rbd_route_info_panel .card-header {
             background-color: transparent; border-bottom: 1px solid #e9ecef;
             color: #198754; font-weight: 700;
             padding: 1.25rem 1.5rem; font-size: 1.2rem;
         }
-        #details-panel .card-body { padding: 1.5rem; }
+        #rbd_route_info_panel .card-body { padding: 1.5rem; }
 
-        .detail-info-grid {
+        /* MODIFIED: Compact Details Grid */
+        .rbd_detail_grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Reduced min-width for compactness */
+            gap: 1.25rem; /* Slightly reduced gap */
         }
-        .detail-info-item { display: flex; align-items: center; gap: 0.8rem; }
-        .detail-info-item .icon { font-size: 1.4rem; color: #0d6efd; width: 30px; text-align: center;}
-        .detail-info-item .label { font-size: 0.85em; color: #6c757d; font-weight: 500; }
-        .detail-info-item .value { font-size: 0.95em; color: #212529; font-weight: 600; }
-        .detail-info-item .staff-list { margin: 0; padding: 0; list-style: none;}
-        .detail-info-item .staff-list li { font-size: 0.9em; line-height: 1.4; }
-        .detail-info-item .staff-list li strong { color: #495057; }
+        .rbd_detail_item { display: flex; align-items: center; gap: 0.8rem; }
+        .rbd_detail_item .icon { font-size: 1.4rem; color: #0d6efd; width: 30px; text-align: center;}
+        .rbd_detail_item .label { font-size: 0.85em; color: #6c757d; font-weight: 500; }
+        .rbd_detail_item .value { font-size: 0.95em; color: #212529; font-weight: 600; }
+        .rbd_detail_item .rbd_staff_list { margin: 0; padding: 0; list-style: none;}
+        .rbd_detail_item .rbd_staff_list li { font-size: 0.9em; line-height: 1.4; }
+        .rbd_detail_item .rbd_staff_list li strong { color: #495057; }
 
-        /* --- Route Timeline Section --- */
-        .route-timeline-section { 
-            position: relative;
-            padding-left: 25px; /* Space for the line */
+        /* --- NEW: Horizontal Route Timeline Section --- */
+        .rbd_timeline_section {
+            display: flex;
+            align-items: flex-start;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            padding-bottom: 1.5rem; /* Space for scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: #0d6efd #e9ecef;
         }
-        /* The main vertical line */
-        .route-timeline-section::before {
+        .rbd_timeline_section::-webkit-scrollbar { height: 8px; }
+        .rbd_timeline_section::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .rbd_timeline_section::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 10px; }
+        .rbd_timeline_section::-webkit-scrollbar-thumb:hover { background: #0b5ed7; }
+
+        .rbd_timeline_entry {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 0 0 160px; /* Each stop has a fixed width, doesn't shrink or grow */
+            text-align: center;
+        }
+        /* The connecting line */
+        .rbd_timeline_entry:not(:last-child)::after {
             content: '';
             position: absolute;
-            left: 13px; /* Centered on the icon width */
-            top: 5px;
-            bottom: 5px;
-            width: 2px;
+            top: 13px; /* Align with the center of the marker */
+            left: 50%;
+            width: 100%;
+            height: 2px;
             background-color: #e9ecef;
+            z-index: 0; /* Behind the marker */
         }
-        .route-timeline-item {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-        .route-timeline-item:last-child { margin-bottom: 0; }
-        .timeline-icon {
-            position: absolute;
-            left: -14px; top: 0;
+        .rbd_timeline_marker {
+            position: relative; /* Changed from absolute */
             width: 28px; height: 28px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            color: white; z-index: 1;
+            color: white; z-index: 1; /* Keep it on top */
             font-size: 0.9rem;
             box-shadow: 0 0 0 4px #ffffff;
+            margin-bottom: 0.75rem; /* Space between marker and text */
         }
-        .timeline-icon.start-point { background-color: #0d6efd; } /* Blue */
-        .timeline-icon.end-point { background-color: #198754; } /* Green */
-        .timeline-icon.stop-point { background-color: #6c757d; } /* Grey */
+        .rbd_timeline_marker.start-node { background-color: #0d6efd; } /* Blue */
+        .rbd_timeline_marker.end-node { background-color: #198754; } /* Green */
+        .rbd_timeline_marker.stop-node { background-color: #6c757d; } /* Grey */
 
-        .timeline-content { padding-left: 25px; }
-        .timeline-content strong.stop-name { font-size: 1.05rem; font-weight: 700; color: #212529; }
-        .timeline-content .details-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.85rem; color: #6c757d;}
-        .time-info { display: flex; align-items: center; gap: 0.3rem; }
-        .duration-pill { background-color: #e9ecef; color: #495057; padding: 0.15rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;}
+        .rbd_timeline_info {
+            padding: 0 5px; /* Prevent long text from touching edges */
+        }
+        .rbd_timeline_info strong.rbd_stop_name {
+            font-size: 1rem; /* Adjusted font size */
+            font-weight: 700;
+            color: #212529;
+            word-break: break-word; /* Break long names */
+        }
+        .rbd_timeline_info .rbd_details {
+            display: flex;
+            flex-direction: column; /* Stack time and duration */
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .rbd_time_info { display: flex; align-items: center; gap: 0.3rem; }
+        .rbd_duration_tag { background-color: #e9ecef; color: #495057; padding: 0.15rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;}
+
 
         /* --- Bookings List Panel --- */
-        .bookings-list-panel {
+        .rbd_bookings_panel {
             background: #fff; border-radius: 12px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.06);
             border: 1px solid #e9ecef;
             margin-top: 2rem;
             border-top: 5px solid #0d6efd; /* Blue accent */
         }
-        .bookings-list-panel .card-header {
+        .rbd_bookings_panel .card-header {
             background-color: transparent; border-bottom: 1px solid #e9ecef;
             color: #0d6efd; font-weight: 700;
             padding: 1.25rem 1.5rem; font-size: 1.2rem;
         }
 
         /* --- DataTables Customizations --- */
-        .dataTables_wrapper { padding: 1.5rem; }
         .dataTables_wrapper .dt-buttons .btn { border-radius: 0.5rem; font-size: 0.85rem; background-color: #6c757d; color: white; border-color: #6c757d; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 0.5rem; border: 1px solid #ced4da; padding: 0.5rem 0.75rem; }
         .dataTables_wrapper .pagination .page-item .page-link { border-radius: 0.5rem !important; margin: 0 2px; }
         .dataTables_wrapper .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
 
         table.dataTable { border-collapse: collapse !important; }
-        .bookings-table-header th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
-        .bookings-table-body td { vertical-align: middle; font-size: 0.9rem; border-top: 1px solid #e9ecef; }
-        .ticket-no-val { font-weight: 600; color: #0d6efd; }
-        .seat-codes-val .badge { background-color: #e9ecef; color: #495057; }
-        .fare-val { font-weight: 700; color: #198754; }
-        .actions-cell .btn { margin-left: 5px; border-radius: 0.4rem; }
+        .rbd_table_header th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .rbd_table_body td { vertical-align: middle; font-size: 0.9rem; border-top: 1px solid #e9ecef; }
+        .rbd_ticket_cell { font-weight: 600; color: #0d6efd; }
+        .rbd_seat_cell .badge { background-color: #e9ecef; color: #495057; }
+        .rbd_fare_cell { font-weight: 700; color: #198754; }
+        .rbd_actions_cell .btn { margin-left: 5px; border-radius: 0.4rem; }
 
         /* --- Responsive Adjustments --- */
         @media (max-width: 767.98px) {
             h2.my-4 { font-size: 1.6rem; }
-            .filter-card { padding: 1.5rem; }
+            .rbd_filters_panel { padding: 1.5rem; }
             .dataTables_wrapper .dt-buttons, .dataTables_wrapper .dataTables_filter { float: none; text-align: left; margin-bottom: 0.5rem; }
         }
     </style>
@@ -215,11 +246,11 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     </div>
                 <?php else : ?>
                     <!-- Filter Section -->
-                    <div class="card filter-card">
+                    <div class="card rbd_filters_panel">
                         <div class="row g-3 align-items-end">
                             <div class="col-lg-5 col-md-12">
-                                <label for="route-filter" class="form-label">Select Your Assigned Route</label>
-                                <select id="route-filter" class="form-select">
+                                <label for="rbd_route_selector" class="form-label">Select Your Assigned Route</label>
+                                <select id="rbd_route_selector" class="form-select">
                                     <option value="">-- Choose a Route --</option>
                                     <?php foreach ($routes as $route) : ?>
                                         <option value="<?php echo htmlspecialchars($route['route_id']); ?>" <?php if ($route_id_from_url == $route['route_id']) echo 'selected'; ?>>
@@ -229,36 +260,35 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                                 </select>
                             </div>
                             <div class="col-lg-4 col-md-6">
-                                <label for="date-filter" class="form-label">Select Travel Date</label>
-                                <input type="text" id="date-filter" class="form-control" placeholder="Select Date">
+                                <label for="rbd_date_picker" class="form-label">Select Travel Date</label>
+                                <input type="text" id="rbd_date_picker" class="form-control" placeholder="Select Date">
                             </div>
                             <div class="col-lg-3 col-md-6 d-flex gap-2">
-                                <button id="clear-filter-btn" class="btn btn-outline-secondary w-100">Clear</button>
+                                <button id="rbd_clear_filters_button" class="btn btn-outline-secondary w-100">Clear</button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Details Panel (populated by AJAX) -->
-                    <div id="details-panel" class="card">
+ 
+                    <div id="rbd_route_info_panel" class="card">
                         <div class="card-header"><i class="fas fa-route me-2"></i>Route & Bus Details</div>
                         <div class="card-body">
-                            <div id="details-content">
+                            <div id="rbd_route_info_content">
                                 <div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Route Details...</span></div>
                             </div>
                             <hr class="my-4">
                             <h6 class="mb-3 fw-bold"><i class="fas fa-map-signs me-2"></i>Complete Route Timeline</h6>
-                            <div id="timeline-content-container">
+                            <div id="rbd_route_timeline_container">
                                 <div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Timeline...</span></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Bookings List Panel -->
-                    <div class="card bookings-list-panel">
-                        <div class="card-header"><i class="fas fa-ticket-alt me-2"></i>Bookings Manifest <span id="booking-count-display" class="fw-normal fs-6"></span></div>
+                    <div class="card rbd_bookings_panel">
+                        <div class="card-header"><i class="fas fa-ticket-alt me-2"></i>Bookings Manifest <span id="rbd_total_bookings_display" class="fw-normal fs-6"></span></div>
                         <div class="card-body">
-                            <table class="table table-hover dt-responsive nowrap" id="bookings-table" style="width:100%">
-                                <thead class="bookings-table-header">
+                            <table class="table table-hover dt-responsive nowrap" id="rbd_manifest_table" style="width:100%">
+                                <thead class="rbd_table_header">
                                     <tr>
                                         <th>Ticket #</th>
                                         <th>Journey</th>
@@ -266,10 +296,10 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                                         <th>Status</th>
                                         <th>Passengers</th>
                                         <th>Seats</th>
-                                        <th class="no-export actions-cell">Actions</th>
+                                        <th class="no-export rbd_actions_cell">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bookings-table-body">
+                                <tbody class="rbd_table_body">
                                     <!-- DataTables will populate this -->
                                 </tbody>
                             </table>
@@ -315,12 +345,12 @@ $user_can_delete = user_has_permission('can_delete_bookings');
 
         $(document).ready(function() {
             // --- DATATABLE INITIALIZATION ---
-            let bookingTable = $('#bookings-table').DataTable({
+            let manifestTable = $('#rbd_manifest_table').DataTable({
                 dom: 'Bfrtip',
                 buttons: ['copy', 'csv', 'excel', 'pdf', 'print'].map(type => ({
                     extend: type,
                     exportOptions: { columns: ':not(.no-export)' },
-                    title: () => `${$('#route-filter option:selected').text().trim()} - ${$('#date-filter').val()}`
+                    title: () => `${$('#rbd_route_selector option:selected').text().trim()} - ${$('#rbd_date_picker').val()}`
                 })),
                 language: {
                     emptyTable: "Please select a route and date to view bookings.",
@@ -335,13 +365,13 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     }
                 },
                 columns: [
-                    { data: "ticket_no", className: "ticket-no-val" },
+                    { data: "ticket_no", className: "rbd_ticket_cell" },
                     { data: "journey" },
-                    { data: "total_fare", className: "fare-val" },
+                    { data: "total_fare", className: "rbd_fare_cell" },
                     { data: "booking_status" },
                     { data: "passenger_names" },
-                    { data: "seat_codes" },
-                    { data: "actions", orderable: false, searchable: false, className: "no-export actions-cell" }
+                    { data: "seat_codes", className: "rbd_seat_cell" },
+                    { data: "actions", orderable: false, searchable: false, className: "no-export rbd_actions_cell" }
                 ],
                 columnDefs: [
                     { responsivePriority: 1, targets: 0 },  // Ticket #
@@ -356,39 +386,39 @@ $user_can_delete = user_has_permission('can_delete_bookings');
             });
 
             // --- FILTER INITIALIZATION & EVENTS ---
-            const datePicker = flatpickr("#date-filter", {
+            const datePicker = flatpickr("#rbd_date_picker", {
                 dateFormat: "Y-m-d",
                 defaultDate: initialDate,
                 onChange: () => loadDashboardData()
             });
 
-            $('#route-filter').on('change', () => loadDashboardData());
+            $('#rbd_route_selector').on('change', () => loadDashboardData());
 
-            $('#clear-filter-btn').on('click', () => {
-                $('#route-filter').val('');
+            $('#rbd_clear_filters_button').on('click', () => {
+                $('#rbd_route_selector').val('');
                 datePicker.setDate(new Date());
-                $('#details-panel').slideUp();
-                bookingTable.clear().draw();
-                updateBookingCount(0);
+                $('#rbd_route_info_panel').slideUp();
+                manifestTable.clear().draw();
+                updateBookingCounter(0);
             });
 
             // --- MAIN DATA LOADING FUNCTION ---
             function loadDashboardData() {
-                const routeId = $('#route-filter').val();
-                const travelDate = $('#date-filter').val();
+                const routeId = $('#rbd_route_selector').val();
+                const travelDate = $('#rbd_date_picker').val();
 
                 if (!routeId || !travelDate) {
-                    $('#details-panel').slideUp();
-                    bookingTable.clear().draw();
-                    updateBookingCount(0);
+                    $('#rbd_route_info_panel').slideUp();
+                    manifestTable.clear().draw();
+                    updateBookingCounter(0);
                     return;
                 }
 
-                $('#details-panel').slideDown();
+                $('#rbd_route_info_panel').slideDown();
                 const loaderHtml = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading...</span></div>';
-                $('#details-content').html(loaderHtml);
-                $('#timeline-content-container').html(loaderHtml);
-                bookingTable.clear().draw(); // Clear old data and show processing message
+                $('#rbd_route_info_content').html(loaderHtml);
+                $('#rbd_route_timeline_container').html(loaderHtml);
+                manifestTable.clear().draw(); // Clear old data and show processing message
 
                 $.getJSON('function/backend/booking_actions.php', {
                     action: 'get_route_dashboard_details',
@@ -399,29 +429,29 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     if (response.status === 'success') {
                         const { details, staff, bookings, timeline } = response;
                         
-                        renderDetailsPanel(details, staff);
-                        renderTimelinePanel(timeline);
-                        renderBookingsTable(bookings);
+                        renderRouteInfo(details, staff);
+                        renderTimelineVisual(timeline);
+                        renderBookingsData(bookings);
 
                     } else {
                         const errorHtml = `<div class="alert alert-danger text-center">${htmlspecialchars(response.message)}</div>`;
-                        $('#details-content').html(errorHtml);
-                        $('#timeline-content-container').html('');
+                        $('#rbd_route_info_content').html(errorHtml);
+                        $('#rbd_route_timeline_container').html('');
                     }
                 })
                 .fail(() => {
                     const errorHtml = `<div class="alert alert-danger text-center">Failed to load data. Please check your connection and try again.</div>`;
-                    $('#details-content').html(errorHtml);
-                    $('#timeline-content-container').html('');
+                    $('#rbd_route_info_content').html(errorHtml);
+                    $('#rbd_route_timeline_container').html('');
                 })
                 .always(() => {
-                    bookingTable.draw();
-                    updateBookingCount(bookingTable.rows().count());
+                    manifestTable.draw();
+                    updateBookingCounter(manifestTable.rows().count());
                 });
             }
 
-            function renderDetailsPanel(details, staff) {
-                let staffHtml = '<ul class="staff-list">';
+            function renderRouteInfo(details, staff) {
+                let staffHtml = '<ul class="rbd_staff_list">';
                 if (staff && staff.length > 0) {
                     staff.forEach(s => {
                         staffHtml += `<li><strong>${htmlspecialchars(s.role)}:</strong> ${htmlspecialchars(s.name)}</li>`;
@@ -431,32 +461,32 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                 }
                 staffHtml += '</ul>';
 
-                $('#details-content').html(`
-                    <div class="detail-info-grid">
-                        <div class="detail-info-item"><i class="fas fa-bus icon"></i><div><span class="label">Bus / Reg #:</span><span class="value">${htmlspecialchars(details.bus_name)} (${htmlspecialchars(details.registration_number)})</span></div></div>
-                        <div class="detail-info-item"><i class="fas fa-couch icon"></i><div><span class="label">Bus Type:</span><span class="value">${htmlspecialchars(details.bus_type)}</span></div></div>
-                        <div class="detail-info-item"><i class="far fa-clock icon"></i><div><span class="label">Departure:</span><span class="value">${formatTime(details.departure_time)}</span></div></div>
-                        <div class="detail-info-item"><i class="fas fa-users-cog icon"></i><div><span class="label">Assigned Staff:</span><span class="value">${staffHtml}</span></div></div>
+                $('#rbd_route_info_content').html(`
+                    <div class="rbd_detail_grid">
+                        <div class="rbd_detail_item"><i class="fas fa-bus icon"></i><div><span class="label">Bus / Reg #:</span><span class="value">${htmlspecialchars(details.bus_name)} (${htmlspecialchars(details.registration_number)})</span></div></div>
+                        <div class="rbd_detail_item"><i class="fas fa-couch icon"></i><div><span class="label">Bus Type:</span><span class="value">${htmlspecialchars(details.bus_type)}</span></div></div>
+                        <div class="rbd_detail_item"><i class="far fa-clock icon"></i><div><span class="label">Departure:</span><span class="value">${formatTime(details.departure_time)}</span></div></div>
+                        <div class="rbd_detail_item"><i class="fas fa-users-cog icon"></i><div><span class="label">Assigned Staff:</span><span class="value">${staffHtml}</span></div></div>
                     </div>`
                 );
             }
 
-            function renderTimelinePanel(timeline) {
-                let timelineHtml = '<div class="route-timeline-section">';
+            function renderTimelineVisual(timeline) {
+                let timelineHtml = '<div class="rbd_timeline_section">';
                 if (timeline && timeline.length > 0) {
                     timeline.forEach(item => {
-                        let iconClass = 'stop-point fas fa-map-marker-alt';
-                        if (item.type === 'start') iconClass = 'start-point fas fa-play';
-                        else if (item.type === 'end') iconClass = 'end-point fas fa-flag-checkered';
+                        let iconClass = 'stop-node fas fa-map-marker-alt';
+                        if (item.type === 'start') iconClass = 'start-node fas fa-play';
+                        else if (item.type === 'end') iconClass = 'end-node fas fa-flag-checkered';
                         
                         timelineHtml += `
-                        <div class="route-timeline-item">
-                            <div class="timeline-icon ${iconClass}"></div>
-                            <div class="timeline-content">
-                                <strong class="stop-name">${htmlspecialchars(item.name)}</strong>
-                                <div class="details-row">
-                                    <span class="time-info"><i class="far fa-clock"></i>&nbsp;${htmlspecialchars(item.time)}</span>
-                                    ${item.duration_from_prev > 0 ? `<span class="duration-pill">+${htmlspecialchars(item.duration_from_prev)} mins</span>` : ''}
+                        <div class="rbd_timeline_entry">
+                            <div class="rbd_timeline_marker ${iconClass}"></div>
+                            <div class="rbd_timeline_info">
+                                <strong class="rbd_stop_name">${htmlspecialchars(item.name)}</strong>
+                                <div class="rbd_details">
+                                    <span class="rbd_time_info"><i class="far fa-clock"></i>&nbsp;${htmlspecialchars(item.time)}</span>
+                                    ${item.duration_from_prev > 0 ? `<span class="rbd_duration_tag">+${htmlspecialchars(item.duration_from_prev)} mins</span>` : ''}
                                 </div>
                             </div>
                         </div>`;
@@ -465,35 +495,35 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     timelineHtml += `<p class="text-muted text-center py-3">No detailed timeline is available for this route.</p>`;
                 }
                 timelineHtml += '</div>';
-                $('#timeline-content-container').html(timelineHtml);
+                $('#rbd_route_timeline_container').html(timelineHtml);
             }
 
-            function renderBookingsTable(bookings) {
+            function renderBookingsData(bookings) {
                 if (bookings && bookings.length > 0) {
                     const tableData = bookings.map(b => {
                         const deleteBtn = userCanDelete ? 
-                            `<button class="btn btn-sm btn-outline-danger delete-booking-btn" data-booking-id="${b.booking_id}" data-ticket-no="${htmlspecialchars(b.ticket_no)}" title="Delete Booking"><i class="fas fa-trash-alt"></i></button>` : '';
+                            `<button class="btn btn-sm btn-outline-danger rbd_action_delete_booking" data-booking-id="${b.booking_id}" data-ticket-no="${htmlspecialchars(b.ticket_no)}" title="Delete Booking"><i class="fas fa-trash-alt"></i></button>` : '';
                         
                         return {
                             ticket_no: `<strong>${htmlspecialchars(b.ticket_no)}</strong>`,
                             journey: `${htmlspecialchars(b.origin)} → ${htmlspecialchars(b.destination)}`,
                             passenger_names: htmlspecialchars(b.passenger_names),
-                            seat_codes: b.seat_codes.split(', ').map(seat => `<span class="badge seat-codes-val">${htmlspecialchars(seat)}</span>`).join(' '),
+                            seat_codes: b.seat_codes.split(', ').map(seat => `<span class="badge">${htmlspecialchars(seat)}</span>`).join(' '),
                             total_fare: `₹${parseFloat(b.total_fare).toFixed(2)}`,
                             booking_status: `<span class="badge bg-${b.payment_status === 'PAID' ? 'success' : 'warning'}">${htmlspecialchars(b.booking_status)}</span>`,
                             actions: `<a href="generate_ticket.php?booking_id=${b.booking_id}" target="_blank" class="btn btn-sm btn-outline-primary" title="View Ticket"><i class="fas fa-eye"></i></a> ${deleteBtn}`
                         };
                     });
-                    bookingTable.rows.add(tableData);
+                    manifestTable.rows.add(tableData);
                 }
             }
 
-            function updateBookingCount(count) {
-                $('#booking-count-display').text(`(${count} Total Bookings)`);
+            function updateBookingCounter(count) {
+                $('#rbd_total_bookings_display').text(`(${count} Total Bookings)`);
             }
 
             // --- DELETE HANDLER (Event Delegation) ---
-            $('#bookings-table tbody').on('click', '.delete-booking-btn', function() {
+            $('#rbd_manifest_table tbody').on('click', '.rbd_action_delete_booking', function() {
                 const bookingId = $(this).data('booking-id');
                 const ticketNo = $(this).data('ticket-no');
                 const row = $(this).closest('tr');
@@ -512,8 +542,8 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                         .done(response => {
                             if (response.status === 'success') {
                                 Swal.fire('Deleted!', response.message, 'success');
-                                bookingTable.row(row).remove().draw();
-                                updateBookingCount(bookingTable.rows().count());
+                                manifestTable.row(row).remove().draw();
+                                updateBookingCounter(manifestTable.rows().count());
                             } else {
                                 Swal.fire('Error!', response.message, 'error');
                             }
@@ -522,9 +552,8 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                     }
                 });
             });
-            
-            // --- INITIAL LOAD ---
-            if ($('#route-filter').val()) {
+             
+            if ($('#rbd_route_selector').val()) {
                 loadDashboardData();
             }
 

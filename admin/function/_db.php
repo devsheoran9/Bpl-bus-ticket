@@ -44,5 +44,5 @@ define('SMTP_SECUREE', 'tls');
 // Email "From" address
 define('MAIL_FROM_ADDRESSS', 'sjsheoran111@gmail.com');
 define('MAIL_FROM_NAMEE', 'BPL Bus Booking');
-define('BASE_URLL', 'http://localhost/bpl-bus-ticket/ticket_public_view');
+define('BASE_URLL', 'http://192.168.1.47/bpl-bus-ticket/ticket_public_view');
 ?>

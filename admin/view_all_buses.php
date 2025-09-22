@@ -6,7 +6,7 @@ session_security_check();
 $can_edit = user_has_permission('can_edit_buses');
 $can_delete = user_has_permission('can_delete_buses');
 $can_manage_seats = user_has_permission('can_manage_seats');
-check_permission('can_view_buses');
+check_permission('can_manage_buses');
 // A single, powerful query to get all bus details at once
 try {
     $sql = "

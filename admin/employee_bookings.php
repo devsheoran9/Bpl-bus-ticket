@@ -498,13 +498,8 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
                 margin-bottom: 1.5rem;
                 border-top-width: 3px; 
             }
-            .filter-card .col-lg-2 { 
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-            .filter-card .col-12.col-lg-2.d-flex.gap-2 { 
-                margin-top: 0.75rem;
-            }
+          
+            
 
             /* Report Card - Mobile Adjustments */
             .report-card {
@@ -593,7 +588,7 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
                 <div class="card-body p-3">
                     <form method="GET" class="  align-items-end">
                         <div class="row g-1">
-                        <div class="col-6  col-lg-2">
+                        <div class="col-6   col-lg-2">
                             <label class="form-label fw-bold">Employee</label>
                             <select name="employee_id" class="form-select">
                                 <option value="">All</option>
@@ -693,8 +688,10 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
                     </div>
                     <div class="report-footer d-flex gap-2 flex-wrap">
                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#detailsModal<?php echo $employee_id; ?>"><i class="fas fa-list-ul me-2"></i>View Details (<?php echo count($data['bookings']); ?>)</button>
+                        <?php if (user_has_permission('main_admin')): ?>
                         <?php if ($data['cash_due'] > 0): ?>
                             <button class="btn btn-success collect-all-cash-btn" data-employee-id="<?php echo $employee_id; ?>" data-employee-name="<?php echo htmlspecialchars($data['employee_name']); ?>" data-amount="<?php echo $data['cash_due']; ?>"><i class="fas fa-money-bill-wave me-2"></i>Collect All Due Cash</button>
+                        <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -724,7 +721,10 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
                                                 <?php echo get_collection_status_badge($booking['payment_method'], $booking['is_collected'], $booking['actual_payment_status']); ?>
                                             </td>
                                             <td class="fw-bold text-end">₹<?php echo number_format($booking['total_fare'], 2); ?></td>
-                                            <td><a href="generate_ticket.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fas fa-eye"></i></a></td>
+                                            <td><a href="generate_ticket.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fas fa-eye"></i></a>
+                                            <?php if (user_has_permission('main_admin')): ?>
+                                                <a href="booking_details.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-info" target="_blank" title="View Full Details"><i class="fas fa-search-plus"></i></a>
+                                                <?php endif; ?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -757,7 +757,10 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
                                         <td><?php echo htmlspecialchars($booking['route_name']); ?></td>
                                         <td><?php echo htmlspecialchars($booking['bus_name']); ?></td>
                                         <td class="fw-bold text-end">₹<?php echo number_format($booking['total_fare'], 2); ?></td>
-                                        <td><a href="generate_ticket.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fas fa-eye"></i></a></td>
+                                        <td><a href="generate_ticket.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fas fa-eye"></i></a>
+                                        <?php if (user_has_permission('main_admin')): ?>
+                                                <a href="booking_details.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-info" target="_blank" title="View Full Details"><i class="fas fa-search-plus"></i></a>
+                                                <?php endif; ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>

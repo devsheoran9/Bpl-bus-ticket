@@ -214,11 +214,14 @@ try {
                                                     'Operations Management' => [
                                                         'can_manage_routes'     => 'Manage Routes (Add/Edit)',
                                                         'can_delete_routes'     => 'Delete Routes',
-                                                        'can_manage_buses'      => 'Manage Buses (Add/Edit/View)', // Clarified
+                                                         'can_charter_bus'       => 'Book Full Bus Charter',
+                                                         'can_toggle_popular_route' => 'Toggle Popular Route Status' ,
+                                                        'can_manage_buses'      => 'Manage Buses (Add/View)', 
+                                                        'can_edit_buses'      => 'Edit Buses', 
+                                                        'can_delete_buses'      => 'Delete Buses', 
                                                         'can_manage_seats'      => 'Manage Bus Seats', // Added new permission
                                                         'can_manage_staff'      => 'Manage Staff (Add/Edit/Delete)', // Clarified
-                                                        'can_toggle_popular_route' => 'Toggle Popular Route Status', // Added new permission
-                                                        'can_charter_bus'       => 'Book Full Bus Charter' // Added new permission
+                                                         
                                                     ],
                                                     'Reports' => [ // Grouped reports
                                                         'can_view_own_collections' => 'View Own Cash Report',

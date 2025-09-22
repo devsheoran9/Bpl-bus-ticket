@@ -16,7 +16,6 @@ if (!$booking_id) {
 
 try {
     // --- QUERY 1: Get main booking details ---
-    // This query is now simplified and does not join with the operators table.
     $stmt = $_conn_db->prepare("
         SELECT 
             b.booking_id, b.ticket_no, b.travel_date, b.total_fare, b.booking_status, b.origin, b.destination,
@@ -88,11 +87,16 @@ try {
 <head>
     <?php include "head.php"; ?>
     <title>Booking Details - #<?php echo htmlspecialchars($booking['ticket_no']); ?></title>
+    <!-- ADDED: DataTables CSS for responsiveness -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.13.6/r-2.5.0/datatables.min.css"/>
+
     <style>
         body {
             background-color: #f8f9fa;
         }
-
+        #wrapper{
+            display: block;
+        }
         .details-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -106,19 +110,20 @@ try {
             border: 1px solid #e9ecef;
         }
 
-        .detail-card-header {
+        .detail-card .card-header { /* Using Bootstrap's card-header for consistency */
             padding: 1rem 1.5rem;
             font-size: 1.1rem;
             font-weight: 600;
             border-bottom: 1px solid #e9ecef;
+            background-color: transparent;
         }
 
-        .detail-card-header i {
+        .detail-card .card-header i {
             color: #0d6efd;
         }
-
-        .detail-card-body {
-            padding: 1.5rem;
+        
+        .detail-card .card-body {
+             padding: 1.5rem;
         }
 
         .info-row {
@@ -141,10 +146,18 @@ try {
             text-align: right;
         }
 
-        .passenger-table td,
-        .passenger-table th {
-            font-size: 0.9em;
+        /* DataTables search input styling */
+        .dataTables_filter input {
+            border-radius: 0.5rem;
+            border: 1px solid #ced4da;
+            padding: 0.5rem 0.75rem;
+            margin-left: 0.5em;
         }
+        .dataTables_filter input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2);
+        }
+
     </style>
 </head>
 
@@ -154,17 +167,17 @@ try {
         <div class="main-content">
             <?php include_once('header.php'); ?>
             <div class="container-fluid">
-                <div class="d-flex justify-content-between align-items-center my-4">
+                <div class="d-flex justify-content-between align-items-center my-4 flex-wrap">
                     <div>
                         <h2 class="mb-0">Booking Details</h2>
-                        <p class="text-muted">Ticket No: <b><?php echo htmlspecialchars($booking['ticket_no']); ?></b></p>
+                        <p class="text-muted mb-0">Ticket No: <b><?php echo htmlspecialchars($booking['ticket_no']); ?></b></p>
                     </div>
-                    <a href="generate_ticket.php?booking_id=<?php echo $booking_id; ?>" target="_blank" class="btn btn-primary"><i class="fas fa-print me-2"></i>View E-Ticket</a>
+                    <a href="generate_ticket.php?booking_id=<?php echo $booking_id; ?>" target="_blank" class="btn btn-primary mt-2 mt-md-0"><i class="fas fa-print me-2"></i>View E-Ticket</a>
                 </div>
 
                 <div class="details-grid">
                     <!-- Journey Details Card -->
-                    <div class="detail-card p-2">
+                    <div class="detail-card">
                         <div class="card-header"><i class="fas fa-route me-2"></i>Journey Details</div>
                         <div class="card-body">
                             <div class="info-row"><span class="label">Route Name</span><span class="value"><?php echo htmlspecialchars($booking['route_name']); ?></span></div>
@@ -175,8 +188,8 @@ try {
                         </div>
                     </div>
 
-                    <!-- Bus & Staff Details Card (UPDATED) -->
-                    <div class="detail-card p-2">
+                    <!-- Bus & Staff Details Card -->
+                    <div class="detail-card">
                         <div class="card-header"><i class="fas fa-bus me-2"></i>Bus & Assigned Staff</div>
                         <div class="card-body">
                             <div class="info-row"><span class="label">Bus Name</span><span class="value"><?php echo htmlspecialchars($booking['bus_name']); ?></span></div>
@@ -185,7 +198,6 @@ try {
                             <?php foreach ($assigned_staff as $role => $staff_list): ?>
                                 <?php if (!empty($staff_list)): ?>
                                     <?php
-                                    // Prepare the display text. For helpers, it will be a comma-separated list.
                                     $staff_names = array_column($staff_list, 'name');
                                     $display_text = htmlspecialchars(implode(', ', $staff_names));
                                     ?>
@@ -199,55 +211,71 @@ try {
                     </div>
 
                     <!-- Booking & Payment Details Card -->
-                    <div class="detail-card p-2">
+                    <div class="detail-card">
                         <div class="card-header"><i class="fas fa-file-invoice-dollar me-2"></i>Booking & Payment</div>
                         <div class="card-body">
                             <div class="info-row"><span class="label">Booked By</span><span class="value"><?php echo htmlspecialchars($booking['booker_name']); ?> (<?php echo $booking['booker_type']; ?>)</span></div>
                             <div class="info-row"><span class="label">Booking Status</span><span class="value"><span class="badge bg-success"><?php echo htmlspecialchars($booking['booking_status']); ?></span></span></div>
                             <div class="info-row"><span class="label">Payment Method</span><span class="value"><?php echo htmlspecialchars($booking['payment_method'] ?: 'CASH'); ?></span></div>
-                            <div class="info-row"><span class="label">Payment Status</span><span class="value"><?php echo htmlspecialchars($booking['payment_status'] ?: 'PAID'); ?></span></div>
+                            <div class="info-row"><span class="label">Payment Status</span><span class="value"><span class="badge bg-<?php echo $booking['payment_status'] === 'PAID' ? 'success' : 'warning'; ?>"><?php echo htmlspecialchars($booking['payment_status'] ?: 'PAID'); ?></span></span></div>
                             <div class="info-row"><span class="label">Total Fare</span><span class="value fs-5 fw-bold text-success">₹<?php echo number_format($booking['total_fare'], 2); ?></span></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Passenger Manifest Card -->
-                <div class="card detail-card  mt-4">
+                <div class="card detail-card mt-4">
                     <div class="card-header"><i class="fas fa-users me-2"></i>Passenger Manifest</div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table passenger-table">
-                                <thead>
+                        <!-- MODIFIED: Added ID and classes for DataTables -->
+                        <table id="passenger_manifest_table" class="table table-hover dt-responsive nowrap" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Mobile</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Seat No.</th>
+                                    <th>Fare</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($passengers as $p): ?>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Mobile</th>
-                                        <th>Age</th>
-                                        <th>Gender</th>
-                                        <th>Seat No.</th>
-                                        <th>Fare</th>
+                                        <td><?php echo htmlspecialchars($p['passenger_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($p['passenger_mobile'] ?: 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($p['passenger_age'] ?: 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($p['passenger_gender']); ?></td>
+                                        <td><span class="badge bg-secondary"><?php echo htmlspecialchars($p['seat_code']); ?></span></td>
+                                        <td>₹<?php echo number_format($p['fare'], 2); ?></td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($passengers as $p): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($p['passenger_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($p['passenger_mobile'] ?: 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($p['passenger_age'] ?: 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($p['passenger_gender']); ?></td>
-                                            <td><span class="badge bg-secondary"><?php echo htmlspecialchars($p['seat_code']); ?></span></td>
-                                            <td>₹<?php echo number_format($p['fare'], 2); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <?php include "foot.php"; ?>
+
+    <!-- ADDED: DataTables JS for responsiveness -->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.13.6/r-2.5.0/datatables.min.js"></script>
+    
+    <!-- ADDED: Script to initialize the DataTable -->
+    <script>
+        $(document).ready(function() {
+            $('#passenger_manifest_table').DataTable({
+                responsive: true,
+                // You can add more options here if needed
+                // For example, to change the search placeholder:
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search passengers..."
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
-
