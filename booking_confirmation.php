@@ -60,7 +60,7 @@ try {
     }
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $base_url = rtrim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/');
-    $view_ticket_url = $base_url . '/ticket_public_view.php?token=' . urlencode($token);
+    $view_ticket_url = $base_url . '/ticket_public_view?token=' . urlencode($token);
 
     // --- 4. Fetch Passengers & Transaction Details ---
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
@@ -84,7 +84,7 @@ try {
     die("An error occurred while fetching booking details: " . $e->getMessage());
 }
 ?>
- 
+
 
 <style>
     .confirmation-card {
@@ -179,54 +179,72 @@ try {
                 <?php endif; ?>
 
                 <div class="card mb-4">
-                    <div class="card-header bg-light text-dark">
+                    <div class="card-header bg-success text-light">
                         <h5 class="mb-0">Journey Summary</h5>
                     </div>
                     <div class="card-body">
-                        <div class="details-grid">
+                        <div class="details-grid"
+                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;">
+
                             <div>
-                                <dt>Ticket No. (PNR)</dt>
+                                <dt class="text-success">Ticket No. (PNR)</dt>
                                 <dd><?php echo htmlspecialchars($booking_details['ticket_no']); ?></dd>
                             </div>
+
                             <div>
-                                <dt>Travel Date</dt>
+                                <dt class="text-success">Travel Date</dt>
                                 <dd><?php echo $actual_departure_datetime->format('D, d M Y'); ?></dd>
                             </div>
+
                             <div>
-                                <dt>Bus Details</dt>
+                                <dt class="text-success">Bus Details</dt>
                                 <dd><?php echo htmlspecialchars($booking_details['bus_name']); ?> (<?php echo htmlspecialchars($booking_details['registration_number']); ?>)</dd>
                             </div>
+
                             <div>
-                                <dt>Total Fare Paid</dt>
-                                <dd><strong>₹<?php echo number_format($booking_details['total_fare'], 2); ?></strong></dd>
+                                <dt class="text-success">Total Fare Paid</dt>
+                                <dd><span class="bg-success text-light p-1" >₹<?php echo number_format($booking_details['total_fare'], 2); ?></span></dd>
                             </div>
+
                             <?php if ($transaction_details && !empty($transaction_details['gateway_payment_id'])): ?>
-                                <div class="grid-item">
-                                    <dt>Payment ID</dt>
-                                    <dd><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></dd>
+                                <div style="grid-column:1/-1;">
+                                    <dt class="text-success">Payment ID</dt>
+                                    <dd><span class="bg-danger text-light p-1" ><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></span></dd>
                                 </div>
                             <?php endif; ?>
+
                         </div>
+
                         <hr>
-                        <div class="row align-items-center">
-                            <div class="col-md-5 text-md-start text-center">
-                                <dt>Boarding From</dt>
-                                <dd class="fs-5"><?php echo htmlspecialchars($booking_details['origin']); ?></dd>
+                        <div class="row align-items-center" style="display:flex;flex-wrap:nowrap;justify-content:space-between;text-align:center;">
+
+                            <!-- Boarding -->
+                            <div class="col-5 text-start" style="flex:1;">
+                                <dt class="text-success">Boarding From</dt>
+                                <dd class="fs-6" style="margin:0;"><?php echo htmlspecialchars($booking_details['origin']); ?></dd>
                                 <small class="text-muted"><?php echo $actual_departure_datetime->format('h:i A'); ?></small>
                             </div>
-                            <div class="col-md-2 text-center journey-arrow d-none d-md-block"><i class="fas fa-long-arrow-alt-right fa-2x text-muted"></i></div>
-                            <div class="col-md-5 text-md-end text-center mt-3 mt-md-0">
-                                <dt>Dropping At</dt>
-                                <dd class="fs-5"><?php echo htmlspecialchars($booking_details['destination']); ?></dd>
+
+                            <!-- Arrow (always visible) -->
+                            <div class="col-2 text-center journey-arrow" style="flex:0;white-space:nowrap;">
+                                <i class="fas fa-long-arrow-alt-right fa-lg text-muted"></i>
+                            </div>
+
+                            <!-- Dropping -->
+                            <div class="col-5 text-end" style="flex:1;">
+                                <dt class="text-success">Dropping At</dt>
+                                <dd class="fs-6" style="margin:0;"><?php echo htmlspecialchars($booking_details['destination']); ?></dd>
                                 <small class="text-muted">Est. <?php echo $actual_arrival_datetime->format('h:i A'); ?></small>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header bg-light text-dark">
-                        <h5 class="mb-0">Passenger Details</h5>
+                    <div class="card-header bg-primary text-light">
+                        <h5 class="mb-0 ">Passenger Details</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -256,8 +274,8 @@ try {
 
                 <div class="text-center mt-4 pt-3 border-top">
                     <p class="text-muted small">A copy of the ticket has also been sent to your registered email address.</p>
-                    <a href="<?php echo htmlspecialchars($view_ticket_url); ?>" class="btn btn-primary btn-lg me-2" target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
-                    <a href="index.php" class="btn btn-outline-secondary btn-lg"><i class="fas fa-bus"></i> Book Another Ticket</a>
+                    <a href="<?php echo htmlspecialchars($view_ticket_url); ?>" class="btn btn-primary btn-sm me-2 " target="_blank"><i class="fas fa-ticket-alt"></i> View/Print Ticket</a>
+                    <a href="index.php" class="btn btn-outline-secondary btn-sm"><i class="fas fa-bus"></i> Book Another Ticket</a>
                 </div>
             </div>
         </div>

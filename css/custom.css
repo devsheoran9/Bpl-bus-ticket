@@ -1817,11 +1817,11 @@ footer .text-primary {
   -webkit-overflow-scrolling: touch;
 }
 
-.table th {
+/* .table th {
   background-color: #343a40;
   color: #ffffff;
   white-space: nowrap;
-}
+} */
 
 .table td {
   vertical-align: middle;

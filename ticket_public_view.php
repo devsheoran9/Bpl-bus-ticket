@@ -8,7 +8,7 @@ require 'admin/function/_db.php';
 
 // --- 1. VALIDATE TOKEN AND FETCH ALL DATA ---
 $access_token = trim($_GET['token'] ?? '');
-if (empty($access_token) || !preg_match('/^[a-f0-9]{32}$/', $access_token)) {
+if (empty($access_token) || !preg_match('/^[a-f0-9]{40}$/', $access_token)) {
     die("Error: A valid ticket token is required.");
 }
 
