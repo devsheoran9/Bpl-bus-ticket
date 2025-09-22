@@ -101,11 +101,15 @@ $is_booking_active = in_array($current_page, $booking_pages);
 
             <!-- REPORTS & CANCELLATIONS -->
             <?php if (user_has_permission('can_view_reports')): ?>
-            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings.php"><i class="fas fa-chart-bar nav-icon me-2"></i>Bookings Report</a></li>
+            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'employee_bookings' ? 'active' : ''; ?>" href="employee_bookings"><i class="fas fa-chart-bar nav-icon me-2"></i>Bookings Report</a></li>
             <?php endif; ?>
             
             <?php if (user_has_permission('can_manage_cancellations')): ?>
-            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'cancellations' ? 'active' : ''; ?>" href="cancellations.php"><i class="fas fa-undo-alt me-2"></i>Cancellations</a></li>
+            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'cancellations' ? 'active' : ''; ?>" href="cancellations"><i class="fas fa-undo-alt me-2"></i>Cancellations</a></li>
+            <?php endif; ?>
+
+            <?php if (user_has_permission('main_admin')): ?>
+            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'view_users' ? 'active' : ''; ?>" href="view_users"><i class="fas fa-user nav-icon me-2"></i>View All Users</a></li>
             <?php endif; ?>
 
            
