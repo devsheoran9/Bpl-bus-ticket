@@ -780,28 +780,12 @@ function get_collection_status_badge($payment_method, $is_collected, $actual_pay
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 $(document).ready(function() {
-     // Initialize the "Date From" picker
-     const fromPicker = flatpickr("#date_from", {
+    // --- Initialize Flatpickr Date Pickers ---
+    flatpickr(".date-picker", {
         dateFormat: "Y-m-d",
-        // When the 'from' date is changed, set it as the minimum date for the 'to' picker
-        onChange: function(selectedDates, dateStr, instance) {
-            if (toPicker) {
-                toPicker.set('minDate', dateStr);
-            }
-        }
     });
 
-    // Initialize the "Date To" picker
-    const toPicker = flatpickr("#date_to", {
-        dateFormat: "Y-m-d",
-        // When the 'to' date is changed, set it as the maximum date for the 'from' picker
-        onChange: function(selectedDates, dateStr, instance) {
-            if (fromPicker) {
-                fromPicker.set('maxDate', dateStr);
-            }
-        }
-    });
-
+    // --- Cash Collection Logic ---
     $('.collect-all-cash-btn').on('click', function() {
         const btn = $(this);
         const employeeId = btn.data('employee-id');
@@ -849,54 +833,49 @@ $(document).ready(function() {
         });
     });
 
-    // Initialize DataTables inside modals when they are shown
+    // ===================================================================
+    // THE FIX STARTS HERE
+    // ===================================================================
+
+    // 1. Initialize ALL DataTables on page load.
+    // We loop through each table with the .datatable class and initialize it.
+    $('.datatable').each(function() {
+        // Find the title from the modal this table belongs to.
+        var modalTitle = $(this).closest('.modal').find('.modal-title').text();
+        
+        $(this).DataTable({
+            "dom": 'Bfrtip',
+            "buttons": ['copy', 'csv', 'excel', 'pdf', 'print'].map(function(type) {
+                return {
+                    extend: type,
+                    exportOptions: { columns: ':not(.no-export)' },
+                    title: modalTitle // Use the captured modal title for exports
+                };
+            }),
+            "pageLength": 10,
+            "order": [[ 1, "desc" ]], // Order by the 'Travel Date' column
+            "responsive": true
+        });
+    });
+
+    // 2. Add an event listener to ALL modals.
+    // When ANY modal is shown, find the DataTable inside it and adjust its layout.
     $('.modal').on('shown.bs.modal', function () {
-        // Only initialize if not already initialized
-        if (!$.fn.DataTable.isDataTable($(this).find('.datatable'))) {
-            $(this).find('.datatable').DataTable({
-                "dom": 'Bfrtip',
-                "buttons": [
-                    { 
-                        extend: 'copyHtml5', 
-                        exportOptions: { columns: ':not(.no-export)' },
-                        title: function() { return $('.modal.show .modal-title').text(); }
-                    },
-                    { 
-                        extend: 'csvHtml5', 
-                        exportOptions: { columns: ':not(.no-export)' },
-                        filename: function() { return $('.modal.show .modal-title').text().replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0,10); }
-                    },
-                    { 
-                        extend: 'excelHtml5', 
-                        exportOptions: { columns: ':not(.no-export)' },
-                        filename: function() { return $('.modal.show .modal-title').text().replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0,10); }
-                    },
-                    { 
-                        extend: 'pdfHtml5', 
-                        exportOptions: { columns: ':not(.no-export)' },
-                        filename: function() { return $('.modal.show .modal-title').text().replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0,10); }
-                    },
-                    { 
-                        extend: 'print', 
-                        exportOptions: { columns: ':not(.no-export)' },
-                        title: function() { return $('.modal.show .modal-title').text(); }
-                    }
-                ],
-                "pageLength": 10,
-                "order": [[ 1, "desc" ]], // Assuming the 2nd column (index 1) is "Travel Date"
-                "responsive": true  
-            });
+        // Get the DataTable API instance for the table inside the triggered modal
+        var table = $(this).find('.datatable').DataTable();
+        
+        // Check if the DataTable instance exists before trying to adjust it
+        if (table) {
+            // Use a small timeout to ensure the modal's CSS transitions are complete
+            setTimeout(function() {
+                table.columns.adjust().responsive.recalc();
+            }, 10);
         }
     });
 
-    // Destroy DataTables when modal is hidden to free up resources and prevent conflicts
-    $('.modal').on('hidden.bs.modal', function () {
-        var table = $(this).find('.datatable').DataTable();
-        if (table) {
-            table.destroy();
-            $(this).find('.datatable').html($(this).find('.datatable thead').html() + '<tbody></tbody>');
-        }
-    });
+    // 3. REMOVE the 'hidden.bs.modal' event listener.
+    // We no longer need to destroy the table. This was the cause of the problem.
+
 });
 </script>
 </body>
