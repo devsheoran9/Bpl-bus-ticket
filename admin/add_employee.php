@@ -144,6 +144,10 @@ try {
             border-bottom: 1px solid #e9ecef;
             padding-bottom: 0.5rem;
             margin-top: 1rem;
+            margin-bottom: 0.75rem; /* Added margin-bottom */
+        }
+        .permissions-section .form-check {
+            margin-bottom: 0.25rem; /* Reduced space between checkboxes */
         }
     </style>
 </head>
@@ -170,74 +174,78 @@ try {
                                     <?php if ($edit_mode): ?>
                                         <input type="hidden" name="employee_id" value="<?php echo $employee_to_edit['id']; ?>">
                                     <?php endif; ?>
-<div class="row g-1">
-                                    <div class="mb-3 col-12">
-                                        <label for="linked_staff_id" class="form-label">Link to Staff Member <small>(Optional)</small></label>
-                                        <select class="form-select" id="linked_staff_id" name="linked_staff_id">
-                                            <option value="">-- No Link / Create New --</option>
-                                            <?php foreach ($all_staff as $staff): ?>
-                                                <option value="<?php echo $staff['staff_id']; ?>"
-                                                    data-name="<?php echo htmlspecialchars($staff['name']); ?>"
-                                                    data-mobile="<?php echo htmlspecialchars($staff['mobile']); ?>"
-                                                    <?php if ($edit_mode && isset($employee_to_edit['linked_staff_id']) && $employee_to_edit['linked_staff_id'] == $staff['staff_id']) echo 'selected'; ?>>
-                                                    <?php echo htmlspecialchars($staff['name']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="form-text">Select a staff member to auto-fill their details below.</div>
-                                    </div>
-
-                                    <div class="mb-3 col-6"><label for="name" class="form-label">Full Name</label><input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($employee_to_edit['name'] ?? ''); ?>" required></div>
-                                    <div class="mb-3 col-6"><label for="mobile" class="form-label">Mobile Number</label><input type="tel" class="form-control" id="mobile" name="mobile" value="<?php echo htmlspecialchars($employee_to_edit['mobile'] ?? ''); ?>" required data-parsley-type="digits" data-parsley-length="[10, 10]"></div>
-                                    <div class="mb-3"><label for="email" class="form-label">Email Address</label><input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($employee_to_edit['email'] ?? ''); ?>" required></div>
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="password" name="password" <?php echo !$edit_mode ? 'required' : ''; ?> data-parsley-minlength="6" placeholder="<?php echo $edit_mode ? 'Leave blank to keep unchanged' : ''; ?>">
-                                    </div>
-
-                                    <div class="mb-3 permissions-section">
-                                        <label class="form-label fw-bold">Assign Permissions</label>
-                                        <div class="row">
-                                            <?php
-                                            // --- CORRECTED AND EXPANDED PERMISSIONS LIST ---
-                                            $permissions_list = [
-                                                'Bookings & Cancellations' => [
-                                                    'can_book_tickets'          => 'Can Book Tickets',
-                                                    'can_view_bookings'         => 'View Daily Bookings',
-                                                    'can_delete_bookings'       => 'Can Delete Bookings',
-                                                    'can_manage_cancellations'  => 'Process Cancellations'
-                                                ],
-                                                'Operations Management' => [
-                                                    'can_manage_routes'     => 'Manage Routes (Add/Edit)',
-                                                    'can_delete_routes'     => 'Delete Routes',
-                                                    'can_manage_buses'      => 'Manage Buses',
-                                                    'can_manage_staff'      => 'Manage Staff'
-                                                ],
-                                                'Admin & Reporting' => [
-                                                    'can_view_own_collections' => 'View Own Cash Report',
-                                                    'can_view_reports'         => 'View Full Sales Report'
-                                                ],
-                                                'System Administration' => [
-                                                    'can_manage_employees'  => 'Manage Other Employees',
-                                                    'can_manage_settings'   => 'Manage Company Settings'
-                                                ]
-                                            ];
-
-                                            foreach ($permissions_list as $group => $perms):
-                                            ?>
-                                                <div class="col-6">
-                                                    <h6><?php echo $group; ?></h6>
-                                                    <?php foreach ($perms as $key => $label): ?>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="permissions[]" value="<?php echo $key; ?>" id="perm_<?php echo $key; ?>" <?php echo isset($employee_permissions[$key]) && $employee_permissions[$key] === true ? 'checked' : ''; ?>>
-                                                            <label class="form-check-label" for="perm_<?php echo $key; ?>"><?php echo $label; ?></label>
-                                                        </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            <?php endforeach; ?>
+                                    <div class="row g-3">
+                                        <div class="mb-3 col-12">
+                                            <label for="linked_staff_id" class="form-label">Link to Staff Member <small>(Optional)</small></label>
+                                            <select class="form-select" id="linked_staff_id" name="linked_staff_id">
+                                                <option value="">-- No Link / Create New --</option>
+                                                <?php foreach ($all_staff as $staff): ?>
+                                                    <option value="<?php echo $staff['staff_id']; ?>"
+                                                        data-name="<?php echo htmlspecialchars($staff['name']); ?>"
+                                                        data-mobile="<?php echo htmlspecialchars($staff['mobile']); ?>"
+                                                        <?php if ($edit_mode && isset($employee_to_edit['linked_staff_id']) && $employee_to_edit['linked_staff_id'] == $staff['staff_id']) echo 'selected'; ?>>
+                                                        <?php echo htmlspecialchars($staff['name']); ?> (ID: <?php echo $staff['staff_id']; ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="form-text">Select a staff member to auto-fill their details below.</div>
                                         </div>
-                                    </div>
-                                    <button type="submit" class="btn <?php echo $edit_mode ? 'btn-warning' : 'btn-primary'; ?> w-100 mt-2"><?php echo $edit_mode ? 'Update Employee' : 'Create Employee'; ?></button>
+
+                                        <div class="mb-3 col-12 col-md-6"><label for="name" class="form-label">Full Name</label><input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($employee_to_edit['name'] ?? ''); ?>" required></div>
+                                        <div class="mb-3 col-12 col-md-6"><label for="mobile" class="form-label">Mobile Number</label><input type="tel" class="form-control" id="mobile" name="mobile" value="<?php echo htmlspecialchars($employee_to_edit['mobile'] ?? ''); ?>" required data-parsley-type="digits" data-parsley-length="[10, 10]"></div>
+                                        <div class="mb-3 col-12"><label for="email" class="form-label">Email Address</label><input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($employee_to_edit['email'] ?? ''); ?>" required></div>
+                                        <div class="mb-3 col-12">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password" name="password" <?php echo !$edit_mode ? 'required' : ''; ?> data-parsley-minlength="6" placeholder="<?php echo $edit_mode ? 'Leave blank to keep unchanged' : ''; ?>">
+                                        </div>
+
+                                        <div class="mb-3 col-12 permissions-section">
+                                            <label class="form-label fw-bold">Assign Permissions</label>
+                                            <div class="row g-2">
+                                                <?php
+                                                // --- CORRECTED AND EXPANDED PERMISSIONS LIST (as discussed) ---
+                                                $permissions_list = [
+                                                    'Booking & Cancellations' => [
+                                                        'can_book_tickets'          => 'Can Book Tickets',
+                                                        'can_view_bookings'         => 'View Daily Bookings',
+                                                        'can_delete_bookings'       => 'Can Delete Bookings',
+                                                        'can_manage_cancellations'  => 'Process Cancellations'
+                                                    ],
+                                                    'Operations Management' => [
+                                                        'can_manage_routes'     => 'Manage Routes (Add/Edit)',
+                                                        'can_delete_routes'     => 'Delete Routes',
+                                                        'can_manage_buses'      => 'Manage Buses (Add/Edit/View)', // Clarified
+                                                        'can_manage_seats'      => 'Manage Bus Seats', // Added new permission
+                                                        'can_manage_staff'      => 'Manage Staff (Add/Edit/Delete)', // Clarified
+                                                        'can_toggle_popular_route' => 'Toggle Popular Route Status', // Added new permission
+                                                        'can_charter_bus'       => 'Book Full Bus Charter' // Added new permission
+                                                    ],
+                                                    'Reports' => [ // Grouped reports
+                                                        'can_view_own_collections' => 'View Own Cash Report',
+                                                        'can_view_reports'         => 'View Full Bookings Report', // Clarified
+                                                    ],
+                                                    'System Admin' => [ // Consolidated System Admin
+                                                        'can_manage_employees'  => 'Manage Other Employees',
+                                                        'can_manage_settings'   => 'Manage Company Settings', // Added new permission
+                                                        'main_admin'            => 'Is Main Administrator (Full Access)' // Main Admin specific
+                                                    ]
+                                                ];
+
+                                                foreach ($permissions_list as $group => $perms):
+                                                ?>
+                                                    <div class="col-12 col-sm-6">
+                                                        <h6><?php echo $group; ?></h6>
+                                                        <?php foreach ($perms as $key => $label): ?>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="permissions[]" value="<?php echo $key; ?>" id="perm_<?php echo $key; ?>" <?php echo isset($employee_permissions[$key]) && $employee_permissions[$key] === true ? 'checked' : ''; ?>>
+                                                                <label class="form-check-label" for="perm_<?php echo $key; ?>"><?php echo $label; ?></label>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn <?php echo $edit_mode ? 'btn-warning' : 'btn-primary'; ?> w-100 mt-3"><?php echo $edit_mode ? 'Update Employee' : 'Create Employee'; ?></button>
                                     </div>
                                 </form>
                             </div>

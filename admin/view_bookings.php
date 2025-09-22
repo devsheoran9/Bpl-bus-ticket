@@ -3,8 +3,19 @@
 include_once('function/_db.php');
 session_security_check();
 check_permission('can_view_bookings');
+
+// --- Pre-load data from URL ---
+// Validate and sanitize URL inputs
 $route_id_from_url = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
-$date_from_url = $_GET['date'] ?? null; // Keep as string for the date picker
+$date_from_url = null;
+if (isset($_GET['date'])) {
+    // Basic validation for YYYY-MM-DD format
+    if (preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $_GET['date'])) {
+        $date_from_url = $_GET['date'];
+    }
+}
+
+
 $routes = [];
 try {
     $allowed_route_ids = get_assigned_route_ids_for_employee($_SESSION['user']['id']);
@@ -15,6 +26,7 @@ try {
         $routes = $routes_query->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (PDOException $e) {
+    // Optionally log the error: error_log($e->getMessage());
     $routes = [];
 }
 $user_can_delete = user_has_permission('can_delete_bookings');
@@ -25,263 +37,160 @@ $user_can_delete = user_has_permission('can_delete_bookings');
 <head>
     <?php include "head.php"; ?>
     <title>Route Dashboard & Bookings</title>
-    <!-- Viewport meta tag is crucial for responsiveness -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+    <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.13.6/b-2.4.1/b-html5-2.4.1/b-print-2.4.1/r-2.5.0/datatables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css"/>
+
     <style>
-        :root {
-            --table-header-bg: #f8f9fa;
-            --table-border-color: #dee2e6;
-            --text-dark: #212529;
-            --text-light: #6c757d;
-            --primary-color: #0d6efd; /* Bootstrap primary blue */
-            --success-color: #198754; /* Bootstrap success green */
-            --warning-color: #ffc107; /* Bootstrap warning yellow */
-            --danger-color: #dc3545; /* Bootstrap danger red */
-            --secondary-color: #6c757d; /* Bootstrap secondary grey */
+        /* --- General Layout & Modern Theme --- */
+        body {
+            background-color: #f8f9fa; 
+            font-family: 'Inter', sans-serif;
+            color: #343a40;
+            line-height: 1.6;
         }
 
-        /* General styles for the overall layout */
+        .container-fluid {
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+        }
+
+        h2.my-4 {
+            font-weight: 700;
+            color: #212529;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem !important;
+        }
+
+        /* --- Filter Card --- */
         .filter-card {
-            background-color: var(--table-header-bg);
+            background-color: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-top: 5px solid #0d6efd; /* Blue accent */
         }
 
+        .filter-card .form-label { font-weight: 600; font-size: 0.875rem; color: #495057; }
+        .filter-card .form-control, .filter-card .form-select {
+            border-radius: 0.5rem; border: 1px solid #ced4da; padding: 0.6rem 1rem;
+            font-size: 0.95rem; transition: all 0.2s ease;
+        }
+        .filter-card .form-control:focus, .filter-card .form-select:focus {
+            border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2);
+        }
+        .filter-card .btn {
+            border-radius: 0.5rem; font-weight: 600; padding: 0.6rem 1.2rem;
+            font-size: 0.95rem; transition: all 0.2s ease-in-out;
+        }
+
+        /* --- Details Panel --- */
         #details-panel {
-            display: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        /* --- Custom Table Styling for Larger Screens (Default) --- */
-        .custom-table-wrapper {
             background: #fff;
-            border: 1px solid var(--table-border-color);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden; /* Ensures rounded corners are visible */
+            box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+            border: 1px solid #e9ecef;
+            margin-top: 2rem; /* Spacing from filters */
+            display: none; /* Hidden by default */
+            border-top: 5px solid #198754; /* Green accent */
         }
-
-        .custom-table {
-            width: 100%;
-            border-collapse: collapse;
+        #details-panel .card-header {
+            background-color: transparent; border-bottom: 1px solid #e9ecef;
+            color: #198754; font-weight: 700;
+            padding: 1.25rem 1.5rem; font-size: 1.2rem;
         }
+        #details-panel .card-body { padding: 1.5rem; }
 
-        .custom-table thead th {
-            background-color: var(--table-header-bg);
-            border-bottom: 2px solid var(--table-border-color);
-            color: var(--text-light);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 0.75rem 1.25rem;
-            text-align: left;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
         }
+        .detail-info-item { display: flex; align-items: center; gap: 0.8rem; }
+        .detail-info-item .icon { font-size: 1.4rem; color: #0d6efd; width: 30px; text-align: center;}
+        .detail-info-item .label { font-size: 0.85em; color: #6c757d; font-weight: 500; }
+        .detail-info-item .value { font-size: 0.95em; color: #212529; font-weight: 600; }
+        .detail-info-item .staff-list { margin: 0; padding: 0; list-style: none;}
+        .detail-info-item .staff-list li { font-size: 0.9em; line-height: 1.4; }
+        .detail-info-item .staff-list li strong { color: #495057; }
 
-        .custom-table tbody tr {
-            border-bottom: 1px solid var(--table-border-color);
-            transition: background-color 0.2s ease;
+        /* --- Route Timeline Section --- */
+        .route-timeline-section { 
+            position: relative;
+            padding-left: 25px; /* Space for the line */
         }
-
-        .custom-table tbody tr:last-child {
-            border-bottom: none;
+        /* The main vertical line */
+        .route-timeline-section::before {
+            content: '';
+            position: absolute;
+            left: 13px; /* Centered on the icon width */
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            background-color: #e9ecef;
         }
-
-        .custom-table tbody tr:hover {
-            background-color: #f8f9fa;
+        .route-timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
         }
-
-        .custom-table td {
-            padding: 0.75rem 1.25rem;
-            vertical-align: middle;
+        .route-timeline-item:last-child { margin-bottom: 0; }
+        .timeline-icon {
+            position: absolute;
+            left: -14px; top: 0;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; z-index: 1;
             font-size: 0.9rem;
+            box-shadow: 0 0 0 4px #ffffff;
+        }
+        .timeline-icon.start-point { background-color: #0d6efd; } /* Blue */
+        .timeline-icon.end-point { background-color: #198754; } /* Green */
+        .timeline-icon.stop-point { background-color: #6c757d; } /* Grey */
+
+        .timeline-content { padding-left: 25px; }
+        .timeline-content strong.stop-name { font-size: 1.05rem; font-weight: 700; color: #212529; }
+        .timeline-content .details-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.85rem; color: #6c757d;}
+        .time-info { display: flex; align-items: center; gap: 0.3rem; }
+        .duration-pill { background-color: #e9ecef; color: #495057; padding: 0.15rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;}
+
+        /* --- Bookings List Panel --- */
+        .bookings-list-panel {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+            border: 1px solid #e9ecef;
+            margin-top: 2rem;
+            border-top: 5px solid #0d6efd; /* Blue accent */
+        }
+        .bookings-list-panel .card-header {
+            background-color: transparent; border-bottom: 1px solid #e9ecef;
+            color: #0d6efd; font-weight: 700;
+            padding: 1.25rem 1.5rem; font-size: 1.2rem;
         }
 
-        /* Specific styles for text within cells */
-        .ticket-no-val {
-            font-weight: 600;
-            color: var(--primary-color);
-        }
+        /* --- DataTables Customizations --- */
+        .dataTables_wrapper { padding: 1.5rem; }
+        .dataTables_wrapper .dt-buttons .btn { border-radius: 0.5rem; font-size: 0.85rem; background-color: #6c757d; color: white; border-color: #6c757d; }
+        .dataTables_wrapper .dataTables_filter input { border-radius: 0.5rem; border: 1px solid #ced4da; padding: 0.5rem 0.75rem; }
+        .dataTables_wrapper .pagination .page-item .page-link { border-radius: 0.5rem !important; margin: 0 2px; }
+        .dataTables_wrapper .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
 
-        .journey-val {
-            font-weight: 500;
-        }
+        table.dataTable { border-collapse: collapse !important; }
+        .bookings-table-header th { background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .bookings-table-body td { vertical-align: middle; font-size: 0.9rem; border-top: 1px solid #e9ecef; }
+        .ticket-no-val { font-weight: 600; color: #0d6efd; }
+        .seat-codes-val .badge { background-color: #e9ecef; color: #495057; }
+        .fare-val { font-weight: 700; color: #198754; }
+        .actions-cell .btn { margin-left: 5px; border-radius: 0.4rem; }
 
-        .passengers-val, .seat-codes-val {
-            max-width: 200px; /* Limits the visible width, text-overflow then adds ellipsis */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; /* Keep on one line for larger screens */
-        }
-
-        .fare-val {
-            font-weight: 700;
-            color: var(--success-color);
-        }
-
-        .actions-cell {
-            text-align: right;
-            white-space: nowrap; /* Keep action buttons on one line */
-        }
-
-        .actions-cell .btn {
-            margin-left: 5px;
-        }
-
-        /* Basic badge styling */
-        .badge {
-            display: inline-block;
-            padding: .35em .65em;
-            font-size: .75em;
-            font-weight: 700;
-            line-height: 1;
-            color: #fff;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: .25rem;
-        }
-
-        .badge.bg-success { background-color: var(--success-color) !important; }
-        .badge.bg-warning { background-color: var(--warning-color) !important; color: #000 !important; }
-        .badge.bg-secondary { background-color: var(--secondary-color) !important; }
-
-        /* --- Responsive Adjustments for Filter Card & Details Panel (using Bootstrap grid for stacking) --- */
+        /* --- Responsive Adjustments --- */
         @media (max-width: 767.98px) {
-            .filter-card .col-md-4,
-            .filter-card .col-md-3,
-            .filter-card .col-md-2 {
-                margin-bottom: 1rem; /* Add space between stacked filter items */
-            }
-            .filter-card .col-md-2 button {
-                width: 100% !important; /* Ensure clear button takes full width on small screens */
-            }
-            .details-content .col-md-6 {
-                margin-bottom: 0.5rem; /* Space between details items if they stack */
-            }
-            /* Make sure .row in filter/details respects spacing */
-            .card-body .row {
-                --bs-gutter-x: 1.5rem; /* Default Bootstrap gutter */
-                --bs-gutter-y: 1rem;
-            }
-        }
-
-        /* --- Custom Table Responsive "Card" Layout for Small Screens --- */
-        /* Only apply these rules if the screen is 767px or narrower */
-        @media screen and (max-width: 767px) {
-            .custom-table-wrapper {
-                overflow-x: hidden; /* Hide default scroll, as rows are block elements */
-                box-shadow: none; /* Remove outer shadow, rows will have their own */
-                border: none; /* Remove outer border */
-                background: transparent; /* Transparent background, cards will have their own */
-            }
-            .custom-table {
-                border: none;
-                width: 100%;
-                table-layout: fixed; /* Ensures td widths behave predictably */
-            }
-
-            .custom-table thead {
-                /* Keep the header visible, but style it for mobile */
-                display: none; /* Force block display */
-                border-bottom: 2px solid var(--table-border-color);
-                margin-bottom: 1rem; /* Space below header */
-                background-color: var(--table-header-bg); /* Header background */
-                border-radius: 8px 8px 0 0; /* Rounded top corners */
-            }
-            .custom-table thead tr {
-                display: block !important; /* Force block display */
-            }
-            .custom-table thead th {
-                display: block !important; /* Each th takes full width of its parent (thead) */
-                text-align: left; /* Keep text left-aligned */
-                font-size: 0.9rem;
-                padding: 0.75rem 1rem;
-                border-bottom: none; /* Remove bottom border from individual th */
-            }
-            /* Visually group header items if there are few, otherwise they'll stack */
-            .custom-table thead th:not(:last-child) {
-                border-bottom: 1px solid var(--table-border-color);
-            }
-            .custom-table thead th.no-export {
-                /* Adjust for actions column if needed */
-                text-align: center; /* Center action header */
-                padding: 0.75rem 1rem;
-            }
-
-
-            .custom-table tbody,
-            .custom-table tr {
-                display: block !important; /* Force block display */
-                width: 100%;
-            }
-
-            .custom-table tr {
-                margin-bottom: 1.5rem; /* Space between card-like rows */
-                border: 1px solid var(--table-border-color); /* Card border */
-                border-radius: 8px; /* Card rounded corners */
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Card shadow */
-                background-color: #fff; /* Ensure card background is white */
-                padding: 0; /* Remove padding from tr, td will have it */
-            }
-
-            .custom-table td {
-                display: flex !important; /* Use flexbox to align label and value side-by-side */
-                justify-content: space-between; /* Push label to left, value to right */
-                align-items: center; /* Vertically align items */
-                padding: 0.75rem 1rem; /* Padding within each cell */
-                border-bottom: 1px solid var(--table-border-color); /* Separator between fields */
-                white-space: normal; /* Allow text to wrap within the cell */
-                overflow: visible; /* Override ellipsis */
-                text-overflow: clip; /* Override ellipsis */
-            }
-
-            .custom-table td:last-of-type {
-                border-bottom: none; /* No border for the last field in the card */
-            }
-
-            /* Add a pseudo-element for the label part of each table cell */
-            .custom-table td::before {
-                content: attr(data-label); /* Get label from data-label attribute */
-                font-weight: 600;
-                color: var(--text-dark);
-                text-align: left;
-                flex-shrink: 0; /* Prevent label from shrinking */
-                margin-right: 1rem; /* Space between label and value */
-                width: 40%; /* Adjust as needed, or let flex handle it */
-            }
-            
-            /* Ensure the first item (Ticket #) still has a clear label even if its class is specific */
-            .custom-table td.ticket-no-val::before {
-                content: "Ticket #"; 
-            }
-
-            /* Specific styling for the actions cell */
-            .custom-table td.actions-cell {
-                text-align: center; /* Center actions in the card */
-                padding-top: 1rem;
-                justify-content: center; /* Center buttons horizontally */
-                border-top: 1px solid var(--table-border-color); /* Separator above actions */
-                margin-top: 1rem; /* Space above action buttons */
-            }
-            .custom-table td.actions-cell::before {
-                display: none !important; /* Hide the label for the actions column */
-            }
-            /* Adjust button size for mobile if desired */
-            .custom-table td.actions-cell .btn {
-                padding: .4rem .6rem;
-                font-size: .85rem;
-            }
-
-            /* Ensure badges and passenger lists wrap correctly */
-            .passengers-val, .seat-codes-val {
-                white-space: normal; /* Allow text to wrap for better readability in cards */
-                max-width: none; /* No max-width constraint in card view */
-                overflow: visible;
-                text-overflow: clip;
-            }
+            h2.my-4 { font-size: 1.6rem; }
+            .filter-card { padding: 1.5rem; }
+            .dataTables_wrapper .dt-buttons, .dataTables_wrapper .dataTables_filter { float: none; text-align: left; margin-bottom: 0.5rem; }
         }
     </style>
 </head>
@@ -292,75 +201,75 @@ $user_can_delete = user_has_permission('can_delete_bookings');
         <div class="main-content">
             <?php include_once('header.php'); ?>
             <div class="container-fluid">
-                <h2 class="my-4">Route Dashboard & Bookings</h2>
-                <a href="deleted_bookings_report">View Deleted Booking</a>
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h2 class="my-4">Route Dashboard & Bookings</h2>
+                    <?php if (user_has_permission('can_view_reports')) : ?>
+                        <a href="deleted_bookings_report.php" class="btn btn-sm btn-outline-secondary mb-3"><i class="fas fa-trash-restore me-1"></i> View Deleted Bookings</a>
+                    <?php endif; ?>
+                </div>
 
-                <!-- Display a message if no routes are available for this employee -->
-                <?php if (empty($routes)): ?>
+                <?php if (empty($routes)) : ?>
                     <div class="alert alert-warning text-center">
                         <h4><i class="fas fa-exclamation-triangle"></i> No Routes Assigned</h4>
-                        <p class="mb-0">You can only view bookings for routes you are assigned to. Please contact an administrator if you believe this is an error.</p>
+                        <p class="mb-0">You do not have any routes assigned to you. Please contact an administrator to gain access.</p>
                     </div>
-                <?php else: ?>
+                <?php else : ?>
                     <!-- Filter Section -->
-                    <div class="card filter-card mb-4">
-                        <div class="card-body">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-4 col-12"> <!-- Added col-12 for full width on small screens -->
-                                    <label for="route-filter" class="form-label fw-bold">Select Your Assigned Route</label>
-                                    <select id="route-filter" class="form-select">
-                                        <option value="">-- Choose a Route --</option>
-                                        <?php foreach ($routes as $route): ?>
-                                            <option value="<?php echo $route['route_id']; ?>" <?php if ($route_id_from_url == $route['route_id']) echo 'selected'; ?>>
-                                                <?php echo htmlspecialchars($route['route_name']); ?> (Bus: <?php echo htmlspecialchars($route['bus_name']); ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 col-12"> <!-- Added col-12 for full width on small screens -->
-                                    <label for="date-filter" class="form-label fw-bold">Select Travel Date</label>
-                                    <input type="text" id="date-filter" class="form-control" placeholder="Select Date">
-                                </div>
-                                <div class="col-md-2 col-12"> <!-- Added col-12 for full width on small screens -->
-                                    <button id="clear-filter-btn" class="btn btn-outline-secondary w-100">Clear</button>
-                                </div>
+                    <div class="card filter-card">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-5 col-md-12">
+                                <label for="route-filter" class="form-label">Select Your Assigned Route</label>
+                                <select id="route-filter" class="form-select">
+                                    <option value="">-- Choose a Route --</option>
+                                    <?php foreach ($routes as $route) : ?>
+                                        <option value="<?php echo htmlspecialchars($route['route_id']); ?>" <?php if ($route_id_from_url == $route['route_id']) echo 'selected'; ?>>
+                                            <?php echo htmlspecialchars($route['route_name']); ?> (Bus: <?php echo htmlspecialchars($route['bus_name']); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <label for="date-filter" class="form-label">Select Travel Date</label>
+                                <input type="text" id="date-filter" class="form-control" placeholder="Select Date">
+                            </div>
+                            <div class="col-lg-3 col-md-6 d-flex gap-2">
+                                <button id="clear-filter-btn" class="btn btn-outline-secondary w-100">Clear</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Details Panel (populated by AJAX) -->
-                    <div id="details-panel" class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Route & Bus Details</h5>
-                        </div>
+                    <div id="details-panel" class="card">
+                        <div class="card-header"><i class="fas fa-route me-2"></i>Route & Bus Details</div>
                         <div class="card-body">
-                            <div id="details-content" class="row">
-                                <!-- Content populated by JS -->
+                            <div id="details-content">
+                                <div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Route Details...</span></div>
                             </div>
-                            <hr>
-                            <h6><i class="fas fa-map-signs me-2"></i>Complete Route Timeline</h6>
-                            <ul id="timeline-content" class="timeline">
-                                <!-- Content populated by JS -->
-                            </ul>
+                            <hr class="my-4">
+                            <h6 class="mb-3 fw-bold"><i class="fas fa-map-signs me-2"></i>Complete Route Timeline</h6>
+                            <div id="timeline-content-container">
+                                <div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Timeline...</span></div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Bookings List Panel -->
-                    <div class="card ">
-                        <div class="card-body custom-table-wrapper">
-                            <table class="display custom-table" id="bookings-table" style="width:100%">
-                                <thead>
+                    <div class="card bookings-list-panel">
+                        <div class="card-header"><i class="fas fa-ticket-alt me-2"></i>Bookings Manifest <span id="booking-count-display" class="fw-normal fs-6"></span></div>
+                        <div class="card-body">
+                            <table class="table table-hover dt-responsive nowrap" id="bookings-table" style="width:100%">
+                                <thead class="bookings-table-header">
                                     <tr>
                                         <th>Ticket #</th>
                                         <th>Journey</th>
-                                        <th>Passengers</th>
-                                        <th>Seats</th>
                                         <th>Fare</th>
                                         <th>Status</th>
+                                        <th>Passengers</th>
+                                        <th>Seats</th>
                                         <th class="no-export actions-cell">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="bookings-table-body">
                                     <!-- DataTables will populate this -->
                                 </tbody>
                             </table>
@@ -372,117 +281,84 @@ $user_can_delete = user_has_permission('can_delete_bookings');
     </div>
 
     <?php include "foot.php"; ?>
+    <!-- JS Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.13.6/b-2.4.1/b-html5-2.4.1/b-print-2.4.1/r-2.5.0/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+
     <script>
-        // Pass the PHP permission check result to JavaScript for secure UI rendering
+        // Pass PHP variables to JavaScript securely
         const userCanDelete = <?php echo json_encode($user_can_delete); ?>;
-        const initialDate = <?php echo json_encode($date_from_url); ?> || new Date().toISOString().slice(0, 10);
+        const initialDateFromUrl = <?php echo json_encode($date_from_url); ?>;
+        const initialDate = initialDateFromUrl || new Date().toISOString().slice(0, 10);
+
+        // Helper function for PHP's htmlspecialchars equivalent in JS
+        function htmlspecialchars(str) {
+            if (typeof str !== 'string') return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return str.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Helper to format time (e.g., "14:30:00" -> "02:30 PM")
+        function formatTime(time24) {
+            if (!time24) return 'N/A';
+            try {
+                const [hours, minutes] = time24.split(':');
+                const date = new Date(0);
+                date.setUTCHours(parseInt(hours), parseInt(minutes));
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            } catch (e) {
+                return time24;
+            }
+        }
+
 
         $(document).ready(function() {
             // --- DATATABLE INITIALIZATION ---
-            // Initialize the table as a DataTable ONCE when the page loads.
             let bookingTable = $('#bookings-table').DataTable({
-                "dom": 'Bfrtip', // This enables the Buttons (B), filtering/search (f), etc.
-                "buttons": [{
-                        extend: 'copyHtml5',
-                        exportOptions: {
-                            columns: ':not(.no-export)'
-                        },
-                        title: () => `${$('#route-filter option:selected').text()} - ${$('#date-filter').val()}`
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        exportOptions: {
-                            columns: ':not(.no-export)'
-                        },
-                        title: () => `${$('#route-filter option:selected').text()} - ${$('#date-filter').val()}`
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        exportOptions: {
-                            columns: ':not(.no-export)'
-                        },
-                        title: () => `${$('#route-filter option:selected').text()} - ${$('#date-filter').val()}`
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        exportOptions: {
-                            columns: ':not(.no-export)'
-                        },
-                        title: () => `${$('#route-filter option:selected').text()} - ${$('#date-filter').val()}`
-                    },
-                    {
-                        extend: 'print',
-                        exportOptions: {
-                            columns: ':not(.no-export)'
-                        },
-                        title: () => `Booking Report for ${$('#route-filter option:selected').text()}`,
-                        messageTop: () => `Travel Date: ${$('#date-filter').val()}`
-                    }
-                ],
-                "language": {
-                    "emptyTable": "Please select a route and date to see bookings.",
-                    // This message is shown by DataTables when `processing: true` is set during internal operations
-                    "processing": '<div class="d-flex justify-content-center align-items-center"><div class="spinner-border text-primary" role="status"></div><span class="ms-2">Loading...</span></div>'
+                dom: 'Bfrtip',
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print'].map(type => ({
+                    extend: type,
+                    exportOptions: { columns: ':not(.no-export)' },
+                    title: () => `${$('#route-filter option:selected').text().trim()} - ${$('#date-filter').val()}`
+                })),
+                language: {
+                    emptyTable: "Please select a route and date to view bookings.",
+                    processing: '<div class="d-flex justify-content-center align-items-center"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Bookings...</span></div>'
                 },
-                "processing": true, // Enable the automatic processing indicator (it will show during redraws)
-                "serverSide": false, // We are handling data client-side (loading all data at once)
-                "columns": [{
-                        "data": "ticket_no",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Ticket #');
-                            $(td).addClass('ticket-no-val');
-                        }
-                    },
-                    {
-                        "data": "journey",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Journey');
-                            $(td).addClass('journey-val');
-                        }
-                    },
-                    {
-                        "data": "passenger_names",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Passengers');
-                            $(td).addClass('passengers-val');
-                        }
-                    },
-                    {
-                        "data": "seat_codes",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Seats');
-                            $(td).addClass('seat-codes-val');
-                        }
-                    },
-                    {
-                        "data": "total_fare",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Fare');
-                            $(td).addClass('fare-val');
-                        }
-                    },
-                    {
-                        "data": "booking_status",
-                        "createdCell": function(td, cellData, rowData, row, col) {
-                            $(td).attr('data-label', 'Status');
-                        }
-                    },
-                    {
-                        "data": "actions",
-                        "orderable": false,
-                        "searchable": false,
-                        "className": "no-export actions-cell" // Ensures actions-cell class is applied
-                        // No data-label needed for actions as per your existing mobile design,
-                        // which hides the label for this column using `td.actions-cell::before { display: none; }`
+                processing: true,
+                serverSide: false, // Data is fetched via our custom AJAX and loaded client-side
+                responsive: {
+                    details: {
+                        type: 'column',
+                        target: 'tr'
                     }
-                ]
+                },
+                columns: [
+                    { data: "ticket_no", className: "ticket-no-val" },
+                    { data: "journey" },
+                    { data: "total_fare", className: "fare-val" },
+                    { data: "booking_status" },
+                    { data: "passenger_names" },
+                    { data: "seat_codes" },
+                    { data: "actions", orderable: false, searchable: false, className: "no-export actions-cell" }
+                ],
+                columnDefs: [
+                    { responsivePriority: 1, targets: 0 },  // Ticket #
+                    { responsivePriority: 2, targets: 1 },  // Journey
+                    { responsivePriority: 3, targets: 6 },  // Actions
+                    { responsivePriority: 4, targets: 2 },  // Fare
+                    { responsivePriority: 10001, targets: 3 }, // Status
+                    { responsivePriority: 10002, targets: 4 }, // Passengers
+                    { responsivePriority: 10003, targets: 5 }  // Seats
+                ],
+                order: [[0, 'desc']] // Default sort by ticket number
             });
 
-            // --- FILTER EVENT LISTENERS ---
+            // --- FILTER INITIALIZATION & EVENTS ---
             const datePicker = flatpickr("#date-filter", {
                 dateFormat: "Y-m-d",
-                defaultDate: initialDate, // Set the date from URL or today's date
+                defaultDate: initialDate,
                 onChange: () => loadDashboardData()
             });
 
@@ -492,7 +368,7 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                 $('#route-filter').val('');
                 datePicker.setDate(new Date());
                 $('#details-panel').slideUp();
-                bookingTable.clear().draw(); // This will show DataTables' processing indicator briefly
+                bookingTable.clear().draw();
                 updateBookingCount(0);
             });
 
@@ -502,86 +378,121 @@ $user_can_delete = user_has_permission('can_delete_bookings');
                 const travelDate = $('#date-filter').val();
 
                 if (!routeId || !travelDate) {
+                    $('#details-panel').slideUp();
                     bookingTable.clear().draw();
                     updateBookingCount(0);
                     return;
                 }
 
-                // Show details panel and its own loading indicator
                 $('#details-panel').slideDown();
-                $('#details-content').html('<div class="d-flex justify-content-center p-3"><div class="spinner-border text-primary"></div><span class="ms-2">Loading Details...</span></div>');
-                
-                // Clear the table and immediately redraw.
-                // Because 'processing: true' is set in DataTable initialization,
-                // the "Processing..." message will show within the table while it's empty,
-                // and remain there until the next draw call.
-                bookingTable.clear().draw();  
-                
+                const loaderHtml = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><span class="ms-2">Loading...</span></div>';
+                $('#details-content').html(loaderHtml);
+                $('#timeline-content-container').html(loaderHtml);
+                bookingTable.clear().draw(); // Clear old data and show processing message
+
                 $.getJSON('function/backend/booking_actions.php', {
-                        action: 'get_route_dashboard_details',
-                        route_id: routeId,
-                        travel_date: travelDate
-                    })
-                    .done(response => {
-                        if (response.status === 'success') {
-                            const {
-                                details,
-                                staff,
-                                bookings
-                            } = response;
+                    action: 'get_route_dashboard_details',
+                    route_id: routeId,
+                    travel_date: travelDate
+                })
+                .done(response => {
+                    if (response.status === 'success') {
+                        const { details, staff, bookings, timeline } = response;
+                        
+                        renderDetailsPanel(details, staff);
+                        renderTimelinePanel(timeline);
+                        renderBookingsTable(bookings);
 
-                            // Populate the details panel
-                            let staffHtml = '<p class="mb-2"><span class="label">Staff:</span> Not Assigned</p>';
-                            if (staff && staff.length > 0) {
-                                staffHtml = staff.map(s => `<p class="mb-2"><span class="label">${s.role}:</span> ${s.name}</p>`).join('');
-                            }
-                            $('#details-content').html(
-                                `<div class="col-md-6"><p class="mb-2"><span class="label">Bus:</span> ${details.bus_name} (${details.registration_number})</p></div>
-                     <div class="col-md-6">${staffHtml}</div>`
-                            );
+                    } else {
+                        const errorHtml = `<div class="alert alert-danger text-center">${htmlspecialchars(response.message)}</div>`;
+                        $('#details-content').html(errorHtml);
+                        $('#timeline-content-container').html('');
+                    }
+                })
+                .fail(() => {
+                    const errorHtml = `<div class="alert alert-danger text-center">Failed to load data. Please check your connection and try again.</div>`;
+                    $('#details-content').html(errorHtml);
+                    $('#timeline-content-container').html('');
+                })
+                .always(() => {
+                    bookingTable.draw();
+                    updateBookingCount(bookingTable.rows().count());
+                });
+            }
 
-                            // Populate the DataTable
-                            if (bookings && bookings.length > 0) {
-                                const tableData = bookings.map(booking => {
-                                    let deleteButtonHtml = '';
-                                    if (userCanDelete) {
-                                        deleteButtonHtml = `<button class="btn btn-sm btn-outline-danger delete-booking-btn" data-booking-id="${booking.booking_id}" data-ticket-no="${booking.ticket_no || 'N/A'}" title="Delete Booking"><i class="fas fa-trash-alt"></i></button>`;
-                                    }
-
-                                    return {
-                                        ticket_no: `<strong class="ticket-no-val">${booking.ticket_no || 'N/A'}</strong>`,
-                                        journey: `${booking.origin} → ${booking.destination}`,
-                                        passenger_names: booking.passenger_names,
-                                        seat_codes: booking.seat_codes.split(', ').map(seat => `<span class="badge bg-secondary me-1">${seat}</span>`).join(''),
-                                        total_fare: `₹${parseFloat(booking.total_fare).toFixed(2)}`,
-                                        booking_status: `<span class="badge bg-${booking.payment_status === 'PAID' ? 'success' : 'warning'}">${booking.booking_status}</span>`,
-                                        actions: `<a href="generate_ticket.php?booking_id=${booking.booking_id}" target="_blank" class="btn btn-sm btn-outline-primary" title="View Ticket"><i class="fas fa-eye"></i></a> ${deleteButtonHtml}`
-                                    };
-                                });
-
-                                bookingTable.rows.add(tableData);
-                            }
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    })
-                    .fail(() => {
-                        Swal.fire('Error', 'Failed to load data from the server. Please check your connection.', 'error');
-                    })
-                    .always(() => {
-                        bookingTable.draw(); // Redraw with new data; DataTables' processing indicator will hide automatically here.
-                        updateBookingCount(bookingTable.rows().count());
+            function renderDetailsPanel(details, staff) {
+                let staffHtml = '<ul class="staff-list">';
+                if (staff && staff.length > 0) {
+                    staff.forEach(s => {
+                        staffHtml += `<li><strong>${htmlspecialchars(s.role)}:</strong> ${htmlspecialchars(s.name)}</li>`;
                     });
+                } else {
+                    staffHtml += `<li>Not Assigned</li>`;
+                }
+                staffHtml += '</ul>';
+
+                $('#details-content').html(`
+                    <div class="detail-info-grid">
+                        <div class="detail-info-item"><i class="fas fa-bus icon"></i><div><span class="label">Bus / Reg #:</span><span class="value">${htmlspecialchars(details.bus_name)} (${htmlspecialchars(details.registration_number)})</span></div></div>
+                        <div class="detail-info-item"><i class="fas fa-couch icon"></i><div><span class="label">Bus Type:</span><span class="value">${htmlspecialchars(details.bus_type)}</span></div></div>
+                        <div class="detail-info-item"><i class="far fa-clock icon"></i><div><span class="label">Departure:</span><span class="value">${formatTime(details.departure_time)}</span></div></div>
+                        <div class="detail-info-item"><i class="fas fa-users-cog icon"></i><div><span class="label">Assigned Staff:</span><span class="value">${staffHtml}</span></div></div>
+                    </div>`
+                );
             }
 
-            // Function to update booking count (if you have an element with id="booking-count" in your HTML)
+            function renderTimelinePanel(timeline) {
+                let timelineHtml = '<div class="route-timeline-section">';
+                if (timeline && timeline.length > 0) {
+                    timeline.forEach(item => {
+                        let iconClass = 'stop-point fas fa-map-marker-alt';
+                        if (item.type === 'start') iconClass = 'start-point fas fa-play';
+                        else if (item.type === 'end') iconClass = 'end-point fas fa-flag-checkered';
+                        
+                        timelineHtml += `
+                        <div class="route-timeline-item">
+                            <div class="timeline-icon ${iconClass}"></div>
+                            <div class="timeline-content">
+                                <strong class="stop-name">${htmlspecialchars(item.name)}</strong>
+                                <div class="details-row">
+                                    <span class="time-info"><i class="far fa-clock"></i>&nbsp;${htmlspecialchars(item.time)}</span>
+                                    ${item.duration_from_prev > 0 ? `<span class="duration-pill">+${htmlspecialchars(item.duration_from_prev)} mins</span>` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    timelineHtml += `<p class="text-muted text-center py-3">No detailed timeline is available for this route.</p>`;
+                }
+                timelineHtml += '</div>';
+                $('#timeline-content-container').html(timelineHtml);
+            }
+
+            function renderBookingsTable(bookings) {
+                if (bookings && bookings.length > 0) {
+                    const tableData = bookings.map(b => {
+                        const deleteBtn = userCanDelete ? 
+                            `<button class="btn btn-sm btn-outline-danger delete-booking-btn" data-booking-id="${b.booking_id}" data-ticket-no="${htmlspecialchars(b.ticket_no)}" title="Delete Booking"><i class="fas fa-trash-alt"></i></button>` : '';
+                        
+                        return {
+                            ticket_no: `<strong>${htmlspecialchars(b.ticket_no)}</strong>`,
+                            journey: `${htmlspecialchars(b.origin)} → ${htmlspecialchars(b.destination)}`,
+                            passenger_names: htmlspecialchars(b.passenger_names),
+                            seat_codes: b.seat_codes.split(', ').map(seat => `<span class="badge seat-codes-val">${htmlspecialchars(seat)}</span>`).join(' '),
+                            total_fare: `₹${parseFloat(b.total_fare).toFixed(2)}`,
+                            booking_status: `<span class="badge bg-${b.payment_status === 'PAID' ? 'success' : 'warning'}">${htmlspecialchars(b.booking_status)}</span>`,
+                            actions: `<a href="generate_ticket.php?booking_id=${b.booking_id}" target="_blank" class="btn btn-sm btn-outline-primary" title="View Ticket"><i class="fas fa-eye"></i></a> ${deleteBtn}`
+                        };
+                    });
+                    bookingTable.rows.add(tableData);
+                }
+            }
+
             function updateBookingCount(count) {
-                // If you add an element like <span id="booking-count"></span>, you can uncomment the line below:
-                // $('#booking-count').text(`${count} ${count === 1 ? 'Booking' : 'Bookings'}`); 
-                console.log(`Booking count: ${count} ${count === 1 ? 'Booking' : 'Bookings'}`);
+                $('#booking-count-display').text(`(${count} Total Bookings)`);
             }
 
-            // --- DELETE HANDLER (Event Delegation for the table body) ---
+            // --- DELETE HANDLER (Event Delegation) ---
             $('#bookings-table tbody').on('click', '.delete-booking-btn', function() {
                 const bookingId = $(this).data('booking-id');
                 const ticketNo = $(this).data('ticket-no');
@@ -589,48 +500,35 @@ $user_can_delete = user_has_permission('can_delete_bookings');
 
                 Swal.fire({
                     title: `Delete Booking #${ticketNo}?`,
-                    text: "This action is permanent and cannot be undone.",
+                    text: "This action cannot be undone. The booking details will be logged for reporting.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
                     confirmButtonText: 'Yes, delete it!'
                 }).then(result => {
                     if (result.isConfirmed) {
-                        $.ajax({
-                            url: 'function/backend/booking_actions.php',
-                            type: 'POST',
-                            data: {
-                                action: 'delete_booking',
-                                booking_id: bookingId
-                            },
-                            dataType: 'json',
-                            success: response => {
-                                if (response.status === 'success') {
-                                    Swal.fire('Deleted!', response.message, 'success');
-                                    // Use the DataTables API to remove the row and redraw
-                                    bookingTable.row(row).remove().draw();
-                                    updateBookingCount(bookingTable.rows().count());
-                                } else {
-                                    Swal.fire('Error!', response.message, 'error');
-                                }
-                            },
-                            error: () => {
-                                Swal.fire('Error!', 'Could not connect to the server.', 'error');
+                        $.post('function/backend/booking_actions.php', { action: 'delete_booking', booking_id: bookingId }, 'json')
+                        .done(response => {
+                            if (response.status === 'success') {
+                                Swal.fire('Deleted!', response.message, 'success');
+                                bookingTable.row(row).remove().draw();
+                                updateBookingCount(bookingTable.rows().count());
+                            } else {
+                                Swal.fire('Error!', response.message, 'error');
                             }
-                        });
+                        })
+                        .fail(() => Swal.fire('Error!', 'Could not connect to the server.', 'error'));
                     }
                 });
             });
             
-            // Initial load if a route is already selected from URL or date is set
-            if ($('#route-filter').val() && $('#date-filter').val()) {
+            // --- INITIAL LOAD ---
+            if ($('#route-filter').val()) {
                 loadDashboardData();
-            } else if (!initialDate && !$('#route-filter').val()) {
-                // If neither route nor date is set, ensure table is empty initially
-                bookingTable.clear().draw();
             }
+
         });
     </script>
 </body>
-
 </html>

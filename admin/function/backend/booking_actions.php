@@ -6,8 +6,6 @@ require_once('../../vendor/autoload.php');
 include_once('../_mailer.php'); 
 use Razorpay\Api\Api;
 
- 
-
 function send_json_response($status, $data = [])
 {
     $response = ['status' => $status];
@@ -53,6 +51,17 @@ if ($action == 'get_seat_layout') {
 
     $day_of_week = date('D', strtotime($travel_date));
     try {
+
+        $stmt_charter_check = $_conn_db->prepare("
+        SELECT charter_id FROM charter_bookings WHERE route_id = ? AND travel_date = ?
+    ");
+    $stmt_charter_check->execute([$route_id, $travel_date]);
+    
+    if ($stmt_charter_check->fetchColumn()) {
+        // If a record is found, the route is fully booked. Stop immediately.
+        send_json_response('error', "This bus is fully booked for a private charter on this date and is unavailable.");
+    }
+
         $stmt_schedule = $_conn_db->prepare("SELECT r.bus_id FROM route_schedules rs JOIN routes r ON rs.route_id=r.route_id WHERE rs.route_id = ? AND rs.operating_day = ?");
         $stmt_schedule->execute([$route_id, $day_of_week]);
         $schedule = $stmt_schedule->fetch(PDO::FETCH_ASSOC);
@@ -211,8 +220,6 @@ if ($action == 'create_pending_booking') {
     send_json_response($result['status'], $result);
 }
 
- 
-
 if ($action == 'get_buses_for_route') {
     $route_id = filter_input(INPUT_GET, 'route_id', FILTER_VALIDATE_INT);
     if (!$route_id) {
@@ -236,7 +243,7 @@ if ($action == 'get_buses_for_route') {
 }
 
 if ($action == 'get_route_dashboard_details') {
-    // --- Permission check for this specific action ---
+    // --- Permission check ---
     if (!isset($_SESSION['user']['id']) || !user_has_permission('can_view_bookings')) {
         send_json_response('error', 'Access Denied.');
     }
@@ -250,45 +257,60 @@ if ($action == 'get_route_dashboard_details') {
 
     try {
         $response_data = [];
+        $day_of_week = date('D', strtotime($travel_date));
 
-        // 1. Get Route and Bus Details
+        // --- FIX #1: Query now fetches departure_time based on travel_date's day of the week ---
         $details_stmt = $_conn_db->prepare("
             SELECT r.route_name, r.starting_point, r.ending_point,
-                   b.bus_name, b.registration_number, b.bus_type
+                   b.bus_name, b.registration_number, b.bus_type,
+                   rsch.departure_time
             FROM routes r
             JOIN buses b ON r.bus_id = b.bus_id
+            LEFT JOIN route_schedules rsch ON r.route_id = rsch.route_id AND rsch.operating_day = ?
             WHERE r.route_id = ?
         ");
-        $details_stmt->execute([$route_id]);
-        $response_data['details'] = $details_stmt->fetch(PDO::FETCH_ASSOC);
+        $details_stmt->execute([$day_of_week, $route_id]);
+        $details = $details_stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 2. Fetch ALL assigned staff for the route
+        if (!$details || empty($details['departure_time'])) {
+            send_json_response('error', 'This route does not operate on the selected date.');
+        }
+        $response_data['details'] = $details;
+        
+        // Fetch staff (no change needed here)
         $staff_stmt = $_conn_db->prepare("
-            SELECT s.name, rsa.role
-            FROM route_staff_assignments rsa
-            JOIN staff s ON rsa.staff_id = s.staff_id
-            WHERE rsa.route_id = ?
-            ORDER BY FIELD(rsa.role, 'Driver', 'Co-Driver', 'Conductor', 'Co-Conductor', 'Helper')
+            SELECT s.name, rsa.role FROM route_staff_assignments rsa JOIN staff s ON rsa.staff_id = s.staff_id
+            WHERE rsa.route_id = ? ORDER BY FIELD(rsa.role, 'Driver', 'Co-Driver', 'Conductor', 'Helper')
         ");
         $staff_stmt->execute([$route_id]);
         $response_data['staff'] = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 3. Get Full Route Timeline
-        $stops_stmt = $_conn_db->prepare("SELECT stop_name FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
+        // --- FIX #2: Full timeline calculation ---
+        $stops_stmt = $_conn_db->prepare("SELECT * FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
         $stops_stmt->execute([$route_id]);
-        $intermediate_stops = $stops_stmt->fetchAll(PDO::FETCH_COLUMN);
-        $response_data['timeline'] = array_merge([$response_data['details']['starting_point']], $intermediate_stops);
+        $all_route_stops = $stops_stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $route_timeline = [];
+        $mainDepartureTime = new DateTime($travel_date . ' ' . $details['departure_time']);
+        $previousStopTime = clone $mainDepartureTime;
 
-        // 4. Get Bookings for the selected date
-        $booking_sql = "
-            SELECT booking_id, ticket_no, total_fare, created_at, booking_status, payment_status, origin, destination
-            FROM bookings WHERE route_id = ? AND travel_date = ? ORDER BY created_at DESC
-        ";
+        $route_timeline[] = ['type' => 'start', 'name' => $details['starting_point'], 'time' => $mainDepartureTime->format('h:i A'), 'duration_from_prev' => 0];
+        foreach ($all_route_stops as $stop) {
+            $arrivalTime = (clone $mainDepartureTime)->modify('+' . $stop['duration_from_start_minutes'] . ' minutes');
+            $interval = $previousStopTime->diff($arrivalTime);
+            $durationBetween = ($interval->h * 60) + $interval->i;
+            $route_timeline[] = ['type' => 'stop', 'name' => $stop['stop_name'], 'time' => $arrivalTime->format('h:i A'), 'duration_from_prev' => $durationBetween];
+            $previousStopTime = clone $arrivalTime;
+        }
+        $response_data['timeline'] = $route_timeline;
+
+        // Fetch Bookings (no change needed here)
+        $booking_sql = "SELECT booking_id, ticket_no, total_fare, created_at, booking_status, payment_status, origin, destination FROM bookings WHERE route_id = ? AND travel_date = ? ORDER BY created_at DESC";
         $booking_stmt = $_conn_db->prepare($booking_sql);
         $booking_stmt->execute([$route_id, $travel_date]);
         $bookings = $booking_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 5. For each booking, fetch its passengers
+        // Fetch passengers for each booking (no change needed here)
         $passenger_stmt = $_conn_db->prepare("SELECT passenger_name, seat_code FROM passengers WHERE booking_id = ?");
         foreach ($bookings as &$booking) {
             $passenger_stmt->execute([$booking['booking_id']]);
@@ -296,13 +318,13 @@ if ($action == 'get_route_dashboard_details') {
             $booking['passenger_names'] = implode(', ', array_column($passengers, 'passenger_name'));
             $booking['seat_codes'] = implode(', ', array_column($passengers, 'seat_code'));
         }
+        unset($booking);
         $response_data['bookings'] = $bookings;
 
         send_json_response('success', $response_data);
-
     } catch (PDOException $e) {
-        error_log("Dashboard details error: " . $e->getMessage()); // Log error
-        send_json_response('error', 'Database error: ' . $e->getMessage()); // Send specific error for debugging
+        error_log("Dashboard details error: " . $e->getMessage());
+        send_json_response('error', 'Database error: ' . $e->getMessage());
     }
 }
 
@@ -498,3 +520,11 @@ if ($action == 'verify_and_book_online') {
     send_json_response('success', $bookingResult);
 }
 
+
+// PHP Code that was provided within comments, which needs to be cleaned up or integrated.
+// The content below is the original code, but the HTML part (from <!DOCTYPE html> to </html>) 
+// should now be the content of 'email_template.html' as shown above.
+// The PHP logic for email sending itself is below (from the original script):
+
+
+?>

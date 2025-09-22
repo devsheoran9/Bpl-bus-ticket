@@ -124,9 +124,7 @@ if ($action == 'delete_route') {
     }
 }
 
-// ===================================================
-//  ACTION: ADD OR UPDATE ROUTE (with staff)
-// ===================================================
+ 
 if ($action == 'save_route') {
     // 1. Get and sanitize all form data
     $bus_id = filter_input(INPUT_POST, 'bus_id', FILTER_VALIDATE_INT);
@@ -264,6 +262,107 @@ if ($action == 'toggle_popular') {
     } catch (PDOException $e) {
         error_log("Toggle Popular Failed: " . $e->getMessage());
         send_response('false', 'danger', 'Database Error', 'Could not update the route status.');
+    }
+}
+if ($action == 'toggle_charter_status') {
+    // Security: Ensure the user has the specific permission to perform this action
+    if (!user_has_permission('can_charter_bus')) {
+        send_response('false', 'danger', 'Access Denied', 'You do not have permission to book a full bus.');
+    }
+    
+    $route_id = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
+    // Sanitize the status to ensure it is only 0 or 1
+    $is_chartered = filter_input(INPUT_POST, 'is_chartered', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1]]);
+
+    if (!$route_id || $is_chartered === null) {
+        send_response('false', 'warning', 'Invalid Input', 'Route ID or status was not provided correctly.');
+    }
+
+    try {
+        $stmt = $_conn_db->prepare("UPDATE routes SET is_chartered = ? WHERE route_id = ?");
+        $stmt->execute([$is_chartered, $route_id]);
+        
+        $status_text = ($is_chartered == 1) ? 'booked for charter' : 'made available for booking';
+
+        send_response('true', 'success', 'Success', 'Route has been successfully ' . $status_text . '.');
+    } catch (PDOException $e) {
+        error_log("Toggle Charter Status Failed: " . $e->getMessage());
+        send_response('false', 'danger', 'Database Error', 'Could not update the route charter status.');
+    }
+}
+if ($action == 'get_charter_status') {
+    if (!user_has_permission('can_charter_bus')) {
+        // Use a different function signature for simple status checks
+        echo json_encode(['status' => 'error', 'message' => 'Access Denied.']);
+        exit();
+    }
+    
+    $route_id = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
+    $travel_date = $_POST['travel_date'] ?? null;
+
+    if (!$route_id || !$travel_date) {
+        echo json_encode(['status' => 'error', 'message' => 'Route ID or date not provided.']);
+        exit();
+    }
+
+    try {
+        $stmt = $_conn_db->prepare("SELECT COUNT(*) FROM charter_bookings WHERE route_id = ? AND travel_date = ?");
+        $stmt->execute([$route_id, $travel_date]);
+        $count = $stmt->fetchColumn();
+        
+        echo json_encode(['status' => 'success', 'is_chartered' => ($count > 0)]);
+        exit();
+
+    } catch (PDOException $e) {
+        error_log("Get Charter Status Error: " . $e->getMessage());
+        echo json_encode(['status' => 'error', 'message' => 'Database error.']);
+        exit();
+    }
+}
+if ($action == 'toggle_charter_booking') {
+    if (!user_has_permission('can_charter_bus')) {
+        send_response('false', 'danger', 'Access Denied', 'You do not have permission to book a full bus.');
+    }
+
+    $route_id = filter_input(INPUT_POST, 'route_id', FILTER_VALIDATE_INT);
+    $travel_date = $_POST['travel_date'] ?? null;
+    $customer_name = trim($_POST['customer_name'] ?? '');
+    $customer_mobile = trim($_POST['customer_mobile'] ?? '');
+    $admin_id = $_SESSION['user']['id'];
+
+    if (!$route_id || !$travel_date) {
+        send_response('false', 'warning', 'Invalid Input', 'Route ID or date was not provided.');
+    }
+
+    try {
+        // Check if a record already exists to decide whether to INSERT or DELETE
+        $stmt_check = $_conn_db->prepare("SELECT charter_id FROM charter_bookings WHERE route_id = ? AND travel_date = ?");
+        $stmt_check->execute([$route_id, $travel_date]);
+        $existing_charter_id = $stmt_check->fetchColumn();
+
+        if ($existing_charter_id) {
+            // Record exists, so we need to DELETE it (unbook)
+            $stmt_delete = $_conn_db->prepare("DELETE FROM charter_bookings WHERE charter_id = ?");
+            $stmt_delete->execute([$existing_charter_id]);
+            send_response('true', 'success', 'Success', 'Charter booking has been removed. The route is now available for ' . $travel_date);
+        } else {
+            // Record does not exist, so we need to INSERT it (book)
+            if (empty($customer_name) || empty($customer_mobile)) {
+                send_response('false', 'warning', 'Input Required', 'Customer Name and Mobile are required to create a charter booking.');
+            }
+            $stmt_insert = $_conn_db->prepare(
+                "INSERT INTO charter_bookings (route_id, travel_date, customer_name, customer_mobile, booked_by_admin_id) VALUES (?, ?, ?, ?, ?)"
+            );
+            $stmt_insert->execute([$route_id, $travel_date, $customer_name, $customer_mobile, $admin_id]);
+            send_response('true', 'success', 'Success', 'Route has been fully booked for ' . $travel_date);
+        }
+
+    } catch (PDOException $e) {
+        error_log("Toggle Charter Error: " . $e->getMessage());
+        if ($e->getCode() == '23000') {
+             send_response('false', 'danger', 'Database Error', 'This route has likely just been booked by another user. Please refresh the page.');
+        }
+        send_response('false', 'danger', 'Database Error', 'Could not update the charter status.');
     }
 }
 

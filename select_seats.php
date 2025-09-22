@@ -21,6 +21,9 @@ $availability_message = '';
 $actual_schedule_id = null;
 $route_info = null;
 
+// --- NEW: Flag to indicate if the bus is chartered ---
+$is_chartered_bus = false;
+
 if (!$initial_schedule_id) {
     $error_message = "A valid schedule ID is required to proceed.";
 } else {
@@ -45,11 +48,25 @@ if (!$initial_schedule_id) {
         } else {
             $actual_schedule_id = $todays_schedule['schedule_id'];
             $departure_time_str = $todays_schedule['departure_time'];
-            if (date('Y-m-d', strtotime($journey_date)) == date('Y-m-d') && time() > strtotime(date('Y-m-d') . ' ' . $departure_time_str)) {
-                $is_bus_available = false;
-                $availability_message = "This bus has already departed for today.";
-            } else {
-                $is_bus_available = true;
+
+            // --- NEW: Check for Charter Booking ---
+            $stmt_charter_check = $pdo->prepare("SELECT charter_id FROM charter_bookings WHERE route_id = ? AND travel_date = ?");
+            $stmt_charter_check->execute([$route_id, $journey_date]);
+            if ($stmt_charter_check->fetchColumn()) {
+                $is_chartered_bus = true;
+                $is_bus_available = false; // Override availability if chartered
+                $availability_message = "This bus is fully booked for a private charter on " . date('d M Y', strtotime($journey_date)) . ".";
+            } 
+            // End NEW Charter Check
+
+            // Continue with time-based availability if not chartered
+            if (!$is_chartered_bus) {
+                if (date('Y-m-d', strtotime($journey_date)) == date('Y-m-d') && time() > strtotime(date('Y-m-d') . ' ' . $departure_time_str)) {
+                    $is_bus_available = false;
+                    $availability_message = "This bus has already departed for today.";
+                } else {
+                    $is_bus_available = true;
+                }
             }
         }
 
@@ -73,6 +90,7 @@ if (!$initial_schedule_id) {
         $stops = $stmt_stops->fetchAll();
 
         $total_route_duration = 0;
+        // The `$from_location` might be the route's starting_point directly, which has 0 duration from start.
         $stop_prices_map[$route_info['starting_point']] = ['price_seater_lower' => 0, 'price_seater_upper' => 0, 'price_sleeper_lower' => 0, 'price_sleeper_upper' => 0];
         foreach ($stops as $stop) {
             $stop_prices_map[$stop['stop_name']] = ['price_seater_lower' => (float)$stop['price_seater_lower'], 'price_seater_upper' => (float)$stop['price_seater_upper'], 'price_sleeper_lower' => (float)$stop['price_sleeper_lower'], 'price_sleeper_upper' => (float)$stop['price_sleeper_upper']];
@@ -83,11 +101,11 @@ if (!$initial_schedule_id) {
         $points_map = [];
         $points_map[$route_info['starting_point']] = ['name' => $route_info['starting_point'], 'time' => date('H:i', $base_departure_time), 'order' => 0];
         foreach ($stops as $stop) {
-            if (!isset($points_map[$stop['stop_name']])) {
+            if (!isset($points_map[$stop['stop_name']])) { // Prevent duplicate entries if start/end point is also a stop
                 $points_map[$stop['stop_name']] = ['name' => $stop['stop_name'], 'time' => date('H:i', $base_departure_time + ($stop['duration_from_start_minutes'] * 60)), 'order' => (int)$stop['stop_order']];
             }
         }
-        if (!isset($points_map[$route_info['ending_point']])) {
+        if (!isset($points_map[$route_info['ending_point']])) { // Add ending point if it's not already a stop
             $points_map[$route_info['ending_point']] = ['name' => $route_info['ending_point'], 'time' => date('H:i', $base_departure_time + ($total_route_duration * 60)), 'order' => count($points_map)];
         }
         $all_points = array_values($points_map);
@@ -102,7 +120,8 @@ if (!$initial_schedule_id) {
         }
 
         $booked_seats_info = [];
-        if ($is_bus_available) {
+        // Only fetch booked seats if the bus is available for booking (not chartered, not departed, etc.)
+        if ($is_bus_available) { 
             $stmt_booked = $pdo->prepare("SELECT p.seat_code, p.passenger_gender FROM passengers AS p JOIN bookings AS b ON p.booking_id = b.booking_id WHERE b.route_id = ? AND b.bus_id = ? AND b.travel_date = ? AND b.booking_status = 'CONFIRMED' AND p.passenger_status = 'CONFIRMED'");
             $stmt_booked->execute([$route_id, $bus_id, $journey_date]);
             $booked_results = $stmt_booked->fetchAll();
@@ -113,10 +132,11 @@ if (!$initial_schedule_id) {
 
         foreach ($all_seats_layout as &$seat) {
             $is_booked = isset($booked_seats_info[$seat['seat_code']]);
+            // A seat is unavailable if the bus is not generally available, or if it's already booked, or if it's not marked bookable
             if (!$is_bus_available || $is_booked || $seat['is_bookable'] == 0) {
-                $seat['final_status'] = 'SOLD';
+                $seat['final_status'] = 'SOLD'; // General 'unavailable' status
             } else {
-                $seat['final_status'] = $seat['status'];
+                $seat['final_status'] = $seat['status']; // Use its own status (AVAILABLE, BLOCKED, DAMAGED)
             }
             $seat['booked_by_gender'] = $is_booked ? strtoupper($booked_seats_info[$seat['seat_code']]) : null;
 
@@ -128,9 +148,9 @@ if (!$initial_schedule_id) {
                 $upper_deck_height = max($upper_deck_height, $seat['y_coordinate'] + $seat['height']);
             }
         }
-        unset($seat);
-        $lower_deck_height += 40;
-        $upper_deck_height += 40;
+        unset($seat); // Unset reference
+        $lower_deck_height += 40; // Add some padding
+        $upper_deck_height += 40; // Add some padding
     } catch (Exception $e) {
         $error_message = "An error occurred: " . $e->getMessage();
     }
@@ -140,13 +160,14 @@ if (!$initial_schedule_id) {
 function get_seat_classes($seat)
 {
     $classes = ['seat', strtolower($seat['seat_type'])];
+    // Seat is 'available' only if its final_status from PHP is 'AVAILABLE' (after all checks including charter, departure, etc.)
     if ($seat['final_status'] === 'AVAILABLE') {
         $classes[] = 'available';
         if (strtoupper($seat['gender_preference']) === 'MALE') $classes[] = 'male-only';
         if (strtoupper($seat['gender_preference']) === 'FEMALE') $classes[] = 'female-only';
     } else {
-        $classes[] = 'unavailable';
-        if ($seat['final_status'] === 'SOLD') {
+        $classes[] = 'unavailable'; // Default unavailable
+        if ($seat['final_status'] === 'SOLD') { // Explicitly sold (booked by someone) or bus not available for booking
             $classes[] = 'sold';
             if ($seat['booked_by_gender'] === 'MALE') $classes[] = 'sold-male';
             if ($seat['booked_by_gender'] === 'FEMALE') $classes[] = 'sold-female';
@@ -155,7 +176,8 @@ function get_seat_classes($seat)
         } elseif ($seat['final_status'] === 'DAMAGED') {
             $classes[] = 'status-damaged';
         } else {
-            $classes[] = 'sold';
+            // Default for any other non-AVAILABLE/SOLD status (e.g., if is_bus_available is false for charter/departed)
+            $classes[] = 'sold'; 
         }
     }
     return implode(' ', $classes);
@@ -484,7 +506,7 @@ function get_transform_style($orientation)
             <div id="step-2" class="step-container">
                 <div class="row">
                     <div class="col-lg-8">
-                        <?php if (!$is_bus_available) : ?>
+                        <?php if (!$is_bus_available) : // Unified warning for charter or unavailability ?>
                             <div class="alert alert-warning text-center mb-4" role="alert">
                                 <strong><?php echo htmlspecialchars($availability_message); ?></strong>
                                 <p class="mb-0 mt-2">Seat selection is disabled.</p>
@@ -972,6 +994,9 @@ function get_transform_style($orientation)
         const stopPrices = <?php echo json_encode($stop_prices_map); ?>;
         const allPoints = <?php echo json_encode($all_points); ?>;
         const isBusAvailable = <?php echo json_encode($is_bus_available); ?>;
+        // NEW: Pass charter status to JavaScript
+        const isCharteredBus = <?php echo json_encode($is_chartered_bus); ?>;
+        
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -999,6 +1024,22 @@ function get_transform_style($orientation)
                     calculateAndApplyPrices();
                 }
                 goToStep(1);
+
+                // NEW: Initialize with disabled buttons if bus is chartered
+                if (isCharteredBus) {
+                    // Disable all radio buttons for points
+                    document.querySelectorAll('input[name="boarding_point"], input[name="dropping_point"]').forEach(radio => {
+                        radio.disabled = true;
+                        radio.closest('.point-option').classList.add('disabled');
+                    });
+                    // Disable action button
+                    actionBtn.disabled = true;
+                    actionBtn.textContent = 'Not Available';
+                    seatCountTextEl.textContent = 'Bus is fully booked (Chartered)';
+                    priceContainerEl.style.display = 'none';
+                    // Visually disable seat interaction (handled by PHP rendering class)
+                    document.querySelectorAll('.seat.available').forEach(seat => seat.classList.remove('available').classList.add('unavailable'));
+                }
             })();
 
             function calculateAndApplyPrices() {
@@ -1035,7 +1076,8 @@ function get_transform_style($orientation)
                 const selectedBoardingRadio = document.querySelector('input[name="boarding_point"]:checked');
                 if (!selectedBoardingRadio) {
                     document.querySelectorAll('input[name="dropping_point"]').forEach(radio => {
-                        if (!radio.closest('.point-option').classList.contains('disabled')) radio.disabled = true;
+                        // NEW: Don't re-enable if bus is chartered
+                        if (!isCharteredBus && !radio.closest('.point-option').classList.contains('disabled')) radio.disabled = true;
                         radio.checked = false;
                     });
                     return;
@@ -1045,7 +1087,8 @@ function get_transform_style($orientation)
                     if (radio.closest('.point-option').classList.contains('disabled')) return;
                     const droppingOrder = parseInt(radio.closest('.point-option').dataset.order);
                     const isEnabled = droppingOrder > selectedBoardingOrder;
-                    radio.disabled = !isEnabled;
+                    // NEW: Ensure points remain disabled if bus is chartered
+                    radio.disabled = !isEnabled || isCharteredBus;
                     if (!isEnabled && radio.checked) radio.checked = false;
                 });
             }
@@ -1082,9 +1125,11 @@ function get_transform_style($orientation)
                 });
             });
 
-            document.querySelectorAll('.seat.available').forEach(seat => {
+            document.querySelectorAll('.seat.available').forEach(seat => { // Only bind click to `available` seats
                 seat.addEventListener('click', () => {
-                    if (currentStep !== 2 || !isBusAvailable) return;
+                    // NEW: Prevent interaction if bus is chartered
+                    if (currentStep !== 2 || !isBusAvailable || isCharteredBus) return;
+
                     const seatCode = seat.dataset.seatId;
                     const price = parseFloat(seat.dataset.price);
                     if (selectedSeats.has(seatCode)) {
@@ -1101,26 +1146,37 @@ function get_transform_style($orientation)
             });
 
             function updateSummaryBar() {
-                if (!isBusAvailable) {
+                // NEW: Ensure buttons are disabled if bus is chartered
+                if (!isBusAvailable) { // This covers both departed/unavailable dates AND chartered
                     actionBtn.disabled = true;
+                    actionBtn.textContent = 'Not Available';
                     priceContainerEl.style.display = 'none';
                     seatCountTextEl.textContent = 'Booking not available';
+                    if (isCharteredBus) {
+                        seatCountTextEl.textContent = 'Bus is fully booked (Chartered)';
+                    }
                     return;
                 }
+                
                 const seatCount = selectedSeats.size;
                 const totalPrice = Array.from(selectedSeats.values()).reduce((sum, s) => sum + s.price, 0);
+
+                // --- NEW: Reset text on action button logic to handle chartered state correctly ---
                 if (currentStep === 1) {
                     const isStep1Valid = document.querySelector('input[name="boarding_point"]:checked') && document.querySelector('input[name="dropping_point"]:checked');
                     actionBtn.disabled = !isStep1Valid;
+                    actionBtn.textContent = isStep1Valid ? 'Continue' : 'Select points';
                     priceContainerEl.style.display = 'none';
                     seatCountTextEl.textContent = isStep1Valid ? 'All points selected' : 'Select boarding & dropping points';
                 } else if (currentStep === 2) {
                     actionBtn.disabled = (seatCount === 0);
+                    actionBtn.textContent = (seatCount > 0) ? 'Continue' : 'Select Seats';
                     priceContainerEl.style.display = seatCount > 0 ? 'block' : 'none';
                     totalPriceEl.textContent = Math.round(totalPrice);
                     seatCountTextEl.textContent = seatCount > 0 ? `${seatCount} Seat(s) Selected` : 'Please select your seat(s)';
                 } else if (currentStep === 3) {
                     actionBtn.disabled = false;
+                    actionBtn.textContent = 'Proceed to Payment';
                     priceContainerEl.style.display = 'block';
                     totalPriceEl.textContent = Math.round(totalPrice);
                     seatCountTextEl.textContent = `${seatCount} Seat(s) Total`;
@@ -1128,6 +1184,9 @@ function get_transform_style($orientation)
             }
 
             function handleGoToStep(targetStep) {
+                // NEW: Disable step navigation if chartered
+                if (isCharteredBus && targetStep > 1) return;
+
                 if (targetStep > 1 && !(document.querySelector('input[name="boarding_point"]:checked') && document.querySelector('input[name="dropping_point"]:checked'))) {
                     alert('Please select your boarding and dropping points first.');
                     return;
@@ -1153,11 +1212,21 @@ function get_transform_style($orientation)
                 document.querySelectorAll('.step-container').forEach(c => c.classList.remove('active'));
                 document.getElementById(`step-${stepNumber}`).classList.add('active');
                 actionBtn.textContent = (stepNumber === 3) ? 'Proceed to Payment' : 'Continue';
+                
+                // NEW: Override button text if chartered
+                if (isCharteredBus) {
+                    actionBtn.textContent = 'Not Available';
+                    actionBtn.disabled = true;
+                }
+                
                 updateSummaryBar();
             }
 
             actionBtn.addEventListener('click', () => {
                 if (actionBtn.disabled) return;
+                // NEW: Prevent booking if chartered
+                if (isCharteredBus) return;
+
                 if (currentStep < 3) {
                     handleGoToStep(currentStep + 1);
                 } else {
@@ -1168,6 +1237,9 @@ function get_transform_style($orientation)
             stepElements.forEach(stepEl => {
                 stepEl.addEventListener('click', () => {
                     const targetStep = parseInt(stepEl.dataset.step);
+                    // NEW: Disable clicking on future steps if chartered
+                    if (isCharteredBus && targetStep > currentStep) return;
+
                     if (targetStep < currentStep) handleGoToStep(targetStep);
                 });
             });

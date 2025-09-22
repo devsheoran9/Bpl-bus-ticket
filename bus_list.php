@@ -54,6 +54,7 @@ try {
         $day_of_week = date('D', strtotime($journey_date));
 
         // --- REVISED AND CORRECTED QUERY ---
+        // Changed named parameters to be explicitly unique for each part of the EXISTS (UNION ALL) clauses.
         $stmt = $_conn_db->prepare("
             SELECT
                 b.bus_name, b.bus_id, b.bus_type,
@@ -62,43 +63,48 @@ try {
                 COUNT(DISTINCT s.seat_id) AS total_seats,
                 COUNT(DISTINCT p.passenger_id) AS booked_seats,
                 GROUP_CONCAT(DISTINCT bc.category_name SEPARATOR ', ') AS categories,
-                MIN(rs_prices.price_seater_lower) AS journey_price
+                MIN(rs_prices.price_seater_lower) AS journey_price,
+                cb.charter_id IS NOT NULL AS is_chartered -- Check if chartered
             FROM route_schedules rsch
             JOIN routes r ON rsch.route_id = r.route_id
             JOIN buses b ON r.bus_id = b.bus_id
             LEFT JOIN seats s ON s.bus_id = b.bus_id AND s.is_bookable = 1
-            LEFT JOIN bookings bk ON bk.route_id = r.route_id AND bk.travel_date = :journey_date
+            LEFT JOIN bookings bk ON bk.route_id = r.route_id AND bk.travel_date = :journey_date AND bk.booking_status = 'CONFIRMED'
             LEFT JOIN passengers p ON p.booking_id = bk.booking_id AND p.passenger_status = 'CONFIRMED'
             LEFT JOIN bus_category_map bcm ON b.bus_id = bcm.bus_id
             LEFT JOIN bus_categories bc ON bcm.category_id = bc.category_id
             LEFT JOIN route_stops rs_prices ON rs_prices.route_id = r.route_id AND rs_prices.price_seater_lower > 0
+            LEFT JOIN charter_bookings cb ON cb.route_id = r.route_id AND cb.travel_date = :journey_date_charter -- Join charter_bookings
             WHERE
                 rsch.operating_day = :day_of_week
-                AND EXISTS (
-                    SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.starting_point = :from_loc1
-                    UNION ALL
-                    SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :from_loc2
+                AND r.status = 'Active' -- Ensure only active routes are shown
+                AND ( -- Condition for FROM location
+                    EXISTS (SELECT 1 FROM routes rt_from WHERE rt_from.route_id = r.route_id AND rt_from.starting_point = :from_location_start_point)
+                    OR
+                    EXISTS (SELECT 1 FROM route_stops rs_from WHERE rs_from.route_id = r.route_id AND rs_from.stop_name = :from_location_stop_name)
                 )
-                AND EXISTS (
-                    SELECT 1 FROM routes rt WHERE rt.route_id = r.route_id AND rt.ending_point = :to_loc3
-                    UNION ALL
-                    SELECT 1 FROM route_stops rs WHERE rs.route_id = r.route_id AND rs.stop_name = :to_loc4
+                AND ( -- Condition for TO location
+                    EXISTS (SELECT 1 FROM routes rt_to WHERE rt_to.route_id = r.route_id AND rt_to.ending_point = :to_location_ending_point)
+                    OR
+                    EXISTS (SELECT 1 FROM route_stops rs_to WHERE rs_to.route_id = r.route_id AND rs_to.stop_name = :to_location_stop_name)
                 )
-            GROUP BY rsch.schedule_id
+            GROUP BY rsch.schedule_id, cb.charter_id -- Group by charter_id to make it distinct per route+date+charter
             ORDER BY rsch.departure_time ASC
         ");
 
+        // --- UPDATED execute() parameters to match new query placeholders ---
         $stmt->execute([
-            ':journey_date' => $journey_date,
-            ':day_of_week' => $day_of_week,
-            ':from_loc1' => $from_location,
-            ':from_loc2' => $from_location,
-            ':to_loc3' => $to_location,
-            ':to_loc4' => $to_location
+            ':journey_date'                 => $journey_date,
+            ':journey_date_charter'         => $journey_date,
+            ':day_of_week'                  => $day_of_week,
+            ':from_location_start_point'    => $from_location,
+            ':from_location_stop_name'      => $from_location,
+            ':to_location_ending_point'     => $to_location,
+            ':to_location_stop_name'        => $to_location
         ]);
         $direct_matches_today = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // --- NEW: Prepare a statement to fetch durations efficiently ---
+        // --- Prepare a statement to fetch durations efficiently (no change needed here) ---
         $duration_stmt = $_conn_db->prepare("
             SELECT stop_name, duration_from_start_minutes FROM route_stops WHERE route_id = ?
             UNION
@@ -107,73 +113,120 @@ try {
 
         // --- MODIFIED PHP LOOP ---
         foreach ($direct_matches_today as $bus) {
-            // Fetch all durations for this specific route
-            $duration_stmt->execute([$bus['route_id'], $bus['route_id']]);
-            $durations = $duration_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            $from_offset = 0; // Initialize
+            $to_offset = 0;   // Initialize
 
-            $base_time = strtotime($journey_date . ' ' . $bus['departure_time']);
+            // Check if chartered for today
+            if ($bus['is_chartered']) {
+                $bus['available_seats'] = 0; // No seats available if chartered
+                $bus['chartered_status'] = true; // Flag for UI
+            } else {
+                // Original logic for non-chartered buses
+                $duration_stmt->execute([$bus['route_id'], $bus['route_id']]);
+                $durations = $duration_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
-            $from_offset = (int)($durations[$from_location] ?? 0);
-            $to_offset = (int)($durations[$to_location] ?? 0);
+                $from_offset = (int)($durations[$from_location] ?? 0);
+                $to_offset = (int)($durations[$to_location] ?? 0);
 
-            // If the destination is the route's final ending point, we need to find the max duration
-            if ($to_location == $bus['ending_point'] && !isset($durations[$to_location])) {
-                $max_duration_stmt = $_conn_db->prepare("SELECT MAX(duration_from_start_minutes) FROM route_stops WHERE route_id = ?");
-                $max_duration_stmt->execute([$bus['route_id']]);
-                $to_offset = (int) $max_duration_stmt->fetchColumn();
+                // If destination is the route's absolute end point and not an intermediate stop explicitly listed in route_stops
+                if ($to_location == $bus['ending_point'] && !isset($durations[$to_location])) {
+                    $max_duration_stmt = $_conn_db->prepare("SELECT MAX(duration_from_start_minutes) FROM route_stops WHERE route_id = ?");
+                    $max_duration_stmt->execute([$bus['route_id']]);
+                    $to_offset = (int) $max_duration_stmt->fetchColumn();
+                }
+                
+                // Skip if destination is before origin or invalid (e.g., origin = destination)
+                if ($to_offset <= $from_offset) {
+                    continue;
+                }
+
+                $bus['available_seats'] = (int)$bus['total_seats'] - (int)$bus['booked_seats'];
+            }
+            
+            // Common logic for both chartered and non-chartered buses
+            $bus_base_time = strtotime($journey_date . ' ' . $bus['departure_time']);
+
+            // Departure Time based on origin offset
+            $bus['departure'] = date('H:i', $bus_base_time + ($from_offset * 60)); 
+            
+            // Skip buses that have already departed today (only applies if not chartered and today's date)
+            if ( $journey_date == date('Y-m-d') && strtotime($bus['departure']) < time() && (!$bus['is_chartered']) ) {
+                continue; 
             }
 
-            $bus['departure'] = date('H:i', $base_time + ($from_offset * 60));
-
-            if ($journey_date == date('Y-m-d') && strtotime($bus['departure']) < time()) {
-                continue; // Skip buses that have already departed today
-            }
-
-            if ($to_offset > $from_offset) {
-                $bus['arrival'] = date('H:i', $base_time + ($to_offset * 60));
+            // Calculate arrival and duration or set chartered status for display
+            if (!isset($bus['chartered_status']) || !$bus['chartered_status']) {
+                $bus['arrival'] = date('H:i', $bus_base_time + ($to_offset * 60));
                 $duration_minutes = $to_offset - $from_offset;
                 $bus['duration'] = floor($duration_minutes / 60) . 'h ' . ($duration_minutes % 60) . 'm';
-                $bus['price'] = isset($bus['journey_price']) ? number_format($bus['journey_price'], 2) : 'N/A';
-                $bus['available_seats'] = (int)$bus['total_seats'] - (int)$bus['booked_seats'];
-                $bus['link_params'] = http_build_query([
-                    'schedule_id' => $bus['schedule_id'],
-                    'from' => $from_location,
-                    'to' => $to_location,
-                    'date' => $journey_date
-                ]);
-                $direct_matches[] = $bus;
+            } else {
+                $bus['arrival'] = 'Chartered'; // Indicate chartered bus, no individual arrival time relevant
+                $bus['duration'] = 'Full Day'; // Indicate full day charter
             }
+            
+            $bus['price'] = isset($bus['journey_price']) ? number_format($bus['journey_price'], 2) : 'N/A';
+            
+            $bus['link_params'] = http_build_query([
+                'schedule_id' => $bus['schedule_id'],
+                'from' => $from_location,
+                'to' => $to_location,
+                'date' => $journey_date
+            ]);
+            $direct_matches[] = $bus;
         }
     }
 
     // ======================================================================
-    // 3. "OTHER AVAILABLE ROUTES" LOGIC
+    // 3. "OTHER AVAILABLE ROUTES" LOGIC (MODIFIED for charter check)
     // ======================================================================
     if (empty($direct_matches)) {
+        // --- Prepare statements for efficiency outside the loop ---
         $all_schedules_stmt = $_conn_db->prepare("
             SELECT 
                 b.bus_name, b.bus_id, b.bus_type, 
                 r.route_id, r.starting_point, r.ending_point, 
-                rsch.schedule_id, rsch.departure_time, rsch.operating_day,
+                rsch.schedule_id, rsch.departure_time, GROUP_CONCAT(DISTINCT rsch.operating_day SEPARATOR ',') AS operating_days_list,
                 MIN(rs_prices.price_seater_lower) AS route_min_price
             FROM route_schedules rsch
-            JOIN routes r ON rsch.route_id = r.route_id
+            JOIN routes r ON rsch.route_id = r.route_id AND r.status = 'Active' -- Only active routes
             JOIN buses b ON r.bus_id = b.bus_id
             LEFT JOIN route_stops rs_prices ON rs_prices.route_id = r.route_id AND rs_prices.price_seater_lower > 0
-            GROUP BY r.route_id
+            GROUP BY r.route_id -- Group by route_id to get one entry per route for representative data
             ORDER BY r.starting_point, r.ending_point, rsch.departure_time ASC
         ");
         $all_schedules_stmt->execute();
         $all_available_schedules = $all_schedules_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Prepare charter check statement for the loop
+        $charter_check_stmt_for_other_routes = $_conn_db->prepare("SELECT charter_id FROM charter_bookings WHERE route_id = ? AND travel_date = ?");
+        // Prepare total seats statement
+        $seats_total_stmt = $_conn_db->prepare("SELECT COUNT(s.seat_id) FROM seats s WHERE s.bus_id = ? AND s.is_bookable = 1");
+        // Prepare booked seats statement
+        $seats_booked_stmt = $_conn_db->prepare("SELECT COUNT(p.passenger_id) FROM passengers p JOIN bookings bk ON p.booking_id = bk.booking_id WHERE bk.route_id = ? AND bk.travel_date = ? AND p.passenger_status = 'CONFIRMED'");
+
+
         $temp_routes = [];
         foreach ($all_available_schedules as $schedule) {
             $route_key = $schedule['route_id'];
             if (!isset($temp_routes[$route_key])) {
-                $temp_routes[$route_key] = ['starting_point' => $schedule['starting_point'], 'ending_point' => $schedule['ending_point'], 'first_departure_time' => $schedule['departure_time'], 'representative_schedule_id' => $schedule['schedule_id'], 'representative_route_id' => $schedule['route_id'], 'representative_bus_id' => $schedule['bus_id'], 'route_min_price' => $schedule['route_min_price'], 'bus_names' => [], 'bus_types' => [], 'all_operating_days' => []];
+                $temp_routes[$route_key] = [
+                    'starting_point' => $schedule['starting_point'], 
+                    'ending_point' => $schedule['ending_point'], 
+                    'first_departure_time' => $schedule['departure_time'], 
+                    'representative_schedule_id' => $schedule['schedule_id'], 
+                    'representative_route_id' => $schedule['route_id'], 
+                    'representative_bus_id' => $schedule['bus_id'], 
+                    'route_min_price' => $schedule['route_min_price'], 
+                    'bus_names' => [], 
+                    'bus_types' => [], 
+                    'all_operating_days' => [],
+                    'operating_days_str' => $schedule['operating_days_list'] // Store original string for find_next_available_date
+                ];
             }
             $temp_routes[$route_key]['bus_names'][$schedule['bus_name']] = true;
             $temp_routes[$route_key]['bus_types'][$schedule['bus_type']] = true;
-            $days = array_map('trim', explode(',', $schedule['operating_day']));
+            // The operating_days_list from GROUP_CONCAT may contain multiple days
+            $days = array_map('trim', explode(',', $schedule['operating_days_list']));
             foreach ($days as $day) {
                 if ($day) $temp_routes[$route_key]['all_operating_days'][$day] = true;
             }
@@ -181,7 +234,8 @@ try {
         $processed_routes = $temp_routes;
     }
 } catch (PDOException $e) {
-    $error_message = "Database Error: " . $e->getMessage();
+    // Corrected error output to include actual message
+    $error_message = "Database Error: " . $e->getMessage(); 
 }
 ?>
 
@@ -260,14 +314,18 @@ try {
                     <?php if ($is_search_performed && !empty($direct_matches)): ?>
                         <h3 class="mb-3 text-center">Buses from <strong style="color:brown"><?php echo htmlspecialchars($from_location); ?></strong> to <strong style="color:green"><?php echo htmlspecialchars($to_location); ?></strong></h3>
                         <?php foreach ($direct_matches as $bus): ?>
-                            <?php $available_seats = max(0, (int)$bus['available_seats']); ?>
+                            <?php $is_bus_chartered = (isset($bus['chartered_status']) && $bus['chartered_status']); ?>
+                            <?php $available_seats = $is_bus_chartered ? 0 : max(0, (int)$bus['available_seats']); ?>
                             <div class="bus-list-item" data-bus-type="<?php echo htmlspecialchars($bus['bus_type']); ?>" data-departure-time="<?php echo $bus['departure']; ?>">
-                                <!-- === FIX: RESTORED HTML FOR DIRECT MATCHES === -->
                                 <div class="bus-item-main">
                                     <div class="bus-info">
                                         <h6><?php echo htmlspecialchars($bus['bus_name']); ?></h6>
                                         <p class="mb-0 text-muted"><?php echo htmlspecialchars($bus['bus_type']); ?></p>
-                                        <p class="fw-bold <?php echo ($available_seats <= 5 && $available_seats > 0) ? 'text-danger' : 'text-success'; ?>"><?php echo $available_seats; ?> Seats available</p>
+                                        <?php if ($is_bus_chartered): ?>
+                                            <p class="fw-bold text-danger">Bus is fully booked (Chartered)</p>
+                                        <?php else: ?>
+                                            <p class="fw-bold <?php echo ($available_seats <= 5 && $available_seats > 0) ? 'text-danger' : 'text-success'; ?>"><?php echo $available_seats; ?> Seats available</p>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="bus-timing">
                                         <div class="time"><?php echo $bus['departure']; ?> &rarr; <?php echo $bus['arrival']; ?></div>
@@ -275,7 +333,7 @@ try {
                                     </div>
                                     <div class="price-section">
                                         <div class="price">From ₹<?php echo htmlspecialchars($bus['price']); ?></div>
-                                        <a href="select_seats.php?<?php echo $bus['link_params']; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Seats' : 'Sold Out'; ?></a>
+                                        <a href="select_seats.php?<?php echo $bus['link_params']; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Seats' : 'Booked Out'; ?></a>
                                     </div>
                                 </div>
                                 <?php if (!empty($bus['categories'])): ?>
@@ -309,17 +367,42 @@ try {
                         <?php foreach ($processed_routes as $route): ?>
                             <?php
                             $all_days_for_route = implode(',', array_keys($route['all_operating_days']));
-                            $start_search_date = date('Y-m-d');
-                            if (in_array(date('D'), array_keys($route['all_operating_days'])) && strtotime(date('Y-m-d') . ' ' . $route['first_departure_time']) < time()) {
+                            $start_search_date = $journey_date;
+                            
+                            // Adjust search start date to tomorrow if today's bus for this route has already departed or it's a past date
+                            // We use the first_departure_time for a representative check
+                            if ( ($journey_date == date('Y-m-d') && strtotime($journey_date . ' ' . $route['first_departure_time']) < time()) ) {
                                 $start_search_date = date('Y-m-d', strtotime('+1 day'));
+                            } 
+                            // If journey_date is in the past, always start search from today/tomorrow
+                            if ($journey_date < date('Y-m-d')) {
+                                $start_search_date = date('Y-m-d');
                             }
+                           
                             $next_date = find_next_available_date($all_days_for_route, $start_search_date);
-                            if (!$next_date) continue;
+                            
+                            if (!$next_date) continue; // Skip if no operating day can be found in the future
 
-                            $seats_stmt = $_conn_db->prepare("SELECT (SELECT COUNT(s.seat_id) FROM seats s WHERE s.bus_id = :bus_id AND s.is_bookable = 1) AS total_seats, (SELECT COUNT(p.passenger_id) FROM passengers p JOIN bookings bk ON p.booking_id = bk.booking_id WHERE bk.route_id = :route_id AND bk.travel_date = :next_travel_date AND p.passenger_status = 'CONFIRMED') AS booked_seats");
-                            $seats_stmt->execute([':bus_id' => $route['representative_bus_id'], ':route_id' => $route['representative_route_id'], ':next_travel_date' => $next_date]);
-                            $seat_counts = $seats_stmt->fetch(PDO::FETCH_ASSOC);
-                            $available_seats = $seat_counts ? max(0, (int)$seat_counts['total_seats'] - (int)$seat_counts['booked_seats']) : 0;
+                            // NEW: Check if this "Other Route" is chartered for its 'next_date'
+                            $charter_check_stmt_for_other_routes->execute([$route['representative_route_id'], $next_date]);
+                            $is_chartered_other_route = $charter_check_stmt_for_other_routes->fetchColumn() !== false;
+
+                            if ($is_chartered_other_route) {
+                                $available_seats = 0; // Chartered, so 0 available seats
+                                $chartered_display_message = "Bus is fully booked (Chartered)";
+                            } else {
+                                // Original logic for seat counts (if not chartered)
+                                $seats_total_stmt->execute([$route['representative_bus_id']]); 
+                                $total_seats_other_route = (int) $seats_total_stmt->fetchColumn();
+                                
+                                // FIX for PDOException: SQLSTATE[HY093]
+                                // Changed named parameters to positional parameters here to match the prepared statement
+                                $seats_booked_stmt->execute([$route['representative_route_id'], $next_date]);
+                                $booked_seats_other_route = (int) $seats_booked_stmt->fetchColumn();
+                                
+                                $available_seats = max(0, $total_seats_other_route - $booked_seats_other_route);
+                                $chartered_display_message = null; // No special message
+                            }
 
                             $link_params = http_build_query(['schedule_id' => $route['representative_schedule_id'], 'from' => $route['starting_point'], 'to' => $route['ending_point'], 'date' => $next_date]);
                             $day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -328,14 +411,21 @@ try {
                             $display_days = (count($days_arr) >= 7) ? 'Daily' : implode(', ', $days_arr);
 
                             $bus_types_json = json_encode(array_values(array_keys($route['bus_types'])));
-                            $all_routes_for_js[] = ['bus_types' => array_keys($route['bus_types']), 'departure_time' => date('H:i', strtotime($route['first_departure_time']))];
+                            // Only add to all_routes_for_js if it's not chartered and would show actual bus data
+                            if (!$is_chartered_other_route) {
+                                $all_routes_for_js[] = ['bus_types' => array_keys($route['bus_types']), 'departure_time' => date('H:i', strtotime($route['first_departure_time']))];
+                            }
                             ?>
                             <div class="bus-list-item" data-bus-types='<?php echo htmlspecialchars($bus_types_json, ENT_QUOTES, 'UTF-8'); ?>' data-departure-time="<?php echo date('H:i', strtotime($route['first_departure_time'])); ?>">
                                 <div class="bus-item-main">
                                     <div class="bus-info">
                                         <h6><?php echo htmlspecialchars(implode(' / ', array_keys($route['bus_names']))); ?></h6>
                                         <p class="mb-0 text-muted"><?php echo htmlspecialchars(implode(', ', array_keys($route['bus_types']))); ?></p>
-                                        <p class="fw-bold <?php echo ($available_seats <= 5 && $available_seats > 0) ? 'text-danger' : 'text-success'; ?>"><?php echo $available_seats; ?> Seats available</p>
+                                        <?php if ($chartered_display_message): ?>
+                                            <p class="fw-bold text-danger"><?php echo $chartered_display_message; ?></p>
+                                        <?php else: ?>
+                                            <p class="fw-bold <?php echo ($available_seats <= 5 && $available_seats > 0) ? 'text-danger' : 'text-success'; ?>"><?php echo $available_seats; ?> Seats available</p>
+                                        <?php endif; ?>
                                         <div class="operating-days">Runs: <?php echo $display_days; ?></div>
                                     </div>
                                     <div class="bus-timing">
@@ -345,7 +435,7 @@ try {
                                     </div>
                                     <div class="price-section">
                                         <div class="price">From ₹<?php echo number_format($route['route_min_price'] ?? 0, 2); ?></div>
-                                        <a href="select_seats.php?<?php echo $link_params; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Next Trip' : 'Sold Out'; ?></a>
+                                        <a href="select_seats.php?<?php echo $link_params; ?>" class="btn btn-danger btn-sm mt-2 <?php if ($available_seats <= 0) echo 'disabled'; ?>"><?php echo ($available_seats > 0) ? 'View Next Trip' : 'Booked Out'; ?></a>
                                     </div>
                                 </div>
                             </div>
@@ -433,7 +523,7 @@ try {
             // COMPLETE FILTERING SCRIPT
             // ==================================================================
             const directMatchData = <?php echo json_encode($direct_matches); ?>;
-            const otherRoutesData = <?php echo json_encode($all_routes_for_js); ?>;
+            const otherRoutesData = <?php echo json_encode($all_routes_for_js); ?>; 
             const busListItems = document.querySelectorAll('.bus-list-item');
             const busTypeContainers = document.querySelectorAll('#bus-type-filters-desktop, #bus-type-filters-mobile');
             const timeContainers = document.querySelectorAll('#departure-time-filters-desktop, #departure-time-filters-mobile');
@@ -476,10 +566,8 @@ try {
                 busListItems.forEach(card => {
                     let cardBusTypes = [];
                     try {
-                        // This handles the JSON string from "Other Routes"
                         cardBusTypes = card.dataset.busTypes ? JSON.parse(card.dataset.busTypes) : [card.dataset.busType];
                     } catch (e) {
-                        // This is a fallback for the single value from "Direct Matches"
                         cardBusTypes = [card.dataset.busType];
                     }
 
@@ -497,14 +585,16 @@ try {
 
             function initializeFilters() {
                 const allBusTypes = new Set();
-                // === FIX: DETERMINE WHICH DATA TO BUILD FILTERS FROM ===
-                const dataToUseForFilters = directMatchData.length > 0 ? directMatchData.map(b => ({
-                    bus_type: b.bus_type,
-                    departure: b.departure
-                })) : otherRoutesData;
+                
+                // When building filters, only consider non-chartered data that is actually displayed
+                // Filter out any entries that PHP determined were chartered
+                const filterableDirectMatches = directMatchData.filter(b => !b.chartered_status);
+                // Note: all_routes_for_js in PHP is already designed to *not* include chartered routes
+                const filterableOtherRoutes = otherRoutesData; 
+                
+                const dataToUseForFilters = filterableDirectMatches.concat(filterableOtherRoutes);
 
                 dataToUseForFilters.forEach(bus => {
-                    // Handle both single bus_type and array of bus_types
                     const types = Array.isArray(bus.bus_types) ? bus.bus_types : [bus.bus_type];
                     types.forEach(type => {
                         if (type) allBusTypes.add(type);

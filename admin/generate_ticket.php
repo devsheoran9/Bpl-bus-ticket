@@ -58,8 +58,8 @@ try {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $host = $_SERVER['HTTP_HOST'];
     $script_path = dirname($_SERVER['PHP_SELF']);
-    $projectBaseUrl = 'http://localhost/bpl-bus-ticket';
-    $publicTicketUrl = $projectBaseUrl . '/ticket_public_view?token=' . $token;
+    $projectBaseUrl = BASE_URLL;
+    $publicTicketUrl = $projectBaseUrl . '?token=' . $token;
 
     // --- Step 5: Calculate real departure/arrival timings ---
     $route_departure_datetime_str = $booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00');

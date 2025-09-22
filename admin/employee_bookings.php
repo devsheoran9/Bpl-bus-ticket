@@ -1,5 +1,6 @@
 <?php
 // employee_bookings.php - Redesigned with DataTables Integration
+global $_conn_db;
 include_once('function/_db.php');
 session_security_check();
 check_permission('can_view_reports');
@@ -26,13 +27,14 @@ try {
             b.booked_by_employee_id,
             r.route_name, bu.bus_name,
             CASE WHEN t.transaction_id IS NOT NULL AND t.payment_status = 'CAPTURED' THEN 'ONLINE' ELSE 'CASH' END as payment_method,
-            (ccl.collection_id IS NOT NULL OR (t.transaction_id IS NOT NULL AND t.payment_status = 'CAPTURED')) AS is_collected
+            (ccl.collection_id IS NOT NULL) AS is_collected, 
+            b.payment_status as actual_payment_status 
         FROM bookings b
         LEFT JOIN admin a ON b.booked_by_employee_id = a.id
         LEFT JOIN users u ON b.user_id = u.id
         JOIN routes r ON b.route_id = r.route_id
         JOIN buses bu ON b.bus_id = bu.bus_id
-        LEFT JOIN transactions t ON b.booking_id = t.booking_id
+        LEFT JOIN transactions t ON b.booking_id = t.booking_id AND t.payment_status = 'CAPTURED' 
         LEFT JOIN cash_collections_log ccl ON b.booking_id = ccl.booking_id
         WHERE 1=1
     ";
@@ -72,18 +74,18 @@ try {
             $employee_report[$emp_id]['total_bookings']++;
             if ($booking['payment_method'] === 'ONLINE') {
                 $employee_report[$emp_id]['total_online'] += $booking['total_fare'];
-            } else {
+            } else { // It's a CASH booking
                 $employee_report[$emp_id]['total_cash'] += $booking['total_fare'];
-                if ($booking['is_collected']) {
+                if ($booking['is_collected']) { 
                     $employee_report[$emp_id]['cash_collected'] += $booking['total_fare'];
                 } else {
                     $employee_report[$emp_id]['cash_due'] += $booking['total_fare'];
                 }
             }
             $employee_report[$emp_id]['bookings'][] = $booking;
-        } else {
+        } else { // It's a User booking (online)
             $user_report['total_bookings']++;
-            $user_report['total_online'] += $booking['total_fare'];
+            $user_report['total_online'] += $booking['total_fare']; 
             $user_report['bookings'][] = $booking;
         }
     }
@@ -102,6 +104,30 @@ function get_initials($name) {
     return $initials ?: '?';
 }
 
+// Helper function to get status badge classes for modals
+function get_collection_status_badge($payment_method, $is_collected, $actual_payment_status) {
+    $class = '';
+    $text = '';
+    $icon = '';
+
+    if ($payment_method === 'ONLINE') {
+        $class = 'bg-info-subtle text-info-emphasis'; 
+        $text = 'Paid Online';
+        $icon = 'fas fa-credit-card';
+    } else { // CASH booking
+        if ($is_collected) {
+            $class = 'bg-success-subtle text-success-emphasis'; 
+            $text = 'Collected';
+            $icon = 'fas fa-check-circle';
+        } else {
+            $class = 'bg-warning-subtle text-warning-emphasis'; 
+            $text = 'Pending';
+            $icon = 'fas fa-hourglass-half';
+        }
+    }
+    return "<span class=\"badge fw-bold {$class}\"><i class=\"{$icon} me-1\"></i>{$text}</span>";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,112 +135,242 @@ function get_initials($name) {
     <?php include "head.php"; ?>
     <title>Complete Booking Report</title>
     <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
+    <!-- DataTables CSS (existing) -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/dt-1.11.3/b-2.1.1/b-html5-2.1.1/b-print-2.1.1/datatables.min.css"/>
-    <style>
-        /* General White Theme Base */
-        body { background-color: #f8f9fa; color: #343a40; } /* Light grey background */
-        .container-fluid { padding-top: 2rem; padding-bottom: 2rem; }
-        h2.my-4 { font-weight: 700; color: #212529; }
+    <!-- NEW: DataTables Responsive CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css"/>
 
-        /* Filter Card Styling */
+    <style>
+        /* --- General White Theme & Layout Base --- */
+        body {
+            background-color: #f8f9fa; /* Very light grey background */
+            font-family: 'Inter', sans-serif; /* Modern, clean font */
+            color: #343a40; /* Darker text for readability */
+            line-height: 1.5;
+        }
+
+        .container-fluid {
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+        }
+
+        h2.my-4 {
+            font-weight: 700;
+            color: #212529; /* Darker heading */
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- Filter Card Styling --- */
         .filter-card {
             background-color: #ffffff;
-            border-radius: 0.75rem;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 0.75rem; /* Consistent rounding */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Subtler shadow */
             border: 1px solid #e0e0e0; /* Lighter border */
             padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.2s ease-in-out;
+            border-top: 5px solid #0d6efd; /* Blue accent top border */
         }
-        .filter-card .form-label { font-weight: 600; color: #495057; }
-        .filter-card .form-control, .filter-card .form-select {
+        .filter-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-card .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.875rem; /* Slightly smaller label */
+            margin-bottom: 0.4rem;
+        }
+
+        .filter-card .form-control,
+        .filter-card .form-select {
             border-radius: 0.5rem;
             border: 1px solid #ced4da;
-            padding: 0.65rem 1rem;
+            padding: 0.6rem 1rem; /* Optimized padding */
+            font-size: 0.9rem;
             transition: all 0.2s ease;
         }
-        .filter-card .form-control:focus, .filter-card .form-select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        .filter-card .btn-primary { background-color: #0d6efd; border-color: #0d6efd; font-weight: 600; border-radius: 0.5rem; }
-        .filter-card .btn-light { border-radius: 0.5rem; font-weight: 600; }
 
-        /* Report Card Styling */
+        .filter-card .form-control:focus,
+        .filter-card .form-select:focus {
+            border-color: #0d6efd; /* Primary blue focus */
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+        }
+
+        .filter-card .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-card .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .filter-card .btn-light {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            border-color: #ced4da;
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-card .btn-light:hover {
+            background-color: #e9ecef;
+            border-color: #bbbbbb;
+        }
+
+        /* --- Report Card Styling --- */
         .report-card {
             background-color: #ffffff;
-            border-radius: 1rem; /* Slightly larger radius */
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); /* More prominent shadow */
+            border-radius: 1rem; /* Consistent rounding */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07); /* Clear shadow */
             margin-bottom: 2rem;
-            border: none; /* No explicit border, rely on shadow */
-            overflow: hidden;
+            border: none;
+            overflow: hidden; /* Ensures rounded corners are respected */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-top: 5px solid #198754; /* Green accent for employee cards (default) */
         }
         .report-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        }
+        /* Special style for Online Customer Bookings card */
+        .report-card.online-user-card {
+            border-top-color: #0d6efd; /* Primary blue accent for online user card */
         }
 
-        .report-header { /* Default for larger screens */
+
+        .report-header {
             display: flex;
             align-items: center;
-            padding: 1.5rem;
-            background-color: #f0f3f6;
-            border-bottom: 1px solid #e9ecef;
-            flex-wrap: nowrap; /* Prevent wrapping by default */
+            padding: 1.25rem 1.5rem;
+            background-color: #f8f9fa; /* Lighter background for header */
+            border-bottom: 1px solid #e9ecef; /* Separator */
             gap: 1rem;
+            flex-wrap: wrap; /* Allow elements to wrap on smaller screens */
         }
+
         .report-header .avatar {
-            width: 55px; height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             color: white;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             flex-shrink: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .avatar-employee { background-color: #0d6efd; }
-        .avatar-user { background-color: #198754; }
-        .report-info { flex-grow: 1; }
-        .report-info h4 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #212529; }
-        .report-info p { margin: 0; color: #6c757d; font-size: 0.95rem; }
+        .avatar-employee { background-color: #198754; } 
+        .avatar-user { background-color: #0d6efd; } 
+        .avatar i { color: white; } /* Ensure icons in avatars are white */
 
-        .cash-due-box { /* Default for larger screens */
-            margin-left: auto;
+
+        .report-info { flex-grow: 1; }
+        .report-info h4 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+            line-height: 1.2;
+        }
+        .report-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .cash-due-box {
             text-align: right;
             padding-left: 1rem;
-            flex-shrink: 0; /* Don't shrink */
+            flex-shrink: 0;
+            display: flex; /* For inline label/value on smaller screens */
+            flex-direction: column; /* Stacked on larger screens */
+            align-items: flex-end; /* Align label/value to the right */
+            justify-content: center;
+            background-color: #fcebeb; /* Very light red background for emphasis */
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ffbebe;
+            box-shadow: 0 2px 8px rgba(220,53,69,0.1); /* Red accent shadow */
+            gap: 0.2rem;
         }
-        .cash-due-box .label { font-size: 0.85em; color: #6c757d; font-weight: 600; text-transform: uppercase; }
-        .cash-due-box .amount { font-size: 2.2rem; font-weight: 800; color: #dc3545; line-height: 1.1; display: block;}
+        .cash-due-box .label {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap; 
+            margin-bottom: 0; 
+        }
+        .cash-due-box .amount {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #dc3545; 
+            line-height: 1.1;
+            display: block;
+            white-space: nowrap;
+        }
         
-        /* Summary Grid Styling */
+        /* --- Summary Grid Styling --- */
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            padding: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 0.75rem; 
+            padding: 1.25rem 1.5rem; 
             border-bottom: 1px solid #f0f3f6;
+            background-color: #fcfdff; 
         }
         .summary-box {
-            background-color: #f8fafd;
-            padding: 0.85rem 1rem;
+            background-color: #ffffff; 
+            padding: 0.75rem 1rem; 
             border-radius: 0.5rem;
             border: 1px solid #eef2f5;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+            transition: all 0.1s ease-in-out;
         }
-        .summary-box .label { font-size: 0.75em; color: #6c757d; text-transform: uppercase; font-weight: 600; margin-bottom: 0.2rem; display: block; }
-        .summary-box .value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; color: #212529;}
+        .summary-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .summary-box .label {
+            font-size: 0.7em; 
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            display: block;
+            white-space: nowrap;
+        }
+        .summary-box .value {
+            font-size: 1.5rem; 
+            font-weight: 800;
+            line-height: 1.2;
+            color: #212529;
+            white-space: nowrap;
+        }
+        /* Color variations for summary box values */
         .text-cash-due { color: #dc3545 !important; }
         .text-cash-collected { color: #198754 !important; }
         .text-online { color: #0dcaf0 !important; }
         .text-total { color: #0d6efd !important; }
 
+        /* --- Report Footer Actions --- */
         .report-footer {
-            padding: 1.25rem 1.5rem;
-            background-color: #f0f3f6;
+            padding: 1rem 1.5rem;
+            background-color: #f8f9fa; 
             border-top: 1px solid #e9ecef;
             display: flex;
             flex-wrap: wrap;
@@ -226,30 +382,73 @@ function get_initials($name) {
             border-radius: 0.5rem;
             padding: 0.6rem 1.2rem;
             font-size: 0.9rem;
+            transition: all 0.2s ease-in-out;
         }
         .report-footer .btn-success { background-color: #198754; border-color: #198754; }
+        .report-footer .btn-success:hover { background-color: #157347; border-color: #146c43; }
         .report-footer .btn-outline-secondary { color: #6c757d; border-color: #ced4da; }
-        
-        /* Modals and DataTables Styling */
-        .modal-header { background-color: #0d6efd; color: white; border-bottom: none; border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0; padding: 1.25rem 1.5rem; }
-        .modal-title { font-weight: 600; font-size: 1.3rem; }
+        .report-footer .btn-outline-secondary:hover { background-color: #e2e6ea; border-color: #d3d6db; }
+
+        /* --- Modals and DataTables Styling --- */
+        .modal-header {
+            background-color: #0d6efd; 
+            color: white;
+            border-bottom: none;
+            border-radius: 1rem 1rem 0 0; 
+            padding: 1.25rem 1.5rem;
+        }
+        .modal-title { font-weight: 700; font-size: 1.3rem; }
         .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
-        .modal-content { border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: none; }
+        .modal-content {
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: none;
+            background-color: #ffffff;
+        }
         .modal-body { padding: 1rem; }
 
-        .details-table th { font-weight: 600; font-size: 0.85em; background-color: #f8f9fa; color: #495057; text-transform: uppercase; }
-        .details-table td { font-size: 0.9em; vertical-align: middle; }
-        .details-table .badge { font-size: 0.75em; padding: 0.4em 0.7em; }
+        .details-table th {
+            font-weight: 700;
+            font-size: 0.8em; 
+            background-color: #f8f9fa;
+            color: #495057;
+            text-transform: uppercase;
+            padding: 0.75rem 1rem;
+        }
+        .details-table td {
+            font-size: 0.85em; 
+            vertical-align: middle;
+            padding: 0.6rem 1rem;
+        }
+        .details-table .badge {
+            font-size: 0.7em;
+            padding: 0.3em 0.6em;
+            border-radius: 0.4rem; 
+            font-weight: 600; 
+        }
+        .details-table .badge.bg-info-subtle { background-color: #cfe2ff !important; color: #084298 !important; border: 1px solid #a8cfff; }
+        .details-table .badge.bg-warning-subtle { background-color: #fff3cd !important; color: #664d03 !important; border: 1px solid #ffe38f; }
+        .details-table .badge.bg-success-subtle { background-color: #d1e7dd !important; color: #0f5132 !important; border: 1px solid #b3d1b3; }
 
-        /* DataTables Customizations */
+
+        /* --- DataTables Customizations (global) --- */
+        /* Note: DataTables Responsive will hide/show columns, these general styles will still apply */
         .dataTables_wrapper .dataTables_filter { margin-bottom: 1rem; margin-top: 0.5rem; text-align: right; }
-        .dataTables_wrapper .dataTables_filter input { border-radius: 0.5rem; border: 1px solid #ced4da; padding: 0.5rem 0.75rem; }
-        .dataTables_wrapper .dataTables_filter input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 0.5rem;
+            border: 1px solid #ced4da;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
         .dataTables_wrapper .dt-buttons { float: left; margin-bottom: 1rem; }
         .dataTables_wrapper .dt-buttons .btn {
             margin-right: 0.5rem;
             border-radius: 0.5rem;
-            font-size: 0.85rem;
+            font-size: 0.8rem; 
             padding: 0.4rem 0.8rem;
             background-color: #6c757d;
             color: white;
@@ -259,102 +458,124 @@ function get_initials($name) {
             background-color: #5a6268;
             border-color: #545b62;
         }
-        .dataTables_wrapper .pagination .page-item .page-link { border-radius: 0.5rem !important; margin: 0 2px; }
-        .dataTables_wrapper .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
-        .dataTables_wrapper .dataTables_info { font-size: 0.85em; color: #6c757d; margin-top: 0.5rem; }
+        .dataTables_wrapper .pagination .page-item .page-link {
+            border-radius: 0.5rem !important;
+            margin: 0 2px;
+            font-size: 0.85rem;
+            padding: 0.5em 0.8em;
+            transition: all 0.1s ease-in-out;
+        }
+        .dataTables_wrapper .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .dataTables_wrapper .pagination .page-item:hover .page-link {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .dataTables_wrapper .dataTables_info { font-size: 0.8em; color: #6c757d; margin-top: 0.5rem; }
 
-        /* No Bookings Found Alert */
+        /* --- No Bookings Found Alert --- */
         .alert.alert-info {
             background-color: #e0f2fe;
-            color: #0a58ca;
+            color: #084298; 
             border-color: #90cdf4;
             border-radius: 0.75rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
-        .alert.alert-info .alert-heading { color: #0a58ca; }
-        .alert.alert-info i { color: #0a58ca; }
+        .alert.alert-info .alert-heading { color: #084298; font-weight: 700; }
+        .alert.alert-info i { color: #084298; }
 
         /* --- MOBILE SPECIFIC STYLES (for screens < 768px) --- */
         @media (max-width: 767.98px) {
             .container-fluid { padding-top: 1rem; padding-bottom: 1rem; }
-            h2.my-4 { font-size: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+            h2.my-4 { font-size: 1.6rem; margin-top: 1rem; margin-bottom: 1rem; }
 
             /* Filter Card */
-            .filter-card { padding: 1rem; margin-bottom: 1.5rem; }
-            .filter-card .col-12.col-sm-6.col-lg-2 { /* Ensure all filter items stack */
-                width: 100%;
-                margin-bottom: 0.5rem; /* Space between inputs */
+            .filter-card {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                border-top-width: 3px; 
             }
-            .filter-card .col-12.col-lg-2.d-flex.gap-2 {
-                margin-top: 0.5rem; /* Space after last input before buttons */
+            .filter-card .col-lg-2 { 
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            .filter-card .col-12.col-lg-2.d-flex.gap-2 { 
+                margin-top: 0.75rem;
             }
 
             /* Report Card - Mobile Adjustments */
             .report-card {
-                margin-bottom: 1.5rem; /* Reduced margin */
-                border-radius: 0.75rem; /* Slightly smaller radius for compactness */
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Subtler shadow */
+                margin-bottom: 1.5rem;
+                border-radius: 0.75rem;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                border-top-width: 3px; 
             }
 
-            .report-header { /* Compact header for mobile */
-                flex-direction: column; /* Stack vertically */
+            .report-header {
+                flex-direction: column; 
                 align-items: flex-start;
-                padding: 1rem; /* Reduced padding */
-                gap: 0.5rem; /* Smaller gap */
-                background-color: #ffffff; /* White header background */
-                border-bottom: none; /* No border, let card body flow */
+                padding: 1rem;
+                gap: 0.75rem;
+                background-color: #ffffff; 
+                border-bottom: none;
             }
             .report-header .avatar {
-                width: 45px; height: 45px; /* Smaller avatar */
-                font-size: 1.3rem; /* Smaller font for initials */
+                width: 45px; height: 45px;
+                font-size: 1.3rem;
             }
-            .report-info h4 { font-size: 1.15rem; } /* Smaller name font */
-            .report-info p { display: none; } /* Hide description on mobile to save space */
+            .report-info h4 { font-size: 1.1rem; }
+            .report-info p { display: none; } 
 
-            .cash-due-box { /* Integrated into header for compactness */
+            .cash-due-box {
                 margin-left: 0;
-                text-align: left;
-                width: 100%; /* Take full width */
-                padding: 0;
+                text-align: left; 
+                width: 100%;
+                padding: 0.6rem 0.8rem; 
+                flex-direction: row; 
+                align-items: baseline;
+                justify-content: flex-start; 
+                gap: 0.5rem;
             }
             .cash-due-box .label {
-                font-size: 0.75em;
-                font-weight: 500;
-                margin-right: 0.2rem;
-                display: inline; /* Keep label inline with amount */
-                color: #dc3545; /* Make due label red */
+                font-size: 0.85em; 
+                font-weight: 600;
+                white-space: nowrap;
+                margin-bottom: 0;
+                color: #dc3545; 
             }
             .cash-due-box .amount {
-                font-size: 1.5rem; /* Smaller amount font */
-                font-weight: 700;
+                font-size: 1.8rem;
+                font-weight: 800;
                 line-height: 1;
-                display: inline; /* Keep amount inline */
             }
 
             .summary-grid {
-                grid-template-columns: repeat(2, 1fr); /* Force 2 columns on most mobiles */
-                gap: 0.5rem; /* Very small gap */
-                padding: 1rem; /* Reduced padding */
-                border-bottom: none; /* No border */
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 0.4rem;
+                padding: 1rem;
+                border-bottom: none;
             }
             .summary-box {
-                padding: 0.6rem 0.75rem; /* Reduced padding */
-                border-radius: 0.4rem; /* Smaller radius */
-                background-color: #fcfdff; /* Even lighter for each box */
-                border: 1px solid #eef2f5;
+                padding: 0.6rem 0.75rem;
+                border-radius: 0.4rem;
+                box-shadow: none; 
             }
-            .summary-box .label { font-size: 0.65em; margin-bottom: 0.1rem; } /* Even smaller label */
-            .summary-box .value { font-size: 1.2rem; } /* Even smaller value */
+            .summary-box .label { font-size: 0.6em; margin-bottom: 0.2rem; }
+            .summary-box .value { font-size: 1.3rem; }
 
             .report-footer {
-                padding: 1rem; /* Reduced padding */
-                gap: 0.5rem; /* Smaller gap */
-                justify-content: center; /* Center buttons */
-                background-color: #ffffff; /* White footer background */
+                padding: 1rem;
+                gap: 0.5rem;
+                justify-content: center; 
             }
             .report-footer .btn {
-                padding: 0.5rem 1rem; /* Smaller buttons */
+                padding: 0.5rem 1rem;
                 font-size: 0.8rem;
+                flex-grow: 1; 
+                max-width: 180px; 
             }
         }
     </style>
@@ -369,9 +590,10 @@ function get_initials($name) {
 
             <!-- Filter Card -->
             <div class="card filter-card mb-4">
-                <div class="card-body p-3"> <!-- Reduced padding for body -->
-                    <form method="GET" class="row g-1 align-items-end">
-                        <div class="col-6 col-sm-6 col-lg-2">
+                <div class="card-body p-3">
+                    <form method="GET" class="  align-items-end">
+                        <div class="row g-1">
+                        <div class="col-6  col-lg-2">
                             <label class="form-label fw-bold">Employee</label>
                             <select name="employee_id" class="form-select">
                                 <option value="">All</option>
@@ -382,7 +604,7 @@ function get_initials($name) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-6 col-sm-6 col-lg-2">
+                        <div class="col-6  col-lg-2">
                             <label class="form-label fw-bold">Bus</label>
                             <select name="bus_id" class="form-select">
                                 <option value="">All</option>
@@ -393,7 +615,7 @@ function get_initials($name) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12 col-sm-6 col-lg-2">
+                        <div class="col-12   col-lg-2">
                             <label class="form-label fw-bold">Route</label>
                             <select name="route_id" class="form-select">
                                 <option value="">All</option>
@@ -405,12 +627,12 @@ function get_initials($name) {
                             </select>
                         </div>
                         
-                        <div class="col-6 col-sm-6 col-lg-2">
+                        <div class="col-6 col-lg-2">
                             <label for="date_from" class="form-label fw-bold">Date From</label>
                             <input type="text" id="date_from" name="date_from" class="form-control date-picker" 
                                    value="<?php echo htmlspecialchars($date_from_filter ?? ''); ?>" placeholder="Start Date">
                         </div>
-                        <div class="col-6 col-sm-6 col-lg-2">
+                        <div class="col-6   col-lg-2">
                             <label for="date_to" class="form-label fw-bold">Date To</label>
                             <input type="text" id="date_to" name="date_to" class="form-control date-picker" 
                                    value="<?php echo htmlspecialchars($date_to_filter ?? ''); ?>" placeholder="End Date">
@@ -419,6 +641,7 @@ function get_initials($name) {
                         <div class="col-12 col-lg-2 d-flex gap-2">
                             <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i> Filter</button>
                             <a href="employee_bookings.php" class="btn btn-light border w-100">Reset</a>
+                        </div>
                         </div>
                     </form>
                 </div>
@@ -433,18 +656,18 @@ function get_initials($name) {
             <?php endif; ?>
 
             <?php if ($user_report['total_bookings'] > 0): ?>
-                <div class="report-card">
+                <div class="report-card online-user-card">
                     <div class="report-header">
                         <div class="avatar avatar-user"><i class="fas fa-globe"></i></div>
                         <div class="report-info"><h4>Online Customer Bookings</h4><p>Bookings made by customers via website/app.</p></div>
                     </div>
                     <div class="summary-grid">
                         <div class="summary-box"><span class="label">Total Bookings</span><div class="value text-total"><?php echo $user_report['total_bookings']; ?></div></div>
-                        <div class="summary-box"><span class="label">Total Online Sales</span><div class="value text-cash-collected">₹<?php echo number_format($user_report['total_online'], 2); ?></div></div>
-                        <!-- Add placeholders for cash related if you want, but for online users, it's mostly online sales -->
-                        <div class="summary-box d-none d-sm-block"><span class="label"></span><div class="value"></div></div> 
-                        <div class="summary-box d-none d-sm-block"><span class="label"></span><div class="value"></div></div>
-                        <div class="summary-box d-none d-sm-block"><span class="label"></span><div class="value"></div></div>
+                        <div class="summary-box"><span class="label">Total Online Sales</span><div class="value text-online">₹<?php echo number_format($user_report['total_online'], 2); ?></div></div>
+                        <!-- Empty boxes for consistent grid layout -->
+                        <div class="summary-box d-sm-none d-lg-block"><span class="label">&nbsp;</span><div class="value">&nbsp;</div></div> 
+                        <div class="summary-box d-sm-none d-lg-block"><span class="label">&nbsp;</span><div class="value">&nbsp;</div></div>
+                        <div class="summary-box d-sm-none d-lg-block"><span class="label">&nbsp;</span><div class="value">&nbsp;</div></div>
                     </div>
                     <div class="report-footer">
                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#detailsModalUser"><i class="fas fa-list-ul me-2"></i>View Booking Details (<?php echo count($user_report['bookings']); ?>)</button>
@@ -455,7 +678,7 @@ function get_initials($name) {
             <?php foreach ($employee_report as $employee_id => $data): ?>
                 <div class="report-card">
                     <div class="report-header">
-                        <div class="avatar avatar-employee"><?php echo get_initials($data['employee_name']); ?></div>
+                        <div class="avatar avatar-employee"><i class="fas fa-user-tie"></i></div> 
                         <div class="report-info"><h4><?php echo htmlspecialchars($data['employee_name']); ?></h4><p>Sales report based on selected filters.</p></div>
                         <?php if ($data['cash_due'] > 0): ?>
                         <div class="cash-due-box"><span class="label">Cash Due</span><div class="amount">₹<?php echo number_format($data['cash_due'], 2); ?></div></div>
@@ -471,7 +694,7 @@ function get_initials($name) {
                     <div class="report-footer d-flex gap-2 flex-wrap">
                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#detailsModal<?php echo $employee_id; ?>"><i class="fas fa-list-ul me-2"></i>View Details (<?php echo count($data['bookings']); ?>)</button>
                         <?php if ($data['cash_due'] > 0): ?>
-                            <button class="btn btn-success collect-all-cash-btn" data-employee-id="<?php echo $employee_id; ?>" data-employee-name="<?php echo htmlspecialchars($data['employee_name']); ?>" data-amount="<?php echo $data['cash_due']; ?>"><i class="fas fa-check-circle me-2"></i>Collect All Due Cash</button>
+                            <button class="btn btn-success collect-all-cash-btn" data-employee-id="<?php echo $employee_id; ?>" data-employee-name="<?php echo htmlspecialchars($data['employee_name']); ?>" data-amount="<?php echo $data['cash_due']; ?>"><i class="fas fa-money-bill-wave me-2"></i>Collect All Due Cash</button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -485,8 +708,8 @@ function get_initials($name) {
                                 <table class="table table-striped table-hover details-table datatable display" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th>Ticket #</th><th>Travel Date</th><th>Route</th><th>Bus</th><th>Payment</th>
-                                            <th>Status</th><th class="text-end">Fare</th><th class="no-export">Action</th>
+                                            <th>Ticket #</th><th>Travel Date</th><th>Route</th><th>Bus</th><th>Payment Type</th>
+                                            <th>Collection Status</th><th class="text-end">Fare</th><th class="no-export">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -496,8 +719,10 @@ function get_initials($name) {
                                             <td><?php echo date('d-M-Y', strtotime($booking['travel_date'])); ?></td>
                                             <td><?php echo htmlspecialchars($booking['route_name']); ?></td>
                                             <td><?php echo htmlspecialchars($booking['bus_name']); ?></td>
-                                            <td><span class="badge <?php echo $booking['payment_method'] === 'CASH' ? 'bg-warning text-dark' : 'bg-info text-dark'; ?>"><?php echo $booking['payment_method']; ?></span></td>
-                                            <td><?php echo $booking['is_collected'] ? '<span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Collected</span>' : ($booking['payment_method'] === 'CASH' ? '<span class="text-danger fw-bold"><i class="fas fa-hourglass-half me-1"></i>Pending</span>' : '<span class="text-info fw-bold"><i class="fas fa-credit-card me-1"></i>Paid Online</span>'); ?></td>
+                                            <td><span class="badge fw-bold <?php echo $booking['payment_method'] === 'CASH' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-info-subtle text-info-emphasis'; ?>"><?php echo $booking['payment_method']; ?></span></td>
+                                            <td>
+                                                <?php echo get_collection_status_badge($booking['payment_method'], $booking['is_collected'], $booking['actual_payment_status']); ?>
+                                            </td>
                                             <td class="fw-bold text-end">₹<?php echo number_format($booking['total_fare'], 2); ?></td>
                                             <td><a href="generate_ticket.php?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fas fa-eye"></i></a></td>
                                         </tr>
@@ -546,8 +771,12 @@ function get_initials($name) {
     </div>
 </div>
 <?php include "foot.php"; ?>
-<!-- DataTables JS -->
+<!-- DataTables JS (existing) -->
 <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/dt-1.11.3/b-2.1.1/b-html5-2.1.1/b-print-2.1.1/datatables.min.js"></script>
+<!-- NEW: DataTables Responsive JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 $(document).ready(function() {
@@ -608,12 +837,12 @@ $(document).ready(function() {
                             });
                         } else {
                             Swal.fire('Error!', response.message || 'An unknown error occurred.', 'error');
-                            btn.prop('disabled', false).html('<i class="fas fa-check-circle me-2"></i>Collect All Due Cash');
+                            btn.prop('disabled', false).html('<i class="fas fa-money-bill-wave me-2"></i>Collect All Due Cash');
                         }
                     },
                     error: function() {
                         Swal.fire('Error!', 'Could not connect to the server.', 'error');
-                        btn.prop('disabled', false).html('<i class="fas fa-check-circle me-2"></i>Collect All Due Cash');
+                        btn.prop('disabled', false).html('<i class="fas fa-money-bill-wave me-2"></i>Collect All Due Cash');
                     }
                 });
             }
@@ -654,7 +883,8 @@ $(document).ready(function() {
                     }
                 ],
                 "pageLength": 10,
-                "order": [[ 1, "desc" ]]
+                "order": [[ 1, "desc" ]], // Assuming the 2nd column (index 1) is "Travel Date"
+                "responsive": true  
             });
         }
     });
@@ -664,8 +894,7 @@ $(document).ready(function() {
         var table = $(this).find('.datatable').DataTable();
         if (table) {
             table.destroy();
-            // Clear the table HTML to prevent re-initialization issues
-            $(this).find('.datatable').html($(this).find('.datatable').html());
+            $(this).find('.datatable').html($(this).find('.datatable thead').html() + '<tbody></tbody>');
         }
     });
 });

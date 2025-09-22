@@ -152,7 +152,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <?php if (user_has_permission('can_manage_employees')): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page == 'add_employee' ? 'active' : ''; ?>" href="add_employee.php">
-                    <i class="fas fa-user-shield me-2"></i>Manage Employees
+                    <i class="fas fa-user-shield me-2"></i>Manage Sub-Admin
                 </a>
             </li>
             <?php endif; ?>

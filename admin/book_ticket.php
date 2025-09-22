@@ -353,26 +353,44 @@ try {
             });
 
             function loadSeatLayout() {
-                resetPage(4);
-                $('#seat-selection-area').removeClass('d-none');
-                $('.deck-container').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary"></div></div>');
-                $.getJSON('function/backend/booking_actions.php', {
-                    action: 'get_seat_layout',
-                    route_id: selectedRouteId,
-                    travel_date: selectedDate,
-                    from_stop_name: fromStopName,
-                    to_stop_name: toStopName
-                }).done(response => {
-                    if (response.status === 'success') {
-                        busId = response.bus_id;
-                        renderSeats(response.seats);
-                    } else {
-                        $('#lower_deck_container').html(`<div class="alert alert-danger m-3">${response.message}</div>`);
-                        $('#upper_deck_container').empty();
-                    }
-                }).fail(() => $('.deck-container').html('<div class="alert alert-danger m-3">Could not load seat layout.</div>'));
-            }
+    resetPage(4);
+    $('#seat-selection-area').removeClass('d-none');
+    
+    const seatLayoutContainer = $('#lower_deck_container');
+    const summaryCard = $('#booking-summary-card');
 
+    seatLayoutContainer.html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary"></div></div>');
+    $('#upper_deck_container').empty().parent().addClass('d-none');
+
+    $.getJSON('function/backend/booking_actions.php', {
+        action: 'get_seat_layout',
+        route_id: selectedRouteId,
+        travel_date: selectedDate,
+        from_stop_name: fromStopName,
+        to_stop_name: toStopName
+    }).done(response => {
+        if (response.status === 'success') {
+            // If successful, enable the summary card and render seats
+            summaryCard.css('opacity', 1);
+            $('#confirm-booking-btn').prop('disabled', true); // Will be enabled when a seat is selected
+            busId = response.bus_id;
+            renderSeats(response.seats);
+        } else {
+            // --- THIS IS THE KEY FIX FOR THE FRONTEND ---
+            // Display the specific error message from the backend
+            const errorMessage = `<div class="alert alert-danger m-3"><strong>Booking Unavailable:</strong> ${response.message}</div>`;
+            seatLayoutContainer.html(errorMessage);
+            
+            // Visually disable the summary and payment section
+            summaryCard.css('opacity', 0.5);
+            $('#confirm-booking-btn').prop('disabled', true);
+            $('#passenger-details-form').html('<p class="text-center text-danger fw-bold">Booking is not available for this route on the selected date.</p>');
+        }
+    }).fail(() => {
+        // Handle general server connection errors
+        seatLayoutContainer.html('<div class="alert alert-danger m-3">Could not load seat layout. Please check the server connection.</div>');
+    });
+}
             function createSeatElement(seatData) {
                 const seatEl = $('<div>').addClass('seat').attr('data-seat-id', seatData.seat_id).addClass(seatData.seat_type.toLowerCase()).css({
                     left: seatData.x_coordinate + 'px',
