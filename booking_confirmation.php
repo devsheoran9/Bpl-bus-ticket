@@ -209,7 +209,7 @@ try {
                             <?php if ($transaction_details && !empty($transaction_details['gateway_payment_id'])): ?>
                                 <div style="grid-column:1/-1;">
                                     <dt class="text-success">Payment ID</dt>
-                                    <dd><span class="bg-danger text-light p-1" ><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></span></dd>
+                                    <dd><span class="bg-danger text-light " ><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></span></dd>
                                 </div>
                             <?php endif; ?>
 
