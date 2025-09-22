@@ -3,9 +3,9 @@
    =================================================================== */
 :root {
   /* New "Light & Pretty" Color Palette */
-  --primary-color: #ff6b6b; /* A vibrant yet soft coral */
+  --primary-color: #ff6b6b;
   --primary-hover-color: #ff8787;
-  --secondary-color: #4ecdc4; /* A complementary fresh teal */
+  --secondary-color: #4ecdc4;
   --secondary-hover-color: #68d8cf;
   --gradient-start: #ff9a8b;
   --gradient-end: #ff6a88;
@@ -15,9 +15,9 @@
   --warning-color: #ffc107;
 
   /* Typography & Layout */
-  --text-dark: #2c3e50; /* A softer, professional dark blue-gray */
-  --text-light: #8d99ae; /* A lighter gray for secondary text */
-  --body-bg: #fdfdff; /* A very light, almost white background */
+  --text-dark: #2c3e50; 
+  --text-light: #8d99ae; 
+  --body-bg: #fdfdff; 
   --card-bg: #ffffff;
   --border-color: #eaeaea;
   --card-shadow: 0 4px 25px rgba(44, 62, 80, 0.08);
