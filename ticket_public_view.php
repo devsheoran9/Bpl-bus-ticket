@@ -131,7 +131,7 @@ try {
         }
 
         /* CORRECT WATERMARK STYLE */
-        .bus-ticket::before {
+        /* .bus-ticket::before {
             content: "Sanjay";
             position: absolute;
             top: 50%;
@@ -143,7 +143,7 @@ try {
             color: rgba(255, 107, 107, 0.1); 
             z-index: 1; 
             pointer-events: none; 
-        }
+        } */
 
         .main-panel {
             width: 75%;
