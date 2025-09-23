@@ -2,13 +2,10 @@
 ob_start();
 include 'includes/header.php';
 
-// --- 1. Security & Input Validation ---
 $booking_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
-// --- FIX IS HERE: Use a modern, reliable method to get the ticket number ---
 $ticket_no = $_GET['ticket'] ?? null;
 
-// Check for both parameters
 if (!$booking_id || !$ticket_no) {
     die("Error: A valid Booking ID and Ticket Number are required.");
 }
@@ -17,14 +14,12 @@ $is_new_user = isset($_GET['new_user']) && $_GET['new_user'] === 'true';
 $is_logged_in = isset($_SESSION['user_id']);
 $logged_in_user_id = $is_logged_in ? $_SESSION['user_id'] : null;
 
-// Initialize variables
 $booking_details = null;
 $passengers = [];
 $transaction_details = null;
 $view_ticket_url = '#';
 
 try {
-    // --- 2. Database Fetching Logic (Now correctly receives the ticket number) ---
     $base_sql = "SELECT b.*, bu.bus_name, bu.registration_number, rs.departure_time, r.starting_point, r.ending_point 
                  FROM bookings b 
                  JOIN buses bu ON b.bus_id = bu.bus_id 
@@ -47,9 +42,7 @@ try {
         die("Booking not found or you do not have permission to view this confirmation.");
     }
 
-
-    // --- 3. GENERATE/RETRIEVE SECURE TOKEN & CREATE TICKET URL ---
-    // --- 3. GENERATE/RETRIEVE SECURE TOKEN & CREATE TICKET URL ---
+    // ---  GENERATE/RETRIEVE SECURE TOKEN & CREATE TICKET URL ---
     $tokenStmt = $pdo->prepare("SELECT token FROM ticket_access_tokens WHERE booking_id = ?");
     $tokenStmt->execute([$booking_id]);
     $token = $tokenStmt->fetchColumn();
@@ -62,7 +55,7 @@ try {
     $base_url = rtrim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/');
     $view_ticket_url = $base_url . '/ticket_public_view?token=' . urlencode($token);
 
-    // --- 4. Fetch Passengers & Transaction Details ---
+    // ---   Fetch Passengers & Transaction Details ---
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");
     $passengersStmt->execute([$booking_id]);
     $passengers = $passengersStmt->fetchAll();
@@ -70,7 +63,7 @@ try {
     $transStmt->execute([$booking_id]);
     $transaction_details = $transStmt->fetch();
 
-    // --- 5. Calculate Times ---
+    // ---  Calculate Times ---
     $stmt_origin = $pdo->prepare("SELECT duration_from_start_minutes FROM route_stops WHERE route_id = ? AND stop_name = ?");
     $stmt_origin->execute([$booking_details['route_id'], $booking_details['origin']]);
     $origin_minutes = (int)$stmt_origin->fetchColumn();
@@ -84,7 +77,6 @@ try {
     die("An error occurred while fetching booking details: " . $e->getMessage());
 }
 ?>
-
 
 <style>
     .confirmation-card {
@@ -143,11 +135,10 @@ try {
     }
 </style>
 
-
 <body>
     <main class="container   pt-5">
         <div class="card shadow-lg confirmation-card">
-            <div class="card-body p-lg-5">
+            <div class="card-body">
                 <div class="text-center mb-4">
                     <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
                     <h1 class="h3"><?php echo $is_new_user ? 'Booking Successful & Account Created!' : 'Booking Confirmed!'; ?></h1>
@@ -203,13 +194,13 @@ try {
 
                             <div>
                                 <dt class="text-success">Total Fare Paid</dt>
-                                <dd><span class="bg-success text-light p-1" >₹<?php echo number_format($booking_details['total_fare'], 2); ?></span></dd>
+                                <dd><span class="text-danger">₹<?php echo number_format($booking_details['total_fare'], 2); ?></span></dd>
                             </div>
 
                             <?php if ($transaction_details && !empty($transaction_details['gateway_payment_id'])): ?>
-                                <div style="grid-column:1/-1;">
+                                <div>
                                     <dt class="text-success">Payment ID</dt>
-                                    <dd><span class="bg-danger text-light " ><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></span></dd>
+                                    <dd><span class=" text-danger "><?php echo htmlspecialchars($transaction_details['gateway_payment_id']); ?></span></dd>
                                 </div>
                             <?php endif; ?>
 
