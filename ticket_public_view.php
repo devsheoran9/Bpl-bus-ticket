@@ -110,6 +110,7 @@ try {
             width: 100%;
             max-width: 840px;
             margin: 0 auto;
+            border-radius: 16px;
         }
 
         #ticket-wrapper {

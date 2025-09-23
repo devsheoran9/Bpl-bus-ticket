@@ -55,15 +55,12 @@ try {
 }
 ?>
 
-<!-- Add a new style block in the head for the awesome review section -->
 <style>
-    /* Awesome Testimonial Section Styles */
     .testimonial-section-awesome {
         background-color: #ffffffff;
         padding: 80px 0;
     }
 
-    /* This ensures cards within a slider row are the same height */
     .carousel-item .row {
         display: flex;
     }
@@ -78,15 +75,12 @@ try {
         display: flex;
         flex-direction: column;
         height: 100%;
-        /* Makes the card fill the column height */
     }
 
     .review-text {
         flex-grow: 1;
-        /* Allows the text to expand and push the footer down */
     }
 
-    /* Styling for the carousel controls */
     .review-carousel .carousel-control-prev,
     .review-carousel .carousel-control-next {
         width: 45px;
@@ -113,13 +107,11 @@ try {
         right: 0px;
     }
 
-    /* Hide controls on very small screens if they overlap too much */
     @media (max-width: 576px) {
 
         .review-carousel .carousel-control-prev,
         .review-carousel .carousel-control-next {
             display: none;
-            /* Hide buttons on mobile for a cleaner swipe experience */
         }
     }
 </style>
@@ -212,7 +204,7 @@ try {
             </div>
         </div>
 
-         <section class="section">
+        <section class="section">
             <div class="container why-choose-container">
                 <h2 class="section-title" style="text-align: left;">bplBus: India’s Trusted Online Bus Booking Platform</h2>
                 <p>bplBus has been simplifying bus travel in India for over 2 years, serving more than 5 million happy travelers. We are committed to providing a smooth, fast, and reliable online ticket booking experience.</p>
@@ -233,6 +225,28 @@ try {
                     <li style="margin-bottom: 1.2rem;"><strong>Instant Refund</strong> - Get an instant refund for cancellation or booking-related issues.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Live Bus Tracking</strong> - Track your bus in real-time and plan your journey more efficiently.</li>
                 </ul>
+            </div>
+        </section>
+
+        <section class="section bg-light-gray">
+            <div class="container">
+                <h2 class="section-title">Popular Bus Routes</h2>
+                <p class="section-subtitle">Explore some of the most traveled bus routes by our satisfied customers.</p>
+                <div class="row g-2">
+                    <?php if (!empty($popular_routes)) : ?>
+                        <?php foreach ($popular_routes as $route) : ?>
+                            <div class="col-lg-4 col-md-6">
+                                <a href="#" class="text-decoration-none popular-route-link" data-from="<?php echo htmlspecialchars($route['starting_point']); ?>" data-to="<?php echo htmlspecialchars($route['ending_point']); ?>">
+                                    <div class="route-card">
+                                        <?php echo htmlspecialchars($route['starting_point']); ?> <i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($route['ending_point']); ?>
+                                    </div>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <p class="text-center text-muted">Popular routes will be displayed here soon.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </section>
 
@@ -294,7 +308,7 @@ try {
         </section>
     </main>
 
-    <?php include "includes/footer.php" ?> 
+    <?php include "includes/footer.php" ?>
 
     <script>
         const allLocations = <?php echo json_encode($all_locations); ?>;

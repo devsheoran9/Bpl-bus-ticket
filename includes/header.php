@@ -161,7 +161,7 @@ $youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="sidebar-menu-item <?php if ($current_page == 'help.php') echo 'active'; ?>">
+                    <a href="help" class="sidebar-menu-item <?php if ($current_page == 'help.php') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-question-circle"></i><span>Help</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>

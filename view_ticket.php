@@ -138,9 +138,9 @@ try {
             background: var(--bg-card);
             padding: 20px;
             border-radius: 16px;
-            box-shadow: 0 10px 40px -10px rgba(0, 82, 204, 0.2);
+            /* box-shadow: 0 10px 40px -10px rgba(0, 82, 204, 0.2); */
             width: 100%;
-            max-width: 900px;
+            max-width: 840px;
         }
 
         #ticket-scroll-container {
@@ -338,7 +338,7 @@ try {
                 </div>
                 <div class="stub-panel">
                     <!-- FIX: Using bus_name instead of operator_name -->
-                    <div class="brand"><?php echo htmlspecialchars($booking_details['bus_name']); ?></div>
+                    <div class="brand">BPL Bus Service</div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
                         <div class="label" style="font-size:11px;">Date</div>
@@ -348,7 +348,7 @@ try {
                         <div class="label" style="font-size:11px;">Total Fare</div>
                         <div class="value" style="font-size:18px; font-weight: 700;">₹<?php echo number_format($booking_details['total_fare'], 2); ?></div>
                     </div>
-                    <div style="font-size:9px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details. Have a safe journey!</div>
+                    <div style="font-size:8px; color:var(--text-light); margin-top:10px;">Scan QR for ticket details. Have a safe journey!</div>
                 </div>
             </div>
         </div>
