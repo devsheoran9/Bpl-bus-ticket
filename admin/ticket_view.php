@@ -45,10 +45,10 @@ try {
     $tokenStmt->execute([$booking_id]);
     $token = $tokenStmt->fetchColumn();
     if (!$token) {
-        $token = bin2hex(random_bytes(16));
+        $token = bin2hex(random_bytes(20));
         $_conn_db->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)")->execute([$booking_id, $token]);
     }
-    $publicTicketUrl = BASE_URLL . '?token=' . $token;
+    $publicTicketUrl = BASE_URLL . '?token=' . urlencode($token);
 
     // --- 4. Fetch Route Stops for detailed timeline ---
     $stmt_stops = $_conn_db->prepare("SELECT * FROM route_stops WHERE route_id = ? ORDER BY stop_order ASC");
@@ -593,17 +593,17 @@ if (!empty($booking['departure_time'])) {
                                 <div class="mb-3">
                                     <label class="form-label small text-muted">Share via WhatsApp</label>
                                     <div class="input-group">
-                                        <input type="tel" class="form-control" id="whatsapp-number" value="<?php echo htmlspecialchars($booking['contact_mobile'] ?? ''); ?>" placeholder="Enter WhatsApp No.">
+                                        <input type="tel" class="form-control" id="whatsapp-number" value="+91<?php echo htmlspecialchars($booking['contact_mobile'] ?? ''); ?>" placeholder="Enter WhatsApp No.">
                                         <button class="btn btn-outline-success" id="send-whatsapp-btn" type="button"><i class="fab fa-whatsapp"></i> Send</button>
                                     </div>
                                 </div>
-                                <div class="mb-3">
+                                <!-- <div class="mb-3">
                                     <label class="form-label small text-muted">Send via Email</label>
                                     <div class="input-group">
                                         <input type="email" class="form-control" id="email-address" value="<?php echo htmlspecialchars($booking['contact_email'] ?? ''); ?>" placeholder="Enter Email Address">
                                         <button class="btn btn-outline-info" id="send-email-btn" type="button"><i class="fas fa-envelope"></i> Send</button>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -614,8 +614,7 @@ if (!empty($booking['departure_time'])) {
 
     <?php include "foot.php"; ?>
     <script>
-        $(document).ready(function() {
-            // --- WhatsApp Share Functionality ---
+        $(document).ready(function() { 
             $('#send-whatsapp-btn').on('click', function() {
                 const number = $('#whatsapp-number').val().trim();
                 if (!number) {
