@@ -5,7 +5,7 @@
         <!-- ======= Hero Section ======= -->
         <section class="text-center py-5" style="background: linear-gradient(to right, #fdfbfb, #ebedee);">
             <div class="container my-4">
-                <h1 class="display-4" style="font-weight: 700; color: #343a40;">Welcome to BPL Bus</h1>
+                <h1 class="display-4" style="font-weight: 700; color: #343a40;">Welcome to <?php echo $company_name; ?></h1>
                 <p class="lead mt-3" style="color: #6c757d; max-width: 700px; margin: auto;">We are more than just a bus ticket booking platform; we are your dedicated partners in travel, committed to making every journey safe, comfortable, and memorable.</p>
             </div>
         </section>
@@ -20,7 +20,7 @@
                     <div class="col-lg-6 ps-lg-5">
                         <h2 style="font-weight: 600; color: #343a40; text-align: left;">Our Story: A Journey of Trust</h2>
                         <p style="line-height:1.7; margin-bottom:15px; text-align:justify; color: #555;">
-                            Founded with a vision to revolutionize road travel in India, BPL Bus was born from a simple idea: booking a bus ticket should be easy, transparent, and completely hassle-free. We saw the challenges travelers faced—long queues, uncertain timings, and a lack of reliable, safe services. We set out to build a solution.
+                            Founded with a vision to revolutionize road travel in India, <?php echo $company_name; ?> was born from a simple idea: booking a bus ticket should be easy, transparent, and completely hassle-free. We saw the challenges travelers faced—long queues, uncertain timings, and a lack of reliable, safe services. We set out to build a solution.
                         </p>
                         <p style="line-height:1.7; text-align:justify; color: #555;">
                             From a humble beginning, we have grown into one of the country's most trusted online bus ticketing platforms. This growth is fueled by a passion for technology and a deep-rooted commitment to your satisfaction. Today, we proudly connect thousands of travelers to hundreds of destinations every single day, making journeys simpler and lives easier.
@@ -109,7 +109,7 @@
         <section class="py-5 text-center" style="background-color: #7b003a; color: white;">
             <div class="container">
                 <h2 style="font-weight: 700;">Ready to Embark on Your Next Adventure?</h2>
-                <p class="lead my-4" style="opacity: 0.9;">Join millions of satisfied travelers who trust BPL Bus for their journey. Your next destination is just a click away.</p>
+                <p class="lead my-4" style="opacity: 0.9;">Join millions of satisfied travelers who trust  <?php echo $company_name; ?> for their journey. Your next destination is just a click away.</p>
                 <a href="index" class="btn btn-light" style="padding: 12px 30px; font-weight: 600; border-radius: 50px; color: #7b003a;">Book Your Next Journey</a>
             </div>
         </section>
