@@ -158,9 +158,7 @@ $stmt->execute();
         border-color: #d32f2f;
     }
 
-    .pagination .page-link {
-        color: #d32f2f;
-    }
+   
 
     .pagination .page-link:hover {
         color: #a02424;

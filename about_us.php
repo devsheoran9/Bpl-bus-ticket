@@ -1,7 +1,6 @@
 <?php include 'includes/header.php'; ?> 
 
 <body style="background-color: #f8f9fa;">
-
     <main>
         <!-- ======= Hero Section ======= -->
         <section class="text-center py-5" style="background: linear-gradient(to right, #fdfbfb, #ebedee);">

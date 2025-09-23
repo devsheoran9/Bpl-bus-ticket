@@ -1,12 +1,35 @@
 <?php
 include 'includes/header.php';
 
+// --- HELPER FUNCTIONS ---
+function render_stars($rating)
+{
+    $stars_html = '';
+    for ($i = 1; $i <= 5; $i++) {
+        $iconClass = ($i <= $rating) ? 'bi-star-fill text-warning' : 'bi-star text-muted';
+        $stars_html .= '<i class="bi ' . $iconClass . '"></i> ';
+    }
+    return $stars_html;
+}
+
+function mask_email($email)
+{
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return '';
+    }
+    list($first, $last) = explode('@', $email);
+    $first = substr($first, 0, 2) . str_repeat('*', max(1, strlen($first) - 2));
+    return $first . '@' . $last;
+}
+
+// --- INITIALIZE VARIABLES ---
 $all_locations = [];
 $popular_routes = [];
+$latest_reviews = [];
 
 try {
-    // Fetch ALL unique locations (from, to, and stops) for dropdowns.
-    $stmt_locations = $_conn_db->query("
+    // --- 1. Fetch ALL unique locations ---
+    $stmt_locations = $pdo->query("
         (SELECT DISTINCT starting_point FROM routes WHERE status = 'Active')
         UNION
         (SELECT DISTINCT ending_point FROM routes WHERE status = 'Active')
@@ -14,18 +37,92 @@ try {
         (SELECT DISTINCT stop_name FROM route_stops)
         ORDER BY starting_point ASC
     ");
-    // Filter out any null or empty values
     $all_locations = array_filter($stmt_locations->fetchAll(PDO::FETCH_COLUMN));
 
-    // Fetch popular routes using the 'is_popular' flag.
-    $stmt_popular = $_conn_db->query("
+    // --- 2. Fetch popular routes ---
+    $stmt_popular = $pdo->query("
         SELECT starting_point, ending_point FROM routes WHERE is_popular = 1 AND status = 'Active' LIMIT 6
     ");
     $popular_routes = $stmt_popular->fetchAll(PDO::FETCH_ASSOC);
+
+    // --- 3. Fetch latest reviews ---
+    $stmt_reviews = $pdo->query("
+        SELECT user_name, email, rating, review_text, created_at FROM reviews WHERE status = 1 ORDER BY created_at DESC LIMIT 6
+    ");
+    $latest_reviews = $stmt_reviews->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Homepage DB Error: " . $e->getMessage());
 }
 ?>
+
+<!-- Add a new style block in the head for the awesome review section -->
+<style>
+    /* Awesome Testimonial Section Styles */
+    .testimonial-section-awesome {
+        background-color: #ffffffff;
+        padding: 80px 0;
+    }
+
+    /* This ensures cards within a slider row are the same height */
+    .carousel-item .row {
+        display: flex;
+    }
+
+    .carousel-item .col-lg-4,
+    .carousel-item .col-md-6 {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .testimonial-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        /* Makes the card fill the column height */
+    }
+
+    .review-text {
+        flex-grow: 1;
+        /* Allows the text to expand and push the footer down */
+    }
+
+    /* Styling for the carousel controls */
+    .review-carousel .carousel-control-prev,
+    .review-carousel .carousel-control-next {
+        width: 45px;
+        height: 45px;
+        background-color: rgba(44, 62, 80, 0.4);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    }
+
+    .review-carousel .carousel-control-prev:hover,
+    .review-carousel .carousel-control-next:hover {
+        opacity: 1;
+        background-color: var(--primary-color);
+    }
+
+    .review-carousel .carousel-control-prev {
+        left: 0px;
+    }
+
+    .review-carousel .carousel-control-next {
+        right: 0px;
+    }
+
+    /* Hide controls on very small screens if they overlap too much */
+    @media (max-width: 576px) {
+
+        .review-carousel .carousel-control-prev,
+        .review-carousel .carousel-control-next {
+            display: none;
+            /* Hide buttons on mobile for a cleaner swipe experience */
+        }
+    }
+</style>
 
 <body>
     <main>
@@ -33,7 +130,6 @@ try {
             <div class="container">
                 <h1 class="fw-bold" style="color:#7b003a">BPL Bus → India’s Trusted Online Bus Booking Service</h1>
                 <p class="lead" style="color:#7b003a">Book safe, reliable, and comfortable bus rides to destinations across India.</p>
-
             </div>
         </section>
 
@@ -49,7 +145,6 @@ try {
                                 <div class="suggestions-dropdown" id="from-suggestions"></div>
                             </div>
                         </div>
-
                         <div class="col-lg-4 col-md-12">
                             <label for="to-city" class="form-label fw-semibold">To</label>
                             <div class="input-group">
@@ -58,7 +153,6 @@ try {
                                 <div class="suggestions-dropdown" id="to-suggestions"></div>
                             </div>
                         </div>
-
                         <div class="col-lg-2 col-md-6">
                             <label for="date" class="form-label fw-semibold">Date</label>
                             <div class="input-group">
@@ -74,79 +168,51 @@ try {
             </div>
         </div>
 
-        <!-- whats new -->
         <div class="container">
-            <!-- START: What's New Section -->
             <div style="width: 100%; margin: 40px auto; padding: 0 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-
                 <h2 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 20px;">What's New</h2>
-
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-
-                    <!-- Card 1: Free Cancellation -->
                     <div style="background-color: #7b003a; border-radius: 16px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.1; color: white; transform: rotate(-15deg);">
-                            <!-- Suggested Icon: cancel / close-circle -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.1; color: white; transform: rotate(-15deg);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm4.3 13.3l-1.4 1.4L12 13.4l-2.9 2.9l-1.4-1.4l2.9-2.9l-2.9-2.9l1.4-1.4l2.9 2.9l2.9-2.9l1.4 1.4L13.4 12l2.9 2.9Z" />
-                            </svg>
-                        </div>
+                            </svg></div>
                         <div style="position: relative; z-index: 2;">
                             <h3 style="font-size: 20px; font-weight: 700; margin: 0 0 8px 0;">Hassle-Free Cancellation</h3>
                             <p style="font-size: 16px; margin: 0 0 24px 0; opacity: 0.9;">Cancel anytime and get a 100% refund instantly.</p>
                         </div>
                     </div>
-
-                    <!-- Card 2: Bus Timetable -->
                     <div style="background-color: #ffffff; border-radius: 16px; padding: 24px; color: #1a1a1a; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
-                        <div style="position: absolute; right: -15px; bottom: -25px; font-size: 120px; opacity: 0.08; color: black; transform: rotate(-15deg);">
-                            <!-- Suggested Icon: clock -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <div style="position: absolute; right: -15px; bottom: -25px; font-size: 120px; opacity: 0.08; color: black; transform: rotate(-15deg);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0-20Zm.5 5v5.25l4.5 2.67l-.75 1.23L11 13V7h1.5Z" />
-                            </svg>
-                        </div>
+                            </svg></div>
                         <div style="position: relative; z-index: 2;">
                             <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0;">Real-Time Bus Timetable</h3>
                             <p style="font-size: 16px; margin: 0 0 16px 0; color: #555;">Check live bus timings for routes across your state.</p>
                         </div>
                     </div>
-
-                    <!-- Card 3: FlexiTicket -->
                     <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border: 1px solid #b2ebf2; border-radius: 16px; padding: 24px; color: #00796b; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #004d40; transform: rotate(-15deg);">
-                            <!-- Suggested Icon: ticket -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <div style="position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #004d40; transform: rotate(-15deg);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M20 4H4v4a2 2 0 0 1 0 4v4h16v-4a2 2 0 0 1 0-4V4Zm0 2v2.59l.71.7l.29.71l-.29.71l-.71.7V16H4v-2.59l-.71-.7l-.29-.71l.29-.71l.71-.7V6h16Z" />
-                            </svg>
-                        </div>
+                            </svg></div>
                         <div style="position: relative; z-index: 2;">
                             <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #004d40;">FlexiTicket Options</h3>
                             <p style="font-size: 16px; margin: 0 0 16px 0; color: #00695c;">Easily reschedule or cancel with special benefits.</p>
                         </div>
                     </div>
-
-                    <!-- Card 4: Lightning Fast Refund -->
                     <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border: 1px solid #ffe0b2; border-radius: 16px; padding: 24px; color: #e65100; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-                        <div style="position: absolute; right: -10px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #bf360c; transform: rotate(-15deg);">
-                            <!-- Suggested Icon: lightning -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <div style="position: absolute; right: -10px; bottom: -20px; font-size: 120px; opacity: 0.2; color: #bf360c; transform: rotate(-15deg);"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
                                 <path fill="currentColor" d="M7 2v11h3v9l7-12h-4l4-8Z" />
-                            </svg>
-                        </div>
+                            </svg></div>
                         <div style="position: relative; z-index: 2;">
                             <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: #bf360c;">Instant Refunds</h3>
                             <p style="font-size: 16px; margin: 0 0 16px 0; color: #d84315;">Get your money back within minutes of cancellation.</p>
                         </div>
                     </div>
-
                 </div>
             </div>
-            <!-- END: What's New Section -->
         </div>
 
-
-
-        <section class="section">
+         <section class="section">
             <div class="container why-choose-container">
                 <h2 class="section-title" style="text-align: left;">bplBus: India’s Trusted Online Bus Booking Platform</h2>
                 <p>bplBus has been simplifying bus travel in India for over 2 years, serving more than 5 million happy travelers. We are committed to providing a smooth, fast, and reliable online ticket booking experience.</p>
@@ -170,58 +236,45 @@ try {
             </div>
         </section>
 
-        <section class="section bg-light-gray">
-            <div class="container">
-                <h2 class="section-title">Popular Bus Routes</h2>
-                <p class="section-subtitle">Explore some of the most traveled bus routes by our satisfied customers.</p>
-                <div class="row g-2">
-                    <?php if (!empty($popular_routes)) : ?>
-                        <?php foreach ($popular_routes as $route) : ?>
-                            <div class="col-lg-4 col-md-6">
-                                <a href="#" class="text-decoration-none popular-route-link" data-from="<?php echo htmlspecialchars($route['starting_point']); ?>" data-to="<?php echo htmlspecialchars($route['ending_point']); ?>">
-                                    <div class="route-card">
-                                        <?php echo htmlspecialchars($route['starting_point']); ?> <i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($route['ending_point']); ?>
-                                    </div>
-                                </a>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else : ?>
-                        <p class="text-center text-muted">Popular routes will be displayed here soon.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </section>
-
-        <!-- === REVIEWS SECTION RESTORED === -->
-        <section class="section">
+        <!-- ===================================================================
+           AWESOME DYNAMIC REVIEWS SECTION (MULTI-ITEM SLIDER)
+           =================================================================== -->
+        <section class="section testimonial-section-awesome">
             <div class="container">
                 <h2 class="section-title">What Our Customers Say</h2>
                 <p class="section-subtitle">Real stories from real travelers who trust us for their journeys.</p>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="testimonial-card">
-                            <div class="rating"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                            <p>"Booking was incredibly easy and fast. The bus was clean and arrived on time. Highly recommended!"</p>
-                            <h6 class="fw-bold mt-4">- Priya Sharma, Delhi</h6>
+
+                <?php if (!empty($latest_reviews)) : ?>
+                    <div id="reviewCarousel" class="carousel slide review-carousel" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <!-- Populated by JavaScript -->
                         </div>
+
+                        <button class="carousel-control-prev" type="button" data-bs-target="#reviewCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#reviewCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
-                    <div class="col-md-4">
-                        <div class="testimonial-card">
-                            <div class="rating"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                            <p>"The live tracking feature is a game-changer! I knew exactly where my bus was. Great experience."</p>
-                            <h6 class="fw-bold mt-4">- Rohan Mehta, Mumbai</h6>
-                        </div>
+
+                    <div class="text-center mt-5">
+                        <a href="reviews.php" class="btn btn-brand">View All Reviews</a>
                     </div>
-                    <div class="col-md-4">
-                        <div class="testimonial-card">
-                            <div class="rating"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                            <p>"I got an amazing discount on my first booking. The website is user-friendly and very convenient."</p>
-                            <h6 class="fw-bold mt-4">- Anjali Reddy, Bangalore</h6>
-                        </div>
+
+                <?php else : ?>
+                    <div class="text-center py-5">
+                        <p class="lead">No customer reviews yet.</p>
+                        <p class="text-muted">Be the first to share your experience!</p>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
         </section>
+        <!-- ===================================================================
+           END OF REVIEWS SECTION
+           =================================================================== -->
 
         <section class="section bg-light-gray">
             <div class="container why-choose-container">
@@ -239,16 +292,15 @@ try {
                 </ul>
             </div>
         </section>
-
     </main>
-    <?php include "includes/footer.php" ?>
+
+    <?php include "includes/footer.php" ?> 
 
     <script>
         const allLocations = <?php echo json_encode($all_locations); ?>;
-    </script>
 
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- FULL SEARCH FORM SCRIPT ---
             const fromInput = document.getElementById('from-city');
             const toInput = document.getElementById('to-city');
             const fromSuggestions = document.getElementById('from-suggestions');
@@ -296,7 +348,7 @@ try {
                 item.className = 'suggestion-item';
                 let highlightedLoc = loc;
                 if (filter) {
-                    const regex = new RegExp(filter, 'gi');
+                    const regex = new RegExp(filter.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
                     highlightedLoc = loc.replace(regex, `<strong>$&</strong>`);
                 }
                 item.innerHTML = `<i class="bi bi-geo-alt-fill"></i> ${highlightedLoc}`;
@@ -331,8 +383,7 @@ try {
                 saveSearch(fromValue, toValue);
             });
 
-            const popularRouteLinks = document.querySelectorAll('.popular-route-link');
-            popularRouteLinks.forEach(link => {
+            document.querySelectorAll('.popular-route-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     fromInput.value = this.dataset.from;
@@ -346,9 +397,101 @@ try {
                     }
                 });
             });
+
+
+            // --- NEW, CORRECTED MULTI-ITEM SLIDER SCRIPT ---
+            const reviewsData = <?php echo json_encode($latest_reviews); ?>;
+            if (reviewsData.length > 0) {
+                const carouselInner = document.querySelector('#reviewCarousel .carousel-inner');
+                let itemsPerSlide = 3; // Default for desktop
+
+                if (window.innerWidth < 992) {
+                    itemsPerSlide = 2;
+                } // Tablet
+                if (window.innerWidth < 768) {
+                    itemsPerSlide = 1;
+                } // Mobile
+
+                let activeClass = 'active';
+                for (let i = 0; i < reviewsData.length; i += itemsPerSlide) {
+                    const slide = document.createElement('div');
+                    slide.className = 'carousel-item ' + activeClass;
+                    activeClass = ''; // Only the first slide is active
+
+                    const row = document.createElement('div');
+                    row.className = 'row g-4 justify-content-center';
+
+                    const chunk = reviewsData.slice(i, i + itemsPerSlide);
+
+                    chunk.forEach(review => {
+                        const col = document.createElement('div');
+                        col.className = 'col-12 col-md-6 col-lg-4 d-flex align-items-stretch';
+
+                        col.innerHTML = `
+                            <div class="testimonial-card w-100">
+                                <div class="testimonial-icon"><i class="bi bi-quote fs-1"></i></div>
+                                <div class="rating-line">
+                                    <div class="rating-stars">${renderStarsJS(review.rating)}</div>
+                                    <div class="masked-email d-none d-sm-block">${maskEmailJS(review.email)}</div>
+                                </div>
+                                <div class="review-text">
+                                    &ldquo;${escapeHTML(review.review_text.substring(0, 150))}${review.review_text.length > 150 ? '...' : ''}&rdquo;
+                                </div>
+                                <div class="author-info">
+                                    <div class="author-name">- ${escapeHTML(review.user_name)}</div>
+                                    <div class="review-date">Reviewed on ${formatDateJS(review.created_at)}</div>
+                                </div>
+                            </div>
+                        `;
+                        row.appendChild(col);
+                    });
+                    slide.appendChild(row);
+                    carouselInner.appendChild(slide);
+                }
+            }
+
+            // Helper functions for JavaScript to render the HTML
+            function renderStarsJS(rating) {
+                let stars_html = '';
+                for (let i = 1; i <= 5; i++) {
+                    const iconClass = (i <= rating) ? 'bi-star-fill text-warning' : 'bi-star text-muted';
+                    stars_html += `<i class="bi ${iconClass}"></i> `;
+                }
+                return stars_html;
+            }
+
+            function maskEmailJS(email) {
+                if (!email) return '';
+                const parts = email.split('@');
+                if (parts.length !== 2) return email;
+                const [first, last] = parts;
+                const maskedFirst = first.substring(0, 2) + '*'.repeat(Math.max(1, first.length - 2));
+                return maskedFirst + '@' + last;
+            }
+
+            function formatDateJS(dateString) {
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                };
+                return new Date(dateString).toLocaleDateString('en-GB', options);
+            }
+
+            function escapeHTML(str) {
+                if (str === null || str === undefined) return '';
+                return str.replace(/[&<>"']/g, function(match) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    } [match];
+                });
+            }
         });
     </script>
-
 </body>
 
 </html>

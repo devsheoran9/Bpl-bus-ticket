@@ -657,7 +657,7 @@ function get_transform_style($orientation)
                                 </div>
 
                                 <!-- Booked by Male -->
-                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                <!-- <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
                                     <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by male passenger</div>
                                     <div style="width: 90px; display: flex; justify-content: center;">
                                         <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #007bff; font-size: 1.2em; opacity: 0.5;">
@@ -669,10 +669,10 @@ function get_transform_style($orientation)
                                             <i class="fas fa-male"></i>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <!-- Booked by Female -->
-                                <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                                <!-- <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
                                     <div style="flex: 1; font-size: 0.9em; color: #555;">Booked by female passenger</div>
                                     <div style="width: 90px; display: flex; justify-content: center;">
                                         <div style="width: 35px; height: 30px; background-color: #f0f0f0; border: 1px solid #e0e0e0; border-radius: 6px; display:flex; align-items:center; justify-content:center; color: #e91e63; font-size: 1.2em; opacity: 0.5;">
@@ -684,7 +684,7 @@ function get_transform_style($orientation)
                                             <i class="fas fa-female"></i>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <!-- Selected by you -->
                                 <div style="display: flex; align-items: center; padding: 10px 0;">

@@ -1,5 +1,5 @@
-<?php 
-require 'admin/function/_db.php'; 
+<?php
+require 'admin/function/_db.php';
 // --- 1. DETERMINE ACCESS METHOD & VALIDATE PERMISSIONS ---
 
 $access_token = trim($_GET['token'] ?? '');
@@ -107,7 +107,6 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Bus Ticket - <?php echo htmlspecialchars($booking_details['ticket_no']); ?></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -358,7 +357,6 @@ try {
     <button id="download-btn" class="download-button"><i class="fas fa-download"></i> Download Ticket PDF</button>
 
     <script>
-        // The JavaScript part does not need any changes and will work correctly.
         (function() {
             const qrData = "<?php echo $publicTicketUrl; ?>";
             const qr = qrcode(0, 'M');
