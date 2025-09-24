@@ -843,7 +843,7 @@ $name = $_SESSION['user']['name'] ?? 'Guest';
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> View Departures
                     </button>
-                    <a href="dashboard.php" class="btn btn-secondary">
+                    <a href="todays_departures" class="btn btn-secondary">
                         <i class="fas fa-redo"></i> Today
                     </a>
                 </form>

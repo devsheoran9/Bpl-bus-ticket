@@ -54,11 +54,11 @@ function sendBookingEmail($booking_id, $recipient_email, $_conn_db) {
         $tokenStmt->execute([$booking_id]);
         $token = $tokenStmt->fetchColumn();
         if (!$token) {
-            $token = bin2hex(random_bytes(16));
+            $token = bin2hex(random_bytes(20));
             $_conn_db->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)")->execute([$booking_id, $token]);
         }
       
-        $publicTicketUrl = BASE_URLL . '?token=' . $token;
+        $publicTicketUrl = BASE_URLL . '?token=' . urlencode($token);
 
         // --- 3. Prepare Dynamic HTML ---
         $payment_html = ($booking['gateway_payment_id']) 

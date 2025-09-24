@@ -53,7 +53,7 @@ try {
     }
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
     $base_url = rtrim($protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']), '/');
-    $view_ticket_url = $base_url . '/ticket_public_view?token=' . urlencode($token);
+    $view_ticket_url = BASE_URLL . '?token=' . urlencode($token);
 
     // ---   Fetch Passengers & Transaction Details ---
     $passengersStmt = $pdo->prepare("SELECT passenger_name, seat_code, passenger_age, passenger_gender FROM passengers WHERE booking_id = ?");

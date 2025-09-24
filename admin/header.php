@@ -1,7 +1,7 @@
 <?php if(isset($head_title)){$head_title = $head_title;}else{$head_title= "Jsnj Infomedia";} ?>
 <style>
     #sidebarToggle {
-    background-color: transparent;
+    background: transparent;
     border: 2px solid #ffffff;
     color: rgb(12 110 253);
     padding: 10px 12px;
@@ -25,6 +25,15 @@
 
 #sidebarToggle:hover i {
     transform: rotate(90deg);
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button{
+    padding:0; 
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover{
+    padding:0;
+    background: transparent;
+    background-color: transparent;
+    border: 0;
 }
 
 </style>

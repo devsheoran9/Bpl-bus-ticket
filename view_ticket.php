@@ -71,9 +71,8 @@ try {
         $insertStmt = $pdo->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
         $insertStmt->execute([$booking_id, $token]);
     }
-
-    $projectBaseUrl = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-    $publicTicketUrl = rtrim($projectBaseUrl, '/') . '/ticket_public_view.php?token=' . $token;
+ 
+    $publicTicketUrl = BASE_URLL . '?token=' . urlencode($token);
 
     // --- 4. CALCULATE REAL BOARDING/DROPPING TIMES ---
 

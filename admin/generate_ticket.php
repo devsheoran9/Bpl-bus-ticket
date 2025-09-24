@@ -50,7 +50,7 @@ try {
     $tokenStmt->execute([$booking_id]);
     $token = $tokenStmt->fetchColumn();
     if (!$token) {
-        $token = bin2hex(random_bytes(16));
+        $token = bin2hex(random_bytes(20));
         $insertStmt = $_conn_db->prepare("INSERT INTO ticket_access_tokens (booking_id, token) VALUES (?, ?)");
         $insertStmt->execute([$booking_id, $token]);
     }
@@ -59,7 +59,7 @@ try {
     $host = $_SERVER['HTTP_HOST'];
     $script_path = dirname($_SERVER['PHP_SELF']);
     $projectBaseUrl = BASE_URLL;
-    $publicTicketUrl = $projectBaseUrl . '?token=' . $token;
+    $publicTicketUrl = $projectBaseUrl . '?token=' . urlencode($token);
 
     // --- Step 5: Calculate real departure/arrival timings ---
     $route_departure_datetime_str = $booking_details['travel_date'] . ' ' . ($booking_details['departure_time'] ?? '00:00');
