@@ -1323,7 +1323,7 @@ function get_transform_style($orientation)
                             "key": data.razorpay_key_id,
                             "amount": data.amount,
                             "currency": "INR",
-                            "name": "BPL Bus Booking",
+                            "name": "<?php echo $company_name?>",
                             "description": "Bus Ticket Payment",
                             "order_id": data.razorpay_order_id,
                             "handler": function(response) {

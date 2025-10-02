@@ -77,12 +77,24 @@ $youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
                 <i class="bi bi-bus-front"></i> BPL Tickets
             </a>
             <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar">
-                        <i class="bi bi-person-circle"></i> Account
-                    </a>
-                </li>
-            </ul>
+    <li class="nav-item">
+        <?php 
+        // Check if the user is logged in by looking for the 'user_data' session variable.
+        // You can change 'user_data' to whatever you use to store login info, e.g., 'user_id'.
+        if (isset($_SESSION['user_id'])): 
+        ?>
+            <!-- If LOGGED IN, show this link -->
+            <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar">
+                <i class="bi bi-person-circle"></i> My Profile
+            </a>
+        <?php else: ?>
+            <!-- If NOT LOGGED IN, show this link -->
+            <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#accountSidebar" aria-controls="accountSidebar">
+                <i class="bi bi-person-circle"></i> Account
+            </a>
+        <?php endif; ?>
+    </li>
+</ul>
         </div>
     </nav>
     <!-- === END OF MODIFIED NAVBAR === -->
@@ -156,7 +168,7 @@ $youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
                     </a>
                 </li> -->
                 <li>
-                    <a href="about_us" class="sidebar-menu-item <?php if ($current_page == 'about_us.php') echo 'active'; ?>">
+                    <a href="about_us" class="sidebar-menu-item <?php if ($current_page == 'about_us') echo 'active'; ?>">
                         <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Know about us</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
@@ -165,6 +177,22 @@ $youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
                         <div class="icon-text-group"><i class="bi bi-question-circle"></i><span>Help</span></div><i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
+                <li>
+                    <a href="terms_and_conditions" class="sidebar-menu-item <?php if ($current_page == 'terms_and_conditions') echo 'active'; ?>">
+                        <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Terms & Conditions</span></div><i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="cancellation_policy" class="sidebar-menu-item <?php if ($current_page == 'cancellation_policy') echo 'active'; ?>">
+                        <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Cancellation & Refund Policy</span></div><i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="contact" class="sidebar-menu-item <?php if ($current_page == 'contact') echo 'active'; ?>">
+                        <div class="icon-text-group"><i class="bi bi-info-circle"></i><span>Contact us</span></div><i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                
 
             </ul>
 
@@ -175,3 +203,159 @@ $youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
             <?php endif; ?>
         </div>
     </div>
+    <style>
+    /* Unique styles for the charter pop-up to avoid conflicts */
+    .bpl-charter-popup-v2 {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1055; /* High z-index */
+        width: 100%;
+        max-width: 320px; /* Reduced width for a more compact look */
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        
+        display: flex; /* Key change for side-by-side layout */
+        align-items: center;
+        gap: 15px; /* Space between icon and text */
+        padding: 16px;
+        
+        /* Initial state for animation */
+        transform: translateY(120%);
+        opacity: 0;
+        visibility: hidden;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, visibility 0.6s;
+    }
+
+    /* State when the pop-up is visible */
+    .bpl-charter-popup-v2.bpl-popup-show {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+        animation: bpl-subtle-float 4s ease-in-out infinite;
+    }
+    
+    /* The close button */
+    #bpl-charter-close-btn-v2 {
+        position: absolute;
+        top: -8px; /* Positioned slightly outside for a modern look */
+        right: -8px;
+        width: 28px;
+        height: 28px;
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 50%;
+        color: #868e96;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    #bpl-charter-close-btn-v2:hover {
+        background-color: #dc3545; /* Red on hover */
+        color: #ffffff;
+        transform: scale(1.1) rotate(90deg);
+    }
+    
+    /* Pop-up icon container */
+    .bpl-charter-icon-v2 {
+        flex-shrink: 0; /* Prevents the icon from shrinking */
+        width: 50px;
+        height: 50px;
+        background-color: #f0e6f2; /* Lighter shade of brand color */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .bpl-charter-icon-v2 i {
+        font-size: 24px;
+        color: #7b003a; /* Your brand color */
+        animation: bpl-bus-shake 5s ease-in-out infinite;
+    }
+    
+    /* Pop-up content container (text and button) */
+    .bpl-charter-content-v2 {
+        flex-grow: 1; /* Takes up remaining space */
+    }
+
+    /* Pop-up text content */
+    .bpl-charter-content-v2 p {
+        font-size: 0.95rem; /* Slightly smaller font */
+        color: #343a40;
+        line-height: 1.5;
+        margin: 0 0 12px 0; /* Space between text and button */
+        font-weight: 500;
+    }
+    
+    /* Call-to-action button */
+    #bpl-charter-cta-btn-v2 {
+        display: inline-block;
+        width: 100%;
+        padding: 8px 15px; /* Reduced padding */
+        background-image: linear-gradient(to right, #8e44ad, #7b003a); /* Gradient button */
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem; /* Smaller font */
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(123, 0, 58, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    #bpl-charter-cta-btn-v2:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(123, 0, 58, 0.3);
+    }
+
+    /* Animation keyframes */
+    @keyframes bpl-subtle-float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0); }
+    }
+    
+    @keyframes bpl-bus-shake {
+        0%, 100% { transform: translateX(0) rotate(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-1px) rotate(-2deg); }
+        20%, 40%, 60%, 80% { transform: translateX(1px) rotate(2deg); }
+    }
+    
+    /* Responsive styles for smaller screens */
+    @media (max-width: 400px) {
+        .bpl-charter-popup-v2 {
+            bottom: 10px;
+            right: 10px;
+            left: 10px;
+            max-width: none; /* Full width on small screens */
+            padding: 12px;
+            gap: 12px;
+        }
+        .bpl-charter-icon-v2 {
+            width: 40px;
+            height: 40px;
+        }
+        .bpl-charter-icon-v2 i {
+            font-size: 20px;
+        }
+        .bpl-charter-content-v2 p {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+        #bpl-charter-cta-btn-v2 {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+    }
+
+    </style>

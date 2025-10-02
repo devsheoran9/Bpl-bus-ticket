@@ -45,4 +45,9 @@ define('SMTP_SECUREE', 'tls');
 define('MAIL_FROM_ADDRESSS', 'sjsheoran111@gmail.com');
 define('MAIL_FROM_NAMEE', 'BPL Bus Booking');
 define('BASE_URLL', 'http://192.168.1.47/bpl-bus-ticket/ticket_public_view');
+
+
+function isMobile() {
+    return preg_match('/Mobile|Android|iP(hone|od|ad)|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT']);
+}
 ?>

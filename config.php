@@ -13,5 +13,8 @@ define('MAIL_FROM_NAME', 'BPL Bus Booking');
 // --- NEW: RAZORPAY API KEYS ---
 // Replace with your actual Test or Live keys
 define('RAZORPAY_KEY_ID', 'rzp_test_xISbqnYlqqrWvs');        
-define('RAZORPAY_KEY_SECRET', 'RxquG8pfP9f5inluawqEAw92'); 
+define('RAZORPAY_KEY_SECRET', 'RxquG8pfP9f5inluawqEAw92');
+
+
+$where_i_want_to_get_mail = 'rohitmechujaatji@gmail.com'
 ?>

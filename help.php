@@ -5,7 +5,7 @@
     <section class="text-center mt-5 py-5" style="background-color: #fffafb; border-bottom: 1px solid #f0e4e6;">
         <div class="container mt-4">
             <h1 class="display-5" style="font-weight: 700; color: #7b003a;">Help Center</h1>
-            <p class="lead mt-3" style="color: #555;">Welcome to the BPL Bus Help Center. Find quick solutions, manage your bookings, and get answers to your travel questions.</p>
+            <p class="lead mt-3" style="color: #555;">Welcome to the  <?php echo $company_name?> Help Center. Find quick solutions, manage your bookings, and get answers to your travel questions.</p>
         </div>
     </section>
 
@@ -132,7 +132,7 @@
                             <div style="font-size: 2.5rem; color: #7b003a; margin-bottom: 1rem;"><i class="bi bi-envelope-fill"></i></div>
                             <h5 style="font-weight: 600;">Email Support</h5>
                             <p class="text-muted">Get a detailed response from our team.</p>
-                            <a href="mailto:support@bplbus.com" class="text-decoration-none" style="font-weight: 500; color: #7b003a;">support@bplbus.com</a>
+                            <a href="<?php echo $email_primary?>" class="text-decoration-none" style="font-weight: 500; color: #7b003a;"><?php echo $email_primary?></a>
                         </div>
                     </div>
                 </div>

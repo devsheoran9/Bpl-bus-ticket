@@ -310,31 +310,9 @@
         border-bottom: 1px solid #ced4da;
     }
 
-    /* Submit Button Styling */
-    .btn-primary {
-        background-color: #28a745;
-        /* Green for success/submit */
-        border-color: #28a745;
-        padding: 12px 25px;
-        font-size: 1.1em;
-        font-weight: 600;
-        border-radius: 6px;
-        box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-        transition: background-color 0.2s ease, box-shadow 0.2s ease;
-    }
+   
 
-    .btn-primary:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
-        box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
-    }
-
-    .btn-primary:active {
-        background-color: #1e7e34;
-        border-color: #1c7430;
-        box-shadow: 0 2px 5px rgba(40, 167, 69, 0.4);
-        transform: translateY(1px);
-    }
+   
 </style>
 <style>
     /* Optional: Basic styling for fieldsets */

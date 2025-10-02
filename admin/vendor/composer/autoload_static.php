@@ -15,6 +15,7 @@ class ComposerStaticInitc5e4dce38859cfa3fcdfe1c976dcf5f4
         'W' => 
         array (
             'WpOrg\\Requests\\' => 15,
+            'WhichBrowser\\' => 13,
         ),
         'S' => 
         array (
@@ -27,7 +28,22 @@ class ComposerStaticInitc5e4dce38859cfa3fcdfe1c976dcf5f4
         ),
         'P' => 
         array (
+            'Psr\\Cache\\' => 10,
             'PHPMailer\\PHPMailer\\' => 20,
+        ),
+        'M' => 
+        array (
+            'MaxMind\\WebService\\' => 19,
+            'MaxMind\\Exception\\' => 18,
+            'MaxMind\\Db\\' => 11,
+        ),
+        'G' => 
+        array (
+            'GeoIp2\\' => 7,
+        ),
+        'C' => 
+        array (
+            'Composer\\CaBundle\\' => 18,
         ),
     );
 
@@ -35,6 +51,10 @@ class ComposerStaticInitc5e4dce38859cfa3fcdfe1c976dcf5f4
         'WpOrg\\Requests\\' => 
         array (
             0 => __DIR__ . '/..' . '/rmccue/requests/src',
+        ),
+        'WhichBrowser\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/whichbrowser/parser/src',
         ),
         'Spipu\\Html2Pdf\\' => 
         array (
@@ -48,9 +68,33 @@ class ComposerStaticInitc5e4dce38859cfa3fcdfe1c976dcf5f4
         array (
             0 => __DIR__ . '/..' . '/razorpay/razorpay/src',
         ),
+        'Psr\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/cache/src',
+        ),
         'PHPMailer\\PHPMailer\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
+        ),
+        'MaxMind\\WebService\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/WebService',
+        ),
+        'MaxMind\\Exception\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/Exception',
+        ),
+        'MaxMind\\Db\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind-db/reader/src/MaxMind/Db',
+        ),
+        'GeoIp2\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/geoip2/geoip2/src',
+        ),
+        'Composer\\CaBundle\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/composer/ca-bundle/src',
         ),
     );
 

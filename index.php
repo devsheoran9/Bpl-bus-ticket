@@ -2,6 +2,17 @@
 include 'includes/header.php';
 
 // --- HELPER FUNCTIONS ---
+function get_initials($name)
+{
+    $words = explode(' ', trim($name));
+    $initials = '';
+    if (count($words) >= 2) {
+        $initials = strtoupper(substr($words[0], 0, 1) . substr(end($words), 0, 1));
+    } else if (count($words) == 1 && strlen($words[0]) > 0) {
+        $initials = strtoupper(substr($words[0], 0, 1));
+    }
+    return $initials;
+}
 function render_stars($rating)
 {
     $stars_html = '';
@@ -55,7 +66,7 @@ try {
 }
 ?>
 
-<style>
+<!-- <style>
     .testimonial-section-awesome {
         background-color: #ffffffff;
         padding: 80px 0;
@@ -114,13 +125,160 @@ try {
             display: none;
         }
     }
+</style> -->
+<style>
+    /* ==============================================
+       NEW MODERN REVIEW SECTION STYLES
+    ============================================== */
+    .testimonial-section-new {
+        background-color: #f8f9fa;
+        /* A very light off-white for contrast */
+        padding: 80px 0;
+    }
+
+    .review-card-new {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 24px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .review-card-new:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Faint background quote icon for elegance */
+    .review-card-new::before {
+        content: '\F517';
+        /* Bootstrap Icons quote unicode */
+        font-family: 'bootstrap-icons';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 80px;
+        color: #000;
+        opacity: 0.04;
+        line-height: 1;
+        z-index: 1;
+    }
+
+    .review-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #7b003a;
+        /* Your brand color */
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .author-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .author-name-new {
+        font-weight: 600;
+        color: #343a40;
+        font-size: 1.1em;
+    }
+
+    .rating-stars .bi {
+        font-size: 0.9em;
+    }
+
+    .review-content {
+        font-size: 1em;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        flex-grow: 1;
+        /* Pushes footer to the bottom */
+        position: relative;
+        z-index: 2;
+    }
+
+    .review-footer {
+        font-size: 0.85em;
+        color: #888;
+        text-align: right;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Carousel Controls Styling */
+    .review-carousel .carousel-control-prev,
+    .review-carousel .carousel-control-next {
+        width: 45px;
+        height: 45px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 1;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        color: #7b003a;
+        /* Your brand color */
+    }
+
+    .review-carousel .carousel-control-prev:hover,
+    .review-carousel .carousel-control-next:hover {
+        background-color: #7b003a;
+        color: #fff;
+    }
+
+    .review-carousel .carousel-control-prev-icon,
+    .review-carousel .carousel-control-next-icon {
+        filter: invert(1);
+        /* Invert to see against white background */
+    }
+
+    .review-carousel .carousel-control-prev {
+        left: -20px;
+    }
+
+    .review-carousel .carousel-control-next {
+        right: -20px;
+    }
+
+    @media (max-width: 768px) {
+
+        .review-carousel .carousel-control-prev,
+        .review-carousel .carousel-control-next {
+            display: none;
+            /* Hide controls on mobile */
+        }
+    }
 </style>
 
 <body>
     <main>
         <section class="hero-section">
             <div class="container">
-                <h1 class="fw-bold" style="color:#7b003a">BPL Bus → India’s Trusted Online Bus Booking Service</h1>
+                <h1 class="fw-bold" style="color:#7b003a"><?php echo $company_name?> → India’s Trusted Online Bus Booking Service</h1>
                 <p class="lead" style="color:#7b003a">Book safe, reliable, and comfortable bus rides to destinations across India.</p>
             </div>
         </section>
@@ -206,19 +364,19 @@ try {
 
         <section class="section">
             <div class="container why-choose-container">
-                <h2 class="section-title" style="text-align: left;">bplBus: India’s Trusted Online Bus Booking Platform</h2>
-                <p>bplBus has been simplifying bus travel in India for over 2 years, serving more than 5 million happy travelers. We are committed to providing a smooth, fast, and reliable online ticket booking experience.</p>
-                <p>With 100+ bus operators and 700+ routes across the country, bplBus makes it easy to reach your destination. Enjoy affordable fares when you book your bus tickets online with us.</p>
+                <h2 class="section-title" style="text-align: left;"><?php echo $company_name?>: India’s Trusted Online Bus Booking Platform</h2>
+                <p><?php echo $company_name?> has been simplifying bus travel in India for over 2 years, serving more than 5 million happy travelers. We are committed to providing a smooth, fast, and reliable online ticket booking experience.</p>
+                <p>With 100+ bus operators and 700+ routes across the country, <?php echo $company_name?> makes it easy to reach your destination. Enjoy affordable fares when you book your bus tickets online with us.</p>
 
                 <div class="mb-2">
-                    <h2 class="section-titlee" style="text-align: left; ">Why Choose BPL Bus for Bus Booking?</h2>
-                    <p style="text-align: left;">Below are some of the reasons why you should choose BPL Bus for booking bus tickets.</p>
+                    <h2 class="section-titlee" style="text-align: left; ">Why Choose <?php echo $company_name?> for Bus Booking?</h2>
+                    <p style="text-align: left;">Below are some of the reasons why you should choose <?php echo $company_name?> for booking bus tickets.</p>
                 </div>
 
                 <ul style="list-style-type: disc; padding-left: 20px; font-size: 1em; color: #555;">
                     <li style="margin-bottom: 1.2rem;"><strong>Free Cancellation</strong> - Cancel bus tickets without paying cancellation charges.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Flexi Ticket</strong> - Select a Flexi ticket to modify your travel date at least 8 hours before departure.</li>
-                    <!-- <li style="margin-bottom: 1.2rem;"><strong>Earn Rewards</strong> - Refer your friend and get rewards in your BPL Bus wallet after they complete their first trip.</li> -->
+                    <!-- <li style="margin-bottom: 1.2rem;"><strong>Earn Rewards</strong> - Refer your friend and get rewards in your <?php echo $company_name?> wallet after they complete their first trip.</li> -->
                     <li style="margin-bottom: 1.2rem;"><strong>Booking for Women</strong> - Access exclusive deals for women travellers and find buses preferred by women.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Primo Services</strong> - Select top-rated bus operators that offer timely and customer-friendly Primo services.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>24/7 Customer Support</strong> - Receive 24/7 customer service for any assistance related to bookings.</li>
@@ -249,11 +407,7 @@ try {
                 </div>
             </div>
         </section>
-
-        <!-- ===================================================================
-           AWESOME DYNAMIC REVIEWS SECTION (MULTI-ITEM SLIDER)
-           =================================================================== -->
-        <section class="section testimonial-section-awesome">
+        <section class="section testimonial-section-new">
             <div class="container">
                 <h2 class="section-title">What Our Customers Say</h2>
                 <p class="section-subtitle">Real stories from real travelers who trust us for their journeys.</p>
@@ -261,7 +415,20 @@ try {
                 <?php if (!empty($latest_reviews)) : ?>
                     <div id="reviewCarousel" class="carousel slide review-carousel" data-bs-ride="carousel">
                         <div class="carousel-inner">
-                            <!-- Populated by JavaScript -->
+                            <?php
+                            // Determine how many items per slide based on a hypothetical screen size (server-side)
+                            // This part will be primarily handled by JavaScript for true responsiveness,
+                            // but we can set up the structure here.
+                            $itemsPerSlide = 3; // Let's assume desktop default
+                            $total_reviews = count($latest_reviews);
+                            $is_first_slide = true;
+
+                            for ($i = 0; $i < $total_reviews; $i += $itemsPerSlide) {
+                                // This loop structure is now mainly a placeholder;
+                                // the dynamic content will be built by JavaScript.
+                            }
+                            ?>
+                            <!-- Carousel items will be dynamically inserted here by JavaScript -->
                         </div>
 
                         <button class="carousel-control-prev" type="button" data-bs-target="#reviewCarousel" data-bs-slide="prev">
@@ -286,18 +453,16 @@ try {
                 <?php endif; ?>
             </div>
         </section>
-        <!-- ===================================================================
-           END OF REVIEWS SECTION
-           =================================================================== -->
+
 
         <section class="section bg-light-gray">
             <div class="container why-choose-container">
                 <div class="mb-2">
-                    <h2 class="section-title" style="text-align: left;  ">How to Book Bus Tickets Online on BPL Bus?</h2>
-                    <p style="text-align: left;">Below are some simple steps that you can follow when booking bus tickets online on BPL Bus.</p>
+                    <h2 class="section-title" style="text-align: left;  ">How to Book Bus Tickets Online on <?php echo $company_name?>?</h2>
+                    <p style="text-align: left;">Below are some simple steps that you can follow when booking bus tickets online on <?php echo $company_name?>.</p>
                 </div>
                 <ul style="list-style-type: disc; padding-left: 20px; font-size: 1em; color: #555;">
-                    <li style="margin-bottom: 1.2rem;"><strong>Step 1:</strong> Visit the BPL Bus website.</li>
+                    <li style="margin-bottom: 1.2rem;"><strong>Step 1:</strong> Visit the <?php echo $company_name?> website.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Step 2:</strong> Select your travel date and journey details (From and To).</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Step 3:</strong> Search for your preferred bus available on your chosen travel date and route.</li>
                     <li style="margin-bottom: 1.2rem;"><strong>Step 4:</strong> Select your preferred boarding or dropping points and enter your contact details.</li>
@@ -415,54 +580,66 @@ try {
 
             // --- NEW, CORRECTED MULTI-ITEM SLIDER SCRIPT ---
             const reviewsData = <?php echo json_encode($latest_reviews); ?>;
-            if (reviewsData.length > 0) {
-                const carouselInner = document.querySelector('#reviewCarousel .carousel-inner');
-                let itemsPerSlide = 3; // Default for desktop
+if (reviewsData.length > 0) {
+    const carouselInner = document.querySelector('#reviewCarousel .carousel-inner');
+    carouselInner.innerHTML = ''; // Clear any server-side placeholders
 
-                if (window.innerWidth < 992) {
-                    itemsPerSlide = 2;
-                } // Tablet
-                if (window.innerWidth < 768) {
-                    itemsPerSlide = 1;
-                } // Mobile
+    let itemsPerSlide = 3; // Default for desktop
+    if (window.innerWidth < 992) { itemsPerSlide = 2; } // Tablet
+    if (window.innerWidth < 768) { itemsPerSlide = 1; } // Mobile
 
-                let activeClass = 'active';
-                for (let i = 0; i < reviewsData.length; i += itemsPerSlide) {
-                    const slide = document.createElement('div');
-                    slide.className = 'carousel-item ' + activeClass;
-                    activeClass = ''; // Only the first slide is active
+    let activeClass = 'active';
+    for (let i = 0; i < reviewsData.length; i += itemsPerSlide) {
+        const slide = document.createElement('div');
+        slide.className = 'carousel-item ' + activeClass;
+        activeClass = ''; // Only the first slide is active
 
-                    const row = document.createElement('div');
-                    row.className = 'row g-4 justify-content-center';
+        const row = document.createElement('div');
+        row.className = 'row g-4 justify-content-center';
 
-                    const chunk = reviewsData.slice(i, i + itemsPerSlide);
+        const chunk = reviewsData.slice(i, i + itemsPerSlide);
 
-                    chunk.forEach(review => {
-                        const col = document.createElement('div');
-                        col.className = 'col-12 col-md-6 col-lg-4 d-flex align-items-stretch';
+        chunk.forEach(review => {
+            const col = document.createElement('div');
+            // Use d-flex to make sure cards in the same row are equal height
+            col.className = 'col-12 col-md-6 col-lg-4 d-flex';
 
-                        col.innerHTML = `
-                            <div class="testimonial-card w-100">
-                                <div class="testimonial-icon"><i class="bi bi-quote fs-1"></i></div>
-                                <div class="rating-line">
-                                    <div class="rating-stars">${renderStarsJS(review.rating)}</div>
-                                    <div class="masked-email d-none d-sm-block">${maskEmailJS(review.email)}</div>
-                                </div>
-                                <div class="review-text">
-                                    &ldquo;${escapeHTML(review.review_text.substring(0, 150))}${review.review_text.length > 150 ? '...' : ''}&rdquo;
-                                </div>
-                                <div class="author-info">
-                                    <div class="author-name">- ${escapeHTML(review.user_name)}</div>
-                                    <div class="review-date">Reviewed on ${formatDateJS(review.created_at)}</div>
-                                </div>
-                            </div>
-                        `;
-                        row.appendChild(col);
-                    });
-                    slide.appendChild(row);
-                    carouselInner.appendChild(slide);
-                }
-            }
+            col.innerHTML = `
+                <div class="review-card-new w-100">
+                    <div class="review-header">
+                        <div class="author-avatar">${getInitialsJS(review.user_name)}</div>
+                        <div class="author-details">
+                            <div class="author-name-new">${escapeHTML(review.user_name)}</div>
+                            <div class="rating-stars">${renderStarsJS(review.rating)}</div>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        ${escapeHTML(review.review_text.substring(0, 180))}${review.review_text.length > 180 ? '...' : ''}
+                    </div>
+                    <div class="review-footer">
+                        ${formatDateJS(review.created_at)}
+                    </div>
+                </div>
+            `;
+            row.appendChild(col);
+        });
+        slide.appendChild(row);
+        carouselInner.appendChild(slide);
+    }
+}
+
+// Helper function to get initials from a name in JS
+function getInitialsJS(name) {
+    if (!name) return '';
+    const words = name.trim().split(' ');
+    let initials = '';
+    if (words.length >= 2) {
+        initials = (words[0][0] || '') + (words[words.length - 1][0] || '');
+    } else if (words.length === 1 && words[0].length > 0) {
+        initials = words[0][0];
+    }
+    return initials.toUpperCase();
+}
 
             // Helper functions for JavaScript to render the HTML
             function renderStarsJS(rating) {
@@ -506,6 +683,7 @@ try {
             }
         });
     </script>
+
 </body>
 
 </html>

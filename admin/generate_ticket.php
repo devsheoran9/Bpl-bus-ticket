@@ -107,7 +107,7 @@ try {
         #ticket-wrapper { background: var(--bg-card); padding: 20px; border-radius: 16px; box-shadow: 0 10px 40px -10px rgba(0,82,204,0.2); transform-origin: top left; }
         .bus-ticket { width: 800px; height: auto; display: flex; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
         .main-panel { width: 75%; padding: 25px; box-sizing: border-box; }
-        .stub-panel { width: 25%; box-sizing: border-box; border-left: 2px dashed var(--border-color); text-align: center; display: flex; flex-direction: column; padding: 20px; justify-content: space-between; }
+        .stub-panel { width: 25%; box-sizing: border-box; border-left: 2px dashed var(--border-color); text-align: center; display: flex; flex-direction: column; padding: 20px;  }
         .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .brand .operator { font-size: 20px; font-weight: 700; color: var(--text-dark); }
         .brand .bus-info { font-size: 13px; color: var(--text-light); }

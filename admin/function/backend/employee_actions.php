@@ -178,7 +178,18 @@ try {
             if (!$employee_id) {
                 throw new Exception('Invalid employee ID.');
             }
-            $stmt = $_conn_db->prepare("SELECT activity_type, ip_address, log_time FROM admin_activity_log WHERE admin_id = ? ORDER BY log_time DESC LIMIT 50");
+            
+            // **THE FIX**: Select all the new detailed columns
+            $stmt = $_conn_db->prepare(
+                "SELECT 
+                    log_id, admin_name, activity_type, ip_address, 
+                    device_type, os, browser, geo_lat, geo_long, 
+                    captured_image, log_time 
+                 FROM admin_activity_log 
+                 WHERE admin_id = ? 
+                 ORDER BY log_time DESC 
+                 LIMIT 50"
+            );
             $stmt->execute([$employee_id]);
             $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
             send_json_response('success', 'History fetched.', ['history' => $history]);

@@ -1,92 +1,99 @@
-<?php
-// function/log_in.php
+<?php 
+
+require_once dirname(__DIR__) . '/vendor/autoload.php'; 
+use WhichBrowser\Parser;
 
 include('./_db.php');
 
-// डिफ़ॉल्ट प्रतिक्रिया सेट करें
 $response = [
-    'page'        => 'login', 
-    'res'         => 'false', 
-    'notif_title' => 'Oops!', 
-    'notif_desc'  => 'An unknown error occurred.',  
-    'notif_type'  => 'danger', 
-    'goTo'        => ''
+    'res' => 'false', 'notif_title' => 'Oops!', 'notif_desc' => 'An unknown error occurred.',  
+    'notif_type' => 'danger', 'goTo' => ''
 ];
 
-// उपयोगकर्ता इनपुट को सुरक्षित करें
+// --- GATHER DATA (NO webcam_image) ---
 $username = trim($_POST["username"] ?? '');
 $password = trim($_POST["password"] ?? '');
+$latitude = $_POST['latitude'] ?? null;
+$longitude = $_POST['longitude'] ?? null;
+
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+$user_agent_string = $_SERVER['HTTP_USER_AGENT'] ?? 'UNKNOWN';
+$login_status = 'failed';
+
+// --- DEVICE PARSING ---
+try {
+    $parser = new Parser($user_agent_string);
+    $device_info = [
+        'browser' => $parser->browser->toString() ?? 'Unknown Browser',
+        'os' => $parser->os->toString() ?? 'Unknown OS',
+        'device_type' => $parser->device->type ?? 'desktop',
+    ];
+} catch (Exception $e) {
+    $device_info = ['browser' => 'Parse Error', 'os' => 'Parse Error', 'device_type' => 'unknown'];
+}
 
 if (empty($username) || empty($password)) {
     $response['notif_desc'] = 'Username and password are required.';
-    $response['notif_type'] = 'warning';
     echo json_encode($response);
     exit();
 }
 
+$user = null;
 try {
-    // डेटाबेस से उपयोगकर्ता की जानकारी प्राप्त करें
-    $stmt = $_conn_db->prepare(
-        "SELECT id, name, email, mobile, password, status, type, permissions 
-         FROM admin 
-         WHERE email = :emails OR mobile = :mobiles"
-    );
+    $stmt = $_conn_db->prepare("SELECT id, name, email, mobile, password, status, type, permissions FROM admin WHERE email = :emails OR mobile = :mobiles");
     $stmt->execute(['emails' => $username, 'mobiles' => $username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user['password'])) {
         if ($user['status'] == '1') {
-            // सत्र टोकन उत्पन्न करें
+            $login_status = 'login';
             $session_token = bin2hex(random_bytes(32));
-
-            // सत्र चर सेट करें
             $_SESSION['user'] = [
-                'login'         => 'true',
-                'id'            => (int)$user['id'],
-                'name'          => $user['name'],
-                'email'         => $user['email'],
-                'mobile'        => $user['mobile'],
-                'type'          => $user['type'],
-                'permissions'   => json_decode($user['permissions'] ?? '[]', true),
-                'session_token' => $session_token,
+                'login' => 'true', 'id' => (int)$user['id'], 'name' => $user['name'], 'email' => $user['email'],
+                'mobile' => $user['mobile'], 'type' => $user['type'],
+                'permissions' => json_decode($user['permissions'] ?? '[]', true), 'session_token' => $session_token,
             ];
 
-            $ip_address = $_SERVER['REMOTE_ADDR'];
-            
-            // admin टेबल में सत्र टोकन और अंतिम लॉगिन विवरण अपडेट करें
-            $update_stmt = $_conn_db->prepare(
-                "UPDATE admin SET session_token = ?, last_login_time = NOW(), last_login_ip = ? WHERE id = ?"
-            );
+            $update_stmt = $_conn_db->prepare("UPDATE admin SET session_token = ?, last_login_time = NOW(), last_login_ip = ? WHERE id = ?");
             $update_stmt->execute([$session_token, $ip_address, $user['id']]);
-
-            // गतिविधि लॉग में लॉगिन रिकॉर्ड करें
-            $log_stmt = $_conn_db->prepare("INSERT INTO admin_activity_log (admin_id, admin_name, activity_type, ip_address) VALUES (?, ?, 'login', ?)");
-            $log_stmt->execute([$user['id'], $user['name'], $ip_address]);
             
-            // सफलता प्रतिक्रिया सेट करें
             $response = [
-                'res'         => 'true',
-                'notif_title' => 'Login Successful!',
-                'notif_desc'  => 'Redirecting to your dashboard...',
-                'notif_type'  => 'success',
-                'goTo'        => 'dashboard.php'
+                'res' => 'true', 'notif_title' => 'Login Successful!', 'notif_desc' => 'Redirecting...',
+                'notif_type' => 'success', 'goTo' => 'dashboard.php'
             ];
-
         } else {
-            $response['notif_title'] = 'Account Deactivated';
-            $response['notif_desc'] = 'Your account is currently inactive. Please contact an administrator.';
+            $login_status = 'deactivated_attempt';
+            $response['notif_desc'] = 'Your account is inactive. Contact an administrator.';
         }
     } else {
-        $response['notif_title'] = 'Invalid Credentials';
+        $login_status = 'failed_attempt';
         $response['notif_desc'] = 'The email/mobile or password you entered is incorrect.';
     }
 
 } catch (PDOException $e) {
-    error_log("Login Error: " . $e->getMessage());
-    $response['notif_desc'] = 'A database error occurred during login. Please try again later.';
+    error_log("Login DB Error: " . $e->getMessage());
+    $response['notif_desc'] = 'A database error occurred.';
+} finally {
+    $user_id = $user['id'] ?? null;
+    $user_name = $user['name'] ?? 'Attempt on: ' . $username;
+    
+    try {
+        // --- UPDATED INSERT QUERY (NO captured_image) ---
+        $log_stmt = $_conn_db->prepare(
+            "INSERT INTO admin_activity_log 
+                (admin_id, admin_name, activity_type, ip_address, user_agent, device_type, os, browser, geo_lat, geo_long) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $log_stmt->execute([
+            $user_id, $user_name, $login_status, $ip_address, $user_agent_string,
+            $device_info['device_type'], $device_info['os'], $device_info['browser'],
+            $latitude,
+            $longitude
+        ]);
+    } catch (PDOException $e) {
+        error_log("Failed to log full admin activity: " . $e->getMessage());
+    }
 }
 
-// JSON प्रतिक्रिया भेजें
 header('Content-Type: application/json');
 echo json_encode($response);
-?>

@@ -712,3 +712,72 @@
         });
     }
 </script>
+
+<!-- Add this entire script block to your foot.php file -->
+<!-- Add this updated script block to your foot.php file -->
+<script>
+    $(document).ready(function() {
+        // --- SECURE LOGOUT SCRIPT (NO IMAGE CAPTURE) ---
+
+        $('#secure-logout-btn').on('click', function(e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, Log Me Out!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    
+                    Swal.fire({
+                        title: 'Logging out...',
+                        text: 'Saving session data, please wait.',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    let userLocation = { latitude: null, longitude: null };
+
+                    // 1. Try to get the GPS location
+                    try {
+                        if (navigator.geolocation) {
+                            userLocation = await new Promise((resolve, reject) => {
+                                navigator.geolocation.getCurrentPosition(
+                                    (position) => resolve({
+                                        latitude: position.coords.latitude,
+                                        longitude: position.coords.longitude
+                                    }),
+                                    (error) => reject(error),
+                                    { timeout: 5000, enableHighAccuracy: true }
+                                );
+                            });
+                        }
+                    } catch (error) { console.warn("Could not get location on logout."); }
+
+                    // 2. Create a temporary, hidden form to send data to logout.php
+                    const form = $('<form>', {
+                        action: 'logout.php',
+                        method: 'POST',
+                        style: 'display:none;'
+                    });
+
+                    // Add only the location data as hidden input fields
+                    if (userLocation.latitude) {
+                        form.append($('<input>', { type: 'hidden', name: 'latitude', value: userLocation.latitude }));
+                    }
+                    if (userLocation.longitude) {
+                        form.append($('<input>', { type: 'hidden', name: 'longitude', value: userLocation.longitude }));
+                    }
+
+                    // 3. Submit the form to logout.php
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>

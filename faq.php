@@ -35,9 +35,9 @@
                                 </div>
                             </div>
                             <div class="accordion-item" style="border-bottom: 1px solid #dee2e6;">
-                                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-gen-2"><i class="bi bi-hand-thumbs-up-fill me-3"></i>What are the advantages of purchasing a bus ticket with BPL Bus?</button></h2>
+                                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-gen-2"><i class="bi bi-hand-thumbs-up-fill me-3"></i>What are the advantages of purchasing a bus ticket with <?php echo $company_name?>?</button></h2>
                                 <div id="faq-gen-2" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                                    <div class="accordion-body">With BPL Bus, you get access to a wide network of trusted bus operators, transparent pricing, exclusive discounts, 24/7 customer support, and innovative features like live tracking and M-tickets, ensuring a seamless and reliable booking experience.</div>
+                                    <div class="accordion-body">With <?php echo $company_name?>, you get access to a wide network of trusted bus operators, transparent pricing, exclusive discounts, 24/7 customer support, and innovative features like live tracking and M-tickets, ensuring a seamless and reliable booking experience.</div>
                                 </div>
                             </div>
                             <div class="accordion-item" style="border-bottom: 1px solid #dee2e6;">
@@ -49,7 +49,7 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-gen-4"><i class="bi bi-tags-fill me-3"></i>Does bus booking online cost me more?</button></h2>
                                 <div id="faq-gen-4" class="accordion-collapse collapse" data-bs-parent="#generalFaqAccordion">
-                                    <div class="accordion-body">Not at all. In fact, booking online with BPL Bus is often cheaper! You get access to special online-only discounts and offers that are not available at physical counters. The price you see is inclusive of all standard taxes.</div>
+                                    <div class="accordion-body">Not at all. In fact, booking online with <?php echo $company_name?> is often cheaper! You get access to special online-only discounts and offers that are not available at physical counters. The price you see is inclusive of all standard taxes.</div>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +109,7 @@
                             <div class="accordion-item" style="border-bottom: 1px solid #dee2e6;">
                                 <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-can-1"><i class="bi bi-x-circle-fill me-3"></i>How can I cancel my bus ticket?</button></h2>
                                 <div id="faq-can-1" class="accordion-collapse collapse" data-bs-parent="#cancellationFaqAccordion">
-                                    <div class="accordion-body">You can request to cancel your ticket by logging into your BPL Bus account and visiting the "My Bookings" section. Select the booking and follow the steps. Alternatively, you can use the "Cancel Ticket" link in the website menu.</div>
+                                    <div class="accordion-body">You can request to cancel your ticket by logging into your <?php echo $company_name?> account and visiting the "My Bookings" section. Select the booking and follow the steps. Alternatively, you can use the "Cancel Ticket" link in the website menu.</div>
                                 </div>
                             </div>
                             <div class="accordion-item" style="border-bottom: 1px solid #dee2e6;">
@@ -142,7 +142,7 @@
                             <div style="font-size: 2.5rem; color: #7b003a; margin-bottom: 1rem;"><i class="bi bi-envelope-fill"></i></div>
                             <h5 style="font-weight: 600;">Email Support</h5>
                             <p class="text-muted">Get a detailed response.</p>
-                            <a href="mailto:support@bplbus.com" style="font-weight: 500;">support@bplbus.com</a>
+                            <a href="mailto:<?php echo $email_primary?>" style="font-weight: 500;"><?php echo $email_primary?></a>
                         </div>
                     </div>
                 </div>

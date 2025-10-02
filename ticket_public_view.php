@@ -6,6 +6,54 @@
 // The path needs to go up one level from the root.
 require 'admin/function/_db.php';
 
+  
+
+$all_settings = [];
+
+try {
+    // Prepare and execute the query to fetch all settings.
+    // PDO::FETCH_KEY_PAIR is highly efficient for key-value tables.
+    // It creates an associative array like ['setting_key' => 'setting_value', ...].
+    $settings_query = $_conn_db->query("SELECT setting_key, setting_value FROM settings");
+    $all_settings = $settings_query->fetchAll(PDO::FETCH_KEY_PAIR);
+
+} catch (PDOException $e) {
+    // If the database query fails, log the error and continue with empty settings.
+    // This prevents the entire site from crashing if the settings table has an issue.
+    error_log("Failed to fetch company settings: " . $e->getMessage());
+    // On failure, all settings variables below will default to an empty string.
+}
+
+
+// --- Assign each setting to its own variable for easy access ---
+// The null coalescing operator (?? '') provides a default empty string if a setting is not found.
+// htmlspecialchars() is used as a security measure to prevent XSS attacks if you echo these variables directly into HTML.
+
+// Basic Information
+$company_name = htmlspecialchars($all_settings['company_name'] ?? '');
+$company_address = htmlspecialchars($all_settings['company_address'] ?? '');
+
+// Contact Details - Mobile
+$mobile_primary = htmlspecialchars($all_settings['mobile_primary'] ?? '');
+$mobile_optional_1 = htmlspecialchars($all_settings['mobile_optional_1'] ?? '');
+$mobile_optional_2 = htmlspecialchars($all_settings['mobile_optional_2'] ?? '');
+
+// Contact Details - WhatsApp
+$whatsapp_primary = htmlspecialchars($all_settings['whatsapp_primary'] ?? '');
+$whatsapp_optional_1 = htmlspecialchars($all_settings['whatsapp_optional_1'] ?? '');
+
+// Contact Details - Email
+$email_primary = htmlspecialchars($all_settings['email_primary'] ?? '');
+$email_optional_1 = htmlspecialchars($all_settings['email_optional_1'] ?? '');
+$email_optional_2 = htmlspecialchars($all_settings['email_optional_2'] ?? '');
+
+// Social Media Links
+$facebook_url = htmlspecialchars($all_settings['facebook_url'] ?? '');
+$instagram_url = htmlspecialchars($all_settings['instagram_url'] ?? '');
+$twitter_url = htmlspecialchars($all_settings['twitter_url'] ?? '');
+$youtube_url = htmlspecialchars($all_settings['youtube_url'] ?? '');
+
+ 
 // --- 1. VALIDATE TOKEN AND FETCH ALL DATA ---
 $access_token = trim($_GET['token'] ?? '');
 if (empty($access_token) || !preg_match('/^[a-f0-9]{40}$/', $access_token)) {
@@ -163,7 +211,7 @@ try {
             display: flex;
             flex-direction: column;
             padding: 20px;
-            justify-content: space-between;
+            /* justify-content: space-between; */
             position: relative;
             /* Ensure content is on top of watermark */
             z-index: 2;
@@ -326,7 +374,7 @@ try {
                     </div>
                 </div>
                 <div class="stub-panel">
-                    <div class="brand">BPL Bus Service</div>
+                    <div class="brand"><?php echo $company_name?></div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
                         <div class="label" style="font-size:11px;">Date</div>

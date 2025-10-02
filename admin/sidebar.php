@@ -16,7 +16,21 @@ $is_route_active = in_array($current_page, $route_pages);
 
 $booking_pages = ['book_ticket', 'view_bookings', 'ticket_view', 'my_collections'];
 $is_booking_active = in_array($current_page, $booking_pages);
+
+$pending_inquiries_count = 0;
+if (user_has_permission('can_manage_enqury')) { // Or a new permission like 'can_view_inquiries'
+    try {
+        $stmt = $_conn_db->query("SELECT COUNT(*) FROM charter_inquiries WHERE status = 'Pending'");
+        $pending_inquiries_count = $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log("Failed to fetch pending inquiries count: " . $e->getMessage());
+    }
+}
+
+
+
 ?>
+
 <nav class="sidebar">
     <div class="sidebar-header d-flex text-center" style="justify-content:center;">
         <h2>BPL Tickets</h2>
@@ -40,9 +54,17 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 </a>
                 <div class="collapse <?php echo $is_booking_active ? 'show' : ''; ?>" id="bookingMenu">
                     <ul class="nav flex-column ms-3">
-                        <?php if (user_has_permission('can_book_tickets')): ?>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page == 'book_ticket' ? 'active' : ''; ?>" href="book_ticket.php"><i class="fas fa-plus-circle me-2"></i>New Booking</a></li>
-                        <?php endif; ?>
+                    <?php
+
+?>
+
+<?php if (user_has_permission('can_book_tickets') && !isMobile()): ?>
+    <li class="nav-item">
+        <a class="nav-link <?php echo $current_page == 'book_ticket' ? 'active' : ''; ?>" href="book_ticket.php">
+            <i class="fas fa-plus-circle me-2"></i>New Booking
+        </a>
+    </li>
+<?php endif; ?>
 
                         <?php if (user_has_permission('can_view_bookings')): ?>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page == 'view_bookings' ? 'active' : ''; ?>" href="view_bookings.php"><i class="fas fa-list-alt me-2"></i>View Bookings</a></li>
@@ -113,11 +135,23 @@ $is_booking_active = in_array($current_page, $booking_pages);
             <?php endif; ?>
 
            
-
+            <?php if (user_has_permission('can_manage_reviews')): ?>
+            <li class="nav-item"><a class="nav-link <?php echo $current_page == 'reviews' ? 'active' : ''; ?>" href="reviews"><i class="fas fa-building nav-icon me-2"></i>Manage Reviews</a></li>
+            <?php endif; ?>
             <?php if (user_has_permission('can_manage_settings')): ?>
             <li class="nav-item"><a class="nav-link <?php echo $current_page == 'settings' ? 'active' : ''; ?>" href="settings.php"><i class="fas fa-building nav-icon me-2"></i>Company Settings</a></li>
             <?php endif; ?>
-
+            <?php if (user_has_permission('can_manage_enqury')): // Or a specific permission ?>
+        <li class="nav-item">
+            <a class="nav-link <?php echo $current_page == 'manage_inquiries' ? 'active' : ''; ?>" href="manage_inquiries.php">
+                <i class="fas fa-route nav-icon me-2"></i>
+                <span>Charter Inquiries</span>
+                <?php if ($pending_inquiries_count > 0): ?>
+                    <span class="badge bg-danger rounded-pill ms-auto"><?php echo $pending_inquiries_count; ?></span>
+                <?php endif; ?>
+            </a>
+        </li>
+    <?php endif; ?>
             <!-- Special links only for main admin, now using the permission system -->
             <?php if (user_has_permission('main_admin')): ?>
                 <li class="nav-item"><a class="nav-link <?php echo $current_page == 'todays_departures' ? 'active' : ''; ?>" href="todays_departures.php"><i class="fas fa-clock nav-icon me-2"></i>Today's Departures</a></li>
@@ -125,7 +159,7 @@ $is_booking_active = in_array($current_page, $booking_pages);
                 <li class="nav-item"><a class="nav-link <?php echo $current_page == 'change_password' ? 'active' : ''; ?>" href="change_password.php"><i class="fas fa-key me-2"></i>Change Password</a></li>
             <?php endif; ?>
 
-            <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="secure-logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
         </ul>
     </div>
 </nav>

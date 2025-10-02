@@ -147,7 +147,7 @@ try {
                                         <td><?php echo date('d M, Y', strtotime($c['travel_date'])); ?></td>
                                         <td class="text-end fare-column">
                                             <?php if ($status === 'FAILED'): ?>
-                                                <div class="original-fare" title="Original Ticket Price">Paid: ₹<?php echo number_format($c['original_passenger_fare'] ?? 0, 2); ?></div>
+                                                <div class="original-fare" title="Original Ticket Price">User Paid: ₹<?php echo number_format($c['original_passenger_fare'] ?? 0, 2); ?></div>
                                             <?php elseif ($status === 'COMPLETED'): ?>
                                                 <div class="refund-amount" title="Amount Refunded">Refunded: ₹<?php echo number_format($c['amount_refunded'], 2); ?></div>
                                             <?php endif; ?>

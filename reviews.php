@@ -1,7 +1,6 @@
 <?php
 include 'includes/header.php';
-
-// --- HELPER FUNCTIONS (Unchanged) ---
+ 
 function render_stars($rating)
 {
     $stars_html = '';
@@ -13,12 +12,12 @@ function render_stars($rating)
 }
 
 function mask_email($email)
-{
+{ 
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return '';
-    }
-    list($first, $last) = explode('@', $email);
-    $first = substr($first, 0, 2) . str_repeat('*', max(1, strlen($first) - 2));
+    } 
+    list($first, $last) = explode('@', $email); 
+    $first = substr($first, 0, 2) . '***'; 
     return $first . '@' . $last;
 }
 
@@ -170,7 +169,7 @@ $stmt->execute();
     <main class="container py-5 mt-5">
         <div class="text-center mb-5">
             <h1 class="h2">What Our Customers Say</h1>
-            <p class="lead text-muted col-lg-8 mx-auto">At BPL Travels, we are committed to providing an exceptional travel experience. Our passengers' feedback is the cornerstone of our service, helping us improve and innovate. Here are real stories from our valued passengers.</p>
+            <p class="lead text-muted col-lg-8 mx-auto">At <?php echo $company_name?>, we are committed to providing an exceptional travel experience. Our passengers' feedback is the cornerstone of our service, helping us improve and innovate. Here are real stories from our valued passengers.</p>
         </div>
 
         <?php if ($stmt->rowCount() > 0) : ?>

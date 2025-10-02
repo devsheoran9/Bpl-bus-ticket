@@ -257,6 +257,10 @@ try {
                     <h5 class="company-title"><?php echo $company_name; ?></h5>
                 <?php endif; ?>
                 <p class="company-description">Your trusted partner for booking bus tickets online. We aim to provide a seamless, safe, and happy booking experience for all our customers.</p>
+                <div class="bpl-charter-content-v2">
+        <p class="text-white">Hey! Want to book a complete bus for a special purpose?</p>
+        <a href="contact.php" id="bpl-charter-cta-btn-v2">Inquire Now</a>
+    </div>
             </div>
 
             <!-- Popular Routes Column -->
@@ -275,8 +279,8 @@ try {
             <div class="col-lg-3 col-md-6 mb-4 footer-section">
                 <h6 class="footer-title">Useful Links</h6>
                 <a href="about_us.php" class="footer-link">About Us</a>
-                <a href="privacy-policy.php" class="footer-link">Privacy Policy</a>
-                <a href="terms-and-conditions.php" class="footer-link">Terms & Conditions</a>
+                <a href="cancellation_policy" class="footer-link">Cancellation Policy</a>
+                <a href="terms_and_conditions" class="footer-link">Terms & Conditions</a>
                 <a href="contact.php" class="footer-link">Help & Support</a>
             </div>
 
@@ -372,7 +376,63 @@ try {
         </div>
     </div>
 </footer>
+<!-- The HTML for the Compact Pop-up Box -->
+<div class="bpl-charter-popup-v2" id="bpl-charter-popup-v2">
+    <button id="bpl-charter-close-btn-v2" aria-label="Close">&times;</button>
+    
+    <div class="bpl-charter-icon-v2">
+        <i class="bi bi-bus-front-fill"></i>
+    </div>
+    
+    <div class="bpl-charter-content-v2">
+        <p>Hey! Want to book a complete bus for a special purpose?</p>
+        <a href="contact.php" id="bpl-charter-cta-btn-v2">Inquire Now</a>
+    </div>
+</div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select the elements using their unique V2 IDs
+    const charterPopup = document.getElementById('bpl-charter-popup-v2');
+    const closeBtn = document.getElementById('bpl-charter-close-btn-v2');
+    
+    // Set the cooldown period in minutes
+    const COOLDOWN_MINUTES = 5;
+
+    // --- Function to show the pop-up ---
+    function showCharterPopup() {
+        const lastClosedTime = localStorage.getItem('bplCharterPopupClosedTimestamp');
+
+        if (!lastClosedTime) {
+            charterPopup.classList.add('bpl-popup-show');
+            return;
+        }
+
+        const currentTime = new Date().getTime();
+        const timeDifference = (currentTime - parseInt(lastClosedTime)) / 1000 / 60;
+
+        if (timeDifference > COOLDOWN_MINUTES) {
+            charterPopup.classList.add('bpl-popup-show');
+        }
+    }
+
+    // --- Function to close the pop-up ---
+    function closeCharterPopup() {
+        charterPopup.classList.remove('bpl-popup-show');
+        const currentTime = new Date().getTime();
+        localStorage.setItem('bplCharterPopupClosedTimestamp', currentTime.toString());
+    }
+
+    // --- Event Listeners ---
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeCharterPopup);
+    }
+
+    // --- Trigger the Pop-up ---
+    setTimeout(showCharterPopup, 3000); // 3-second delay
+
+});
+</script>
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 

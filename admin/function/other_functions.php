@@ -262,7 +262,7 @@ function check_user_token_match($token_get)
 }
 function user_login_index_check() {
     if (isset($_SESSION['user']['token'])) {
-        echo "<script>window.location = 'dashboard.php'</script>";
+        echo "<script>window.location = 'dashboard'</script>";
         exit();
     }
 }

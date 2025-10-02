@@ -22,12 +22,12 @@ try {
                 CONCAT(r.route_name, ' (', b.bus_name, ')') AS display_name
             FROM routes r
             JOIN buses b ON r.bus_id = b.bus_id
-            WHERE r.status = 'Active' AND r.route_id IN ($placeholders)
+            WHERE r.status = 'Active' 
             ORDER BY r.route_name, b.bus_name
         ";
         
         $stmt = $_conn_db->prepare($query);
-        $stmt->execute($allowed_route_ids);
+        $stmt->execute();
         $routes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     // If $allowed_route_ids is empty, the $routes array will also remain empty.
@@ -37,6 +37,18 @@ try {
     error_log("Error on book_ticket.php: " . $e->getMessage());
 }
 ?>
+<?php
+// Detect if user is on mobile
+ 
+
+if (isMobile()) {
+    echo "<div style='display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;font-family:sans-serif;'>
+            <h2>Mobile not supported. Please use a desktop or PC</h2>
+          </div>";
+    exit; // Stop further execution
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -184,6 +196,8 @@ try {
                 transform: translateY(0);
             }
         }
+   
+
     </style>
 </head>
 
@@ -818,6 +832,8 @@ function verifyAndBook(paymentResponse, passengers) {
             }
         });
     </script>
+ 
+
 </body>
 
 </html>

@@ -87,7 +87,7 @@ $recent_reviews = $recent_reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
             border: 1px solid var(--border-color);
             position: relative;
             overflow: hidden;
-            padding: 2.5rem 3rem;
+            padding: 2.5rem 1.5rem;
         }
         
         .form-card::before {
@@ -142,6 +142,7 @@ $recent_reviews = $recent_reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
  
 
     <main>
+        <br>
         <div class="form-container">
             <div class="container">
                  <div class="page-header text-center mb-5">

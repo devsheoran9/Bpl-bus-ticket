@@ -1,5 +1,5 @@
 <?php
-// add_employee.php (Full Add & Edit Functionality with Staff Linking)
+// add_employee.php (Full Add & Edit Functionality with Staff Linking & Detailed History)
 include_once('function/_db.php');
 session_security_check();
 check_permission('can_manage_employees'); // Page-specific permission
@@ -49,6 +49,8 @@ try {
 <head>
     <?php include "head.php"; ?>
     <title><?php echo $edit_mode ? 'Edit' : 'Add'; ?> Employee</title>
+    <!-- Fancybox CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
     <style>
         body {
             background-color: #f8f9fa;
@@ -144,10 +146,57 @@ try {
             border-bottom: 1px solid #e9ecef;
             padding-bottom: 0.5rem;
             margin-top: 1rem;
-            margin-bottom: 0.75rem; /* Added margin-bottom */
+            margin-bottom: 0.75rem;
         }
+
         .permissions-section .form-check {
-            margin-bottom: 0.25rem; /* Reduced space between checkboxes */
+            margin-bottom: 0.25rem;
+        }
+
+        /* Styles for the history modal */
+        .history-item {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 1rem 0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .status-login {
+            color: #198754;
+            font-weight: bold;
+        }
+
+        .status-failed_attempt {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-deactivated_attempt {
+            color: #664d03;
+            font-weight: bold;
+            background-color: #fff3cd;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .status-logout {
+            color: #6c757d;
+        }
+
+        .fancybox__container {
+            z-index: 1060;
+            /* Bootstrap Modals are usually at z-index 1050-1055 */
         }
     </style>
 </head>
@@ -169,7 +218,7 @@ try {
                                 <?php endif; ?>
                             </div>
                             <div class="card-body">
-                                <form id="employee-form" action="function/backend/employee_actions.php" method="POST" class="data-formm" data-parsley-validate>
+                                <form id="employee-form" action="function/backend/employee_actions.php" method="POST" data-parsley-validate>
                                     <input type="hidden" name="action" value="<?php echo $edit_mode ? 'update_employee' : 'add_employee'; ?>">
                                     <?php if ($edit_mode): ?>
                                         <input type="hidden" name="employee_id" value="<?php echo $employee_to_edit['id']; ?>">
@@ -190,7 +239,6 @@ try {
                                             </select>
                                             <div class="form-text">Select a staff member to auto-fill their details below.</div>
                                         </div>
-
                                         <div class="mb-3 col-12 col-md-6"><label for="name" class="form-label">Full Name</label><input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($employee_to_edit['name'] ?? ''); ?>" required></div>
                                         <div class="mb-3 col-12 col-md-6"><label for="mobile" class="form-label">Mobile Number</label><input type="tel" class="form-control" id="mobile" name="mobile" value="<?php echo htmlspecialchars($employee_to_edit['mobile'] ?? ''); ?>" required data-parsley-type="digits" data-parsley-length="[10, 10]"></div>
                                         <div class="mb-3 col-12"><label for="email" class="form-label">Email Address</label><input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($employee_to_edit['email'] ?? ''); ?>" required></div>
@@ -198,44 +246,20 @@ try {
                                             <label for="password" class="form-label">Password</label>
                                             <input type="password" class="form-control" id="password" name="password" <?php echo !$edit_mode ? 'required' : ''; ?> data-parsley-minlength="6" placeholder="<?php echo $edit_mode ? 'Leave blank to keep unchanged' : ''; ?>">
                                         </div>
-
                                         <div class="mb-3 col-12 permissions-section">
                                             <label class="form-label fw-bold">Assign Permissions</label>
                                             <div class="row g-2">
                                                 <?php
-                                                // --- CORRECTED AND EXPANDED PERMISSIONS LIST (as discussed) ---
                                                 $permissions_list = [
-                                                    'Booking & Cancellations' => [
-                                                        'can_book_tickets'          => 'Can Book Tickets',
-                                                        'can_view_bookings'         => 'View Daily Bookings',
-                                                        'can_delete_bookings'       => 'Can Delete Bookings',
-                                                        'can_manage_cancellations'  => 'Process Cancellations'
-                                                    ],
-                                                    'Operations Management' => [
-                                                        'can_manage_routes'     => 'Manage Routes (Add/Edit)',
-                                                        'can_delete_routes'     => 'Delete Routes',
-                                                         'can_charter_bus'       => 'Book Full Bus Charter',
-                                                         'can_toggle_popular_route' => 'Toggle Popular Route Status' ,
-                                                        'can_manage_buses'      => 'Manage Buses (Add/View)', 
-                                                        'can_edit_buses'      => 'Edit Buses', 
-                                                        'can_delete_buses'      => 'Delete Buses', 
-                                                        'can_manage_seats'      => 'Manage Bus Seats', // Added new permission
-                                                        'can_manage_staff'      => 'Manage Staff (Add/Edit/Delete)', // Clarified
-                                                         
-                                                    ],
-                                                    'Reports' => [ // Grouped reports
-                                                        'can_view_own_collections' => 'View Own Cash Report',
-                                                        'can_view_reports'         => 'View Full Bookings Report', // Clarified
-                                                    ],
-                                                    'System Admin' => [ // Consolidated System Admin
-                                                        'can_manage_employees'  => 'Manage Other Employees',
-                                                        'can_manage_settings'   => 'Manage Company Settings', // Added new permission
-                                                        'main_admin'            => 'Is Main Administrator (Full Access)' // Main Admin specific
-                                                    ]
-                                                ];
+                                                    'Booking & Cancellations' => ['can_book_tickets' => 'Can Book Tickets', 'can_view_bookings' => 'View Daily Bookings', 'can_delete_bookings' => 'Can Delete Bookings', 'can_manage_cancellations' => 'Process Cancellations'],
 
-                                                foreach ($permissions_list as $group => $perms):
-                                                ?>
+                                                    'Operations Management' => ['can_manage_routes' => 'Manage Routes (Add/Edit)', 'can_delete_routes' => 'Delete Routes', 'can_charter_bus' => 'Book Full Bus Charter', 'can_toggle_popular_route' => 'Toggle Popular Route Status', 'can_manage_buses' => 'Manage Buses (Add/View)', 'can_edit_buses' => 'Edit Buses', 'can_delete_buses' => 'Delete Buses', 'can_manage_seats' => 'Manage Bus Seats', 'can_manage_staff' => 'Manage Staff (Add/Edit/Delete)', 'can_manage_reviews' => 'Manage Reviews'],
+
+                                                    'Reports' => ['can_view_own_collections' => 'View Own Cash Report', 'can_view_reports' => 'View Full Bookings Report', 'can_manage_enqury' => 'Inquries For Bus Charter'],
+
+                                                    'System Admin' => ['can_manage_employees' => 'Manage Other Employees', 'can_manage_settings' => 'Manage Company Settings', 'main_admin' => 'Is Main Administrator (Full Access)']
+                                                ];
+                                                foreach ($permissions_list as $group => $perms): ?>
                                                     <div class="col-12 col-sm-6">
                                                         <h6><?php echo $group; ?></h6>
                                                         <?php foreach ($perms as $key => $label): ?>
@@ -254,7 +278,6 @@ try {
                             </div>
                         </div>
                     </div>
-
                     <div class="col-lg-8">
                         <div class="card">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -295,24 +318,27 @@ try {
         </div>
     </div>
 
+    <!-- Modal for Detailed Login History -->
     <div class="modal fade" id="historyModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Login History</h5>
+                    <h5 class="modal-title">Detailed Login History</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="historyModalBody">
-                </div>
+                <div class="modal-body" id="historyModalBody"></div>
             </div>
         </div>
     </div>
 
     <?php include "foot.php"; ?>
+    <!-- Fancybox JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
     <script>
         $(document).ready(function() {
-            const backendUrl = 'function/backend/employee_actions';
-            $('form.data-formm').on('submit', function(e) {
+            const backendUrl = 'function/backend/employee_actions.php';
+
+            $('#employee-form').on('submit', function(e) {
                 e.preventDefault();
                 if (typeof $(this).parsley === 'function' && !$(this).parsley().isValid()) return;
 
@@ -328,41 +354,29 @@ try {
                     dataType: 'json',
                     success: function(response) {
                         if (response.status === 'success') {
-
                             Swal.fire({
                                 title: 'Success!',
                                 text: response.message,
                                 icon: 'success',
-                                timer: 2000,
+                                timer: 1500,
                                 showConfirmButton: false
                             }).then(() => {
-                                // Redirect after the alert closes
                                 window.location.href = 'add_employee.php';
                             });
                         } else {
-                            $.notify({
-                                message: response.message
-                            }, {
-                                type: 'danger'
-                            });
+                            Swal.fire('Error!', response.message, 'error');
                         }
                     },
-                    error: () => $.notify({
-                        message: 'A server error occurred.'
-                    }, {
-                        type: 'warning'
-                    }),
+                    error: () => Swal.fire('Error!', 'A server error occurred. Please try again.', 'error'),
                     complete: () => submitBtn.prop('disabled', false).html(originalBtnText)
-                }).data('handler-attached', true);
+                });
             });
 
             $('#linked_staff_id').on('change', function() {
                 const selectedOption = $(this).find('option:selected');
-                const staffName = selectedOption.data('name');
-                const staffMobile = selectedOption.data('mobile');
                 if ($(this).val()) {
-                    $('#name').val(staffName);
-                    $('#mobile').val(staffMobile);
+                    $('#name').val(selectedOption.data('name'));
+                    $('#mobile').val(selectedOption.data('mobile'));
                 } else {
                     $('#name').val('');
                     $('#mobile').val('');
@@ -376,13 +390,12 @@ try {
                 const searchTerm = $(this).val().toLowerCase();
                 let visibleCount = 0;
                 $('.employee-card').each(function() {
-                    const card = $(this);
-                    const cardText = card.text().toLowerCase();
+                    const cardText = $(this).text().toLowerCase();
                     if (cardText.includes(searchTerm)) {
-                        card.show();
+                        $(this).show();
                         visibleCount++;
                     } else {
-                        card.hide();
+                        $(this).hide();
                     }
                 });
                 $('#no-results-message').toggle(visibleCount === 0 && $('.employee-card').length > 0);
@@ -390,40 +403,28 @@ try {
 
             $(document).on('change', '.status-toggle', function() {
                 const checkbox = $(this);
-                $.ajax({
-                    url: backendUrl,
-                    type: 'POST',
-                    data: {
+                $.post(backendUrl, {
                         action: 'toggle_status',
                         employee_id: checkbox.data('employee-id'),
                         new_status: checkbox.is(':checked') ? 1 : 2
-                    },
-                    dataType: 'json',
-                    success: function(response) {
+                    }, 'json')
+                    .done(response => {
                         if (response.status === 'success') {
-                            $.notify({
-                                message: response.message
-                            }, {
-                                type: 'success'
+                            Swal.fire({
+                                title: 'Success',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
                             });
                         } else {
-                            $.notify({
-                                message: response.message
-                            }, {
-                                type: 'danger'
-                            });
+                            Swal.fire('Error', response.message, 'error');
                             checkbox.prop('checked', !checkbox.prop('checked'));
                         }
-                    },
-                    error: () => {
-                        $.notify({
-                            message: 'A server error occurred.'
-                        }, {
-                            type: 'warning'
-                        });
+                    }).fail(() => {
+                        Swal.fire('Error', 'A server error occurred.', 'error');
                         checkbox.prop('checked', !checkbox.prop('checked'));
-                    }
-                });
+                    });
             });
 
             $(document).on('click', '.delete-employee-btn', function() {
@@ -437,26 +438,18 @@ try {
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
-                            url: backendUrl,
-                            type: 'POST',
-                            data: {
+                        $.post(backendUrl, {
                                 action: 'delete_employee',
                                 employee_id: employeeId
-                            },
-                            dataType: 'json',
-                            success: function(response) {
+                            }, 'json')
+                            .done(response => {
                                 if (response.status === 'success') {
-                                    $('#employee-' + employeeId).fadeOut(500, function() {
-                                        $(this).remove();
-                                    });
+                                    $('#employee-' + employeeId).fadeOut(500, () => $(this).remove());
                                     Swal.fire('Deleted!', response.message, 'success');
                                 } else {
                                     Swal.fire('Error!', response.message, 'error');
                                 }
-                            },
-                            error: () => Swal.fire('Error!', 'Could not connect to server.', 'error')
-                        });
+                            }).fail(() => Swal.fire('Error!', 'Could not connect to server.', 'error'));
                     }
                 });
             });
@@ -472,36 +465,31 @@ try {
                     confirmButtonText: 'Yes, terminate session!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
-                            url: backendUrl,
-                            type: 'POST',
-                            data: {
+                        $.post(backendUrl, {
                                 action: 'force_logout',
                                 employee_id: employeeId
-                            },
-                            dataType: 'json',
-                            success: function(response) {
+                            }, 'json')
+                            .done(response => {
                                 if (response.status === 'success') {
                                     Swal.fire('Success!', response.message, 'success').then(() => window.location.reload());
                                 } else {
                                     Swal.fire('Error!', response.message, 'error');
                                 }
-                            },
-                            error: () => Swal.fire('Error!', 'Could not connect to server.', 'error')
-                        });
+                            }).fail(() => Swal.fire('Error!', 'Could not connect to server.', 'error'));
                     }
                 });
             });
 
+            // --- NEW, ENHANCED HISTORY MODAL LOGIC ---
             const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
             $(document).on('click', '.history-btn', function() {
                 const employeeId = $(this).data('employee-id');
                 const modalBody = $('#historyModalBody');
-                modalBody.html('<div class="text-center p-4"><div class="spinner-border"></div></div>');
+                modalBody.html('<div class="text-center p-4"><div class="spinner-border"></div><p class="mt-2">Loading History...</p></div>');
                 historyModal.show();
 
                 $.ajax({
-                    url: backendUrl,
+                    url: backendUrl, // The backendUrl variable is already defined
                     type: 'GET',
                     data: {
                         action: 'get_login_history',
@@ -509,35 +497,51 @@ try {
                     },
                     dataType: 'json',
                     success: function(response) {
-                        if (response.status === 'success') {
-                            let content = '<ul class="list-group list-group-flush">';
-                            if (response.data.history && response.data.history.length > 0) {
-                                response.data.history.forEach(log => {
-                                    let activityClass = log.activity_type === 'login' ? 'text-success' : 'text-danger';
-                                    let formattedDate = new Date(log.log_time).toLocaleString('en-GB', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit'
-                                    });
-                                    content += `
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong class="${activityClass}">${log.activity_type.toUpperCase()}</strong>
-                                        <br>
-                                        <small class="text-muted">IP: ${log.ip_address}</small>
+                        if (response.status === 'success' && response.data.history && response.data.history.length > 0) {
+                            let content = '';
+                            response.data.history.forEach(log => {
+                                let activityClass = log.activity_type.includes('fail') ? 'text-danger' : (log.activity_type === 'login' ? 'text-success' : 'text-warning');
+                                let formattedDate = new Date(log.log_time).toLocaleString('en-GB');
+
+                                let locationHtml = `<span class="text-muted">N/A</span>`;
+                                if (log.geo_lat && log.geo_long) {
+                                    locationHtml = `<a href="https://www.google.com/maps?q=${log.geo_lat},${log.geo_long}" target="_blank" class="text-decoration-none">
+                                                    <i class="fas fa-map-marker-alt text-danger me-1"></i> View on Map
+                                                </a>`;
+                                }
+
+                                let imageHtml = `<span class="text-muted">No Image</span>`;
+                                if (log.captured_image) {
+                                    imageHtml = `<a data-fancybox data-src="uploads/login_captures/${log.captured_image}" class="text-decoration-none fw-bold">
+                                                <i class="fas fa-camera me-1"></i> View Capture
+                                             </a>`;
+                                }
+
+                                content += `
+                                <div class="history-item">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <strong class="status-${log.activity_type}">${log.activity_type.replace(/_/g, ' ').toUpperCase()}</strong> 
+                                                <span class="text-muted fw-normal">from ${log.ip_address}</span>
+                                            </h6>
+                                            <div class="history-details">
+                                                <span><i class="fas fa-map-pin me-1 opacity-75"></i> ${locationHtml}</span>
+                                                
+                                                <span><i class="fas fa-desktop me-1 opacity-75"></i> ${log.device_type} / ${log.os}</span>
+                                                <span><i class="fab fa-chrome me-1 opacity-75"></i> ${log.browser}</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted text-nowrap mt-2 mt-sm-0">${formattedDate}</small>
                                     </div>
-                                    <small>${formattedDate}</small>
-                                </li>`;
-                                });
-                            } else {
-                                content += '<li class="list-group-item">No login history found for this employee.</li>';
-                            }
-                            modalBody.html(content + '</ul>');
+                                </div>
+                            `;
+                            });
+                            modalBody.html(content);
+                            Fancybox.bind("[data-fancybox]", {}); // Re-initialize Fancybox for new content
+
                         } else {
-                            modalBody.html(`<div class="alert alert-danger">${response.message}</div>`);
+                            modalBody.html('<div class="alert alert-info">No detailed login history found for this employee.</div>');
                         }
                     },
                     error: () => {

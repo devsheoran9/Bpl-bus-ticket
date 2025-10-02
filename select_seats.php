@@ -1007,6 +1007,7 @@ function get_transform_style($orientation)
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectedSeats = new Map();
+            const MAX_SEATS_ALLOWED = 8;
             let currentStep = 1;
             const actionBtn = document.getElementById('action-btn');
             const stepElements = document.querySelectorAll('.step');
@@ -1132,10 +1133,23 @@ function get_transform_style($orientation)
 
                     const seatCode = seat.dataset.seatId;
                     const price = parseFloat(seat.dataset.price);
+
                     if (selectedSeats.has(seatCode)) {
                         selectedSeats.delete(seatCode);
                         seat.classList.remove('selected-any');
                     } else {
+                        // =======================================================
+                        // NEW: CHECK SEAT LIMIT BEFORE ADDING A NEW SEAT
+                        // =======================================================
+                        if (selectedSeats.size >= MAX_SEATS_ALLOWED) {
+                            alert(`You can select a maximum of ${MAX_SEATS_ALLOWED} seats per booking.`);
+                            return; // Stop the function here, preventing the seat from being added
+                        }
+                        // =======================================================
+                        // END OF NEW CODE
+                        // =======================================================
+                        
+                        // This code will only run if the limit has not been reached
                         selectedSeats.set(seatCode, {
                             price
                         });
@@ -1335,8 +1349,7 @@ function get_transform_style($orientation)
                     if (firstInvalidElement) firstInvalidElement.focus();
                     return;
                 }
-
-                // Use a plain object for jQuery AJAX
+ 
                 const bookingData = {
                     route_id: form.querySelector('input[name="route_id"]').value,
                     bus_id: form.querySelector('input[name="bus_id"]').value,
@@ -1370,7 +1383,7 @@ function get_transform_style($orientation)
                             "key": data.razorpay_key_id,
                             "amount": data.amount,
                             "currency": "INR",
-                            "name": "BPL Bus Booking",
+                            "name": "<?php echo $company_name?>",
                             "description": "Bus Ticket Payment",
                             "order_id": data.razorpay_order_id,
                             "handler": function(response) {

@@ -337,7 +337,7 @@ try {
                 </div>
                 <div class="stub-panel">
                     <!-- FIX: Using bus_name instead of operator_name -->
-                    <div class="brand">BPL Bus Service</div>
+                    <div class="brand"><?php echo $company_name?></div>
                     <div id="qrcode"></div>
                     <div style="text-align:center;">
                         <div class="label" style="font-size:11px;">Date</div>
